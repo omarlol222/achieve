@@ -22,6 +22,21 @@ export const Navigation = () => {
     },
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!session?.user?.id,
+  });
+
   const { data: hasPurchased } = useQuery({
     queryKey: ["hasPurchased", session?.user?.id],
     queryFn: async () => {
@@ -41,6 +56,8 @@ export const Navigation = () => {
     await supabase.auth.signOut();
     navigate("/");
   };
+
+  const isAdmin = profile?.role === "admin";
 
   return (
     <nav className="border-b">
@@ -66,9 +83,14 @@ export const Navigation = () => {
             </Link>
           ) : (
             <>
-              {session && hasPurchased && (
+              {(session && hasPurchased) && (
                 <Link to="/gat" className="hover:text-primary mr-4">
                   Dashboard
+                </Link>
+              )}
+              {isAdmin && (
+                <Link to="/admin" className="hover:text-primary mr-4">
+                  Admin
                 </Link>
               )}
               <DropdownMenu>
@@ -87,9 +109,14 @@ export const Navigation = () => {
                   <DropdownMenuItem onClick={() => navigate("/faq")}>
                     FAQ
                   </DropdownMenuItem>
-                  {session && hasPurchased && (
+                  {(session && hasPurchased) && (
                     <DropdownMenuItem onClick={() => navigate("/gat")}>
                       Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate("/admin")}>
+                      Admin
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem onClick={handleSignOut}>
