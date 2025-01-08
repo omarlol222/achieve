@@ -1,6 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { BookOpen, PenTool, MonitorPlay } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const TopicProgress = ({ name, value }: { name: string; value: number }) => (
   <div className="space-y-2">
@@ -23,19 +25,61 @@ const LearningCard = ({
 );
 
 const GAT = () => {
-  const englishTopics = [
-    { name: "Topic", value: 100 },
-    { name: "Topic", value: 30 },
-    { name: "Topic", value: 20 },
-    { name: "Topic", value: 80 },
-  ];
+  // First, fetch the GAT test type ID
+  const { data: testType } = useQuery({
+    queryKey: ["testType", "GAT"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("test_types")
+        .select("id")
+        .eq("name", "GAT")
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
 
-  const mathTopics = [
-    { name: "Topic", value: 70 },
-    { name: "Topic", value: 40 },
-    { name: "Topic", value: 20 },
-    { name: "Topic", value: 90 },
-  ];
+  // Then fetch subjects for GAT
+  const { data: subjects } = useQuery({
+    queryKey: ["subjects", testType?.id],
+    enabled: !!testType?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subjects")
+        .select(`
+          id,
+          name,
+          topics (
+            id,
+            name
+          )
+        `)
+        .eq("test_type_id", testType.id);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch user progress for all topics
+  const { data: userProgress } = useQuery({
+    queryKey: ["userProgress"],
+    queryFn: async () => {
+      const { data: progress, error } = await supabase
+        .from("user_progress")
+        .select("*");
+      if (error) throw error;
+      return progress;
+    },
+  });
+
+  // Calculate progress for each topic
+  const calculateTopicProgress = (topicId: string) => {
+    const progress = userProgress?.find(p => p.topic_id === topicId);
+    if (!progress) return 0;
+    return progress.questions_attempted > 0
+      ? (progress.questions_correct / progress.questions_attempted) * 100
+      : 0;
+  };
 
   return (
     <div className="min-h-screen bg-white p-8">
@@ -47,30 +91,22 @@ const GAT = () => {
         <section className="space-y-6">
           <h2 className="text-2xl font-bold text-[#1B2B2B]">Progress</h2>
           <div className="grid md:grid-cols-2 gap-8">
-            <Card className="p-6 space-y-4">
-              <h3 className="text-xl font-semibold text-center">English</h3>
-              <div className="space-y-4">
-                {englishTopics.map((topic, index) => (
-                  <TopicProgress
-                    key={index}
-                    name={topic.name}
-                    value={topic.value}
-                  />
-                ))}
-              </div>
-            </Card>
-            <Card className="p-6 space-y-4">
-              <h3 className="text-xl font-semibold text-center">English</h3>
-              <div className="space-y-4">
-                {mathTopics.map((topic, index) => (
-                  <TopicProgress
-                    key={index}
-                    name={topic.name}
-                    value={topic.value}
-                  />
-                ))}
-              </div>
-            </Card>
+            {subjects?.map((subject) => (
+              <Card key={subject.id} className="p-6 space-y-4">
+                <h3 className="text-xl font-semibold text-center">
+                  {subject.name}
+                </h3>
+                <div className="space-y-4">
+                  {subject.topics?.map((topic) => (
+                    <TopicProgress
+                      key={topic.id}
+                      name={topic.name}
+                      value={calculateTopicProgress(topic.id)}
+                    />
+                  ))}
+                </div>
+              </Card>
+            ))}
           </div>
         </section>
 
@@ -79,10 +115,7 @@ const GAT = () => {
           <div className="grid md:grid-cols-3 gap-8">
             <LearningCard title="Course" icon={BookOpen} />
             <LearningCard title="Practice" icon={PenTool} />
-            <LearningCard
-              title="GAT Simulator"
-              icon={MonitorPlay}
-            />
+            <LearningCard title="GAT Simulator" icon={MonitorPlay} />
           </div>
         </section>
       </div>
