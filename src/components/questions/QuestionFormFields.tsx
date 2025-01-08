@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
+import { useState } from "react";
 
 type QuestionFormData = {
   question_text: string;
@@ -31,33 +32,67 @@ type QuestionFormData = {
 type QuestionFormFieldsProps = {
   form: UseFormReturn<QuestionFormData>;
   topics: any[];
+  subjects: any[];
 };
 
-export function QuestionFormFields({ form, topics }: QuestionFormFieldsProps) {
+export function QuestionFormFields({ form, topics, subjects }: QuestionFormFieldsProps) {
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  
+  const filteredTopics = topics?.filter(
+    (topic) => !selectedSubject || topic.subject_id === selectedSubject
+  );
+
   return (
     <>
       <FormField
         control={form.control}
         name="topic_id"
         render={({ field }) => (
-          <FormItem>
-            <FormLabel>Topic</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a topic" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {topics?.map((topic) => (
-                  <SelectItem key={topic.id} value={topic.id}>
-                    {topic.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
+          <div className="space-y-4">
+            <FormItem>
+              <FormLabel>Subject</FormLabel>
+              <Select 
+                onValueChange={(value) => {
+                  setSelectedSubject(value);
+                  // Reset topic when subject changes
+                  field.onChange("");
+                }}
+                value={selectedSubject}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a subject" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {subjects?.map((subject) => (
+                    <SelectItem key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormItem>
+
+            <FormItem>
+              <FormLabel>Topic</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a topic" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {filteredTopics?.map((topic) => (
+                    <SelectItem key={topic.id} value={topic.id}>
+                      {topic.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          </div>
         )}
       />
 

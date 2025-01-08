@@ -61,12 +61,24 @@ export function QuestionDialog({
         },
   });
 
+  const { data: subjects } = useQuery({
+    queryKey: ["subjects"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subjects")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: topics } = useQuery({
     queryKey: ["topics"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("topics")
-        .select("*")
+        .select("*, subject:subjects(name)")
         .order("name");
       if (error) throw error;
       return data;
@@ -122,7 +134,11 @@ export function QuestionDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <QuestionFormFields form={form} topics={topics || []} />
+            <QuestionFormFields 
+              form={form} 
+              topics={topics || []} 
+              subjects={subjects || []}
+            />
 
             <div className="flex justify-end gap-2">
               <Button

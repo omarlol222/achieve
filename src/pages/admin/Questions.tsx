@@ -26,6 +26,7 @@ const Questions = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [topicFilter, setTopicFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -33,11 +34,11 @@ const Questions = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<any>(null);
 
-  const { data: topics } = useQuery({
-    queryKey: ["topics"],
+  const { data: subjects } = useQuery({
+    queryKey: ["subjects"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("topics")
+        .from("subjects")
         .select("*")
         .order("name");
       if (error) throw error;
@@ -45,15 +46,32 @@ const Questions = () => {
     },
   });
 
+  const { data: topics } = useQuery({
+    queryKey: ["topics"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topics")
+        .select("*, subject:subjects(name)")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: questionsData, isLoading } = useQuery({
-    queryKey: ["questions", search, topicFilter, difficultyFilter, currentPage],
+    queryKey: ["questions", search, subjectFilter, topicFilter, difficultyFilter, currentPage],
     queryFn: async () => {
       let query = supabase
         .from("questions")
         .select(
           `
           *,
-          topic:topics(name)
+          topic:topics(
+            name,
+            subject:subjects(
+              name
+            )
+          )
         `,
           { count: "exact" }
         )
@@ -65,6 +83,11 @@ const Questions = () => {
 
       if (topicFilter && topicFilter !== "all") {
         query = query.eq("topic_id", topicFilter);
+      } else if (subjectFilter && subjectFilter !== "all") {
+        const filteredTopicIds = topics
+          ?.filter((topic) => topic.subject_id === subjectFilter)
+          .map((topic) => topic.id);
+        query = query.in("topic_id", filteredTopicIds);
       }
 
       if (difficultyFilter && difficultyFilter !== "all") {
@@ -133,10 +156,13 @@ const Questions = () => {
       <QuestionFilters
         search={search}
         setSearch={setSearch}
+        subjectFilter={subjectFilter}
+        setSubjectFilter={setSubjectFilter}
         topicFilter={topicFilter}
         setTopicFilter={setTopicFilter}
         difficultyFilter={difficultyFilter}
         setDifficultyFilter={setDifficultyFilter}
+        subjects={subjects || []}
         topics={topics || []}
       />
 

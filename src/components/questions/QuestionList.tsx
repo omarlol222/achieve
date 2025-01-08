@@ -28,6 +28,7 @@ export function QuestionList({
         <TableHeader>
           <TableRow>
             <TableHead>Question</TableHead>
+            <TableHead>Subject</TableHead>
             <TableHead>Topic</TableHead>
             <TableHead>Difficulty</TableHead>
             <TableHead className="w-24">Actions</TableHead>
@@ -36,14 +37,14 @@ export function QuestionList({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-8">
+              <TableCell colSpan={5} className="text-center py-8">
                 Loading questions...
               </TableCell>
             </TableRow>
           ) : questions.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={4}
+                colSpan={5}
                 className="text-center py-8 text-muted-foreground"
               >
                 No questions found. Add your first question to get started.
@@ -55,6 +56,7 @@ export function QuestionList({
                 <TableCell className="font-medium">
                   {question.question_text}
                 </TableCell>
+                <TableCell>{question.topic?.subject?.name || "Uncategorized"}</TableCell>
                 <TableCell>{question.topic?.name || "Uncategorized"}</TableCell>
                 <TableCell>Level {question.difficulty || "N/A"}</TableCell>
                 <TableCell>

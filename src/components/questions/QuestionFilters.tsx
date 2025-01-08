@@ -10,25 +10,35 @@ import {
 type QuestionFiltersProps = {
   search: string;
   setSearch: (value: string) => void;
+  subjectFilter: string;
+  setSubjectFilter: (value: string) => void;
   topicFilter: string;
   setTopicFilter: (value: string) => void;
   difficultyFilter: string;
   setDifficultyFilter: (value: string) => void;
+  subjects: any[];
   topics: any[];
 };
 
 export function QuestionFilters({
   search,
   setSearch,
+  subjectFilter,
+  setSubjectFilter,
   topicFilter,
   setTopicFilter,
   difficultyFilter,
   setDifficultyFilter,
+  subjects,
   topics,
 }: QuestionFiltersProps) {
+  const filteredTopics = topics?.filter(
+    (topic) => !subjectFilter || subjectFilter === "all" || topic.subject_id === subjectFilter
+  );
+
   return (
     <div className="mb-6 grid gap-4 md:grid-cols-4">
-      <div className="flex gap-2">
+      <div className="md:col-span-2">
         <Input
           placeholder="Search questions..."
           value={search}
@@ -37,13 +47,30 @@ export function QuestionFilters({
         />
       </div>
 
+      <Select value={subjectFilter} onValueChange={(value) => {
+        setSubjectFilter(value);
+        setTopicFilter("all"); // Reset topic when subject changes
+      }}>
+        <SelectTrigger>
+          <SelectValue placeholder="Filter by subject" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Subjects</SelectItem>
+          {subjects?.map((subject) => (
+            <SelectItem key={subject.id} value={subject.id}>
+              {subject.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       <Select value={topicFilter} onValueChange={setTopicFilter}>
         <SelectTrigger>
           <SelectValue placeholder="Filter by topic" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Topics</SelectItem>
-          {topics?.map((topic) => (
+          {filteredTopics?.map((topic) => (
             <SelectItem key={topic.id} value={topic.id}>
               {topic.name}
             </SelectItem>
