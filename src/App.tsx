@@ -7,6 +7,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import Landing from "./pages/Landing";
 import About from "./pages/About";
 import Shop from "./pages/Shop";
+import FAQ from "./pages/FAQ";
+import SignIn from "./pages/SignIn";
 import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Questions from "./pages/admin/Questions";
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/about" element={<About />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/signin" element={<SignIn />} />
           <Route
             path="/admin"
             element={
