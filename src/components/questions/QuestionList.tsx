@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 type QuestionListProps = {
   questions: any[];
@@ -22,6 +23,20 @@ export function QuestionList({
   onEdit,
   onDelete,
 }: QuestionListProps) {
+  const getQuestionTypeBadge = (type: string) => {
+    const colors = {
+      normal: "bg-blue-100 text-blue-800",
+      passage: "bg-purple-100 text-purple-800",
+      analogy: "bg-green-100 text-green-800",
+    };
+    
+    return (
+      <Badge variant="secondary" className={colors[type as keyof typeof colors]}>
+        {type.charAt(0).toUpperCase() + type.slice(1)}
+      </Badge>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg border">
       <Table>
@@ -30,6 +45,7 @@ export function QuestionList({
             <TableHead>Question</TableHead>
             <TableHead>Subject</TableHead>
             <TableHead>Topic</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Difficulty</TableHead>
             <TableHead className="w-24">Actions</TableHead>
           </TableRow>
@@ -37,14 +53,14 @@ export function QuestionList({
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-8">
+              <TableCell colSpan={6} className="text-center py-8">
                 Loading questions...
               </TableCell>
             </TableRow>
           ) : questions.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={5}
+                colSpan={6}
                 className="text-center py-8 text-muted-foreground"
               >
                 No questions found. Add your first question to get started.
@@ -58,6 +74,7 @@ export function QuestionList({
                 </TableCell>
                 <TableCell>{question.topic?.subject?.name || "Uncategorized"}</TableCell>
                 <TableCell>{question.topic?.name || "Uncategorized"}</TableCell>
+                <TableCell>{getQuestionTypeBadge(question.question_type)}</TableCell>
                 <TableCell>Level {question.difficulty || "N/A"}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">

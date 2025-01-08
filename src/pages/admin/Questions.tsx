@@ -29,6 +29,7 @@ const Questions = () => {
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [topicFilter, setTopicFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -59,7 +60,7 @@ const Questions = () => {
   });
 
   const { data: questionsData, isLoading } = useQuery({
-    queryKey: ["questions", search, subjectFilter, topicFilter, difficultyFilter, currentPage],
+    queryKey: ["questions", search, subjectFilter, topicFilter, difficultyFilter, typeFilter, currentPage],
     queryFn: async () => {
       let query = supabase
         .from("questions")
@@ -92,6 +93,10 @@ const Questions = () => {
 
       if (difficultyFilter && difficultyFilter !== "all") {
         query = query.eq("difficulty", parseInt(difficultyFilter));
+      }
+
+      if (typeFilter && typeFilter !== "all") {
+        query = query.eq("question_type", typeFilter);
       }
 
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -162,6 +167,8 @@ const Questions = () => {
         setTopicFilter={setTopicFilter}
         difficultyFilter={difficultyFilter}
         setDifficultyFilter={setDifficultyFilter}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
         subjects={subjects || []}
         topics={topics || []}
       />

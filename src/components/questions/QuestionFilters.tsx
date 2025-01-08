@@ -16,6 +16,8 @@ type QuestionFiltersProps = {
   setTopicFilter: (value: string) => void;
   difficultyFilter: string;
   setDifficultyFilter: (value: string) => void;
+  typeFilter: string;
+  setTypeFilter: (value: string) => void;
   subjects: any[];
   topics: any[];
 };
@@ -29,6 +31,8 @@ export function QuestionFilters({
   setTopicFilter,
   difficultyFilter,
   setDifficultyFilter,
+  typeFilter,
+  setTypeFilter,
   subjects,
   topics,
 }: QuestionFiltersProps) {
@@ -37,7 +41,7 @@ export function QuestionFilters({
   );
 
   return (
-    <div className="mb-6 grid gap-4 md:grid-cols-4">
+    <div className="mb-6 grid gap-4 md:grid-cols-5">
       <div className="md:col-span-2">
         <Input
           placeholder="Search questions..."
@@ -75,6 +79,18 @@ export function QuestionFilters({
               {topic.name}
             </SelectItem>
           ))}
+        </SelectContent>
+      </Select>
+
+      <Select value={typeFilter} onValueChange={setTypeFilter}>
+        <SelectTrigger>
+          <SelectValue placeholder="Filter by type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Types</SelectItem>
+          <SelectItem value="normal">Normal Questions</SelectItem>
+          <SelectItem value="passage">Passage-Based Questions</SelectItem>
+          <SelectItem value="analogy">Analogy Questions</SelectItem>
         </SelectContent>
       </Select>
 

@@ -27,6 +27,8 @@ type QuestionFormData = {
   difficulty: string;
   topic_id: string;
   explanation?: string;
+  question_type: string;
+  passage_text?: string;
 };
 
 type QuestionFormFieldsProps = {
@@ -37,6 +39,7 @@ type QuestionFormFieldsProps = {
 
 export function QuestionFormFields({ form, topics, subjects }: QuestionFormFieldsProps) {
   const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const questionType = form.watch("question_type");
   
   const filteredTopics = topics?.filter(
     (topic) => !selectedSubject || topic.subject_id === selectedSubject
@@ -44,6 +47,29 @@ export function QuestionFormFields({ form, topics, subjects }: QuestionFormField
 
   return (
     <>
+      <FormField
+        control={form.control}
+        name="question_type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Question Type</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select question type" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="normal">Normal Question</SelectItem>
+                <SelectItem value="passage">Passage-Based Question</SelectItem>
+                <SelectItem value="analogy">Analogy Question</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
       <FormField
         control={form.control}
         name="topic_id"
@@ -54,7 +80,6 @@ export function QuestionFormFields({ form, topics, subjects }: QuestionFormField
               <Select 
                 onValueChange={(value) => {
                   setSelectedSubject(value);
-                  // Reset topic when subject changes
                   field.onChange("");
                 }}
                 value={selectedSubject}
@@ -95,6 +120,22 @@ export function QuestionFormFields({ form, topics, subjects }: QuestionFormField
           </div>
         )}
       />
+
+      {questionType === "passage" && (
+        <FormField
+          control={form.control}
+          name="passage_text"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Passage Text</FormLabel>
+              <FormControl>
+                <Textarea {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       <FormField
         control={form.control}

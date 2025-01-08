@@ -78,7 +78,9 @@ export type Database = {
           explanation: string | null
           id: string
           image_url: string | null
+          passage_text: string | null
           question_text: string
+          question_type: string
           topic_id: string | null
           updated_at: string
         }
@@ -93,7 +95,9 @@ export type Database = {
           explanation?: string | null
           id?: string
           image_url?: string | null
+          passage_text?: string | null
           question_text: string
+          question_type?: string
           topic_id?: string | null
           updated_at?: string
         }
@@ -108,7 +112,9 @@ export type Database = {
           explanation?: string | null
           id?: string
           image_url?: string | null
+          passage_text?: string | null
           question_text?: string
+          question_type?: string
           topic_id?: string | null
           updated_at?: string
         }

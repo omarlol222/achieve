@@ -23,6 +23,8 @@ type QuestionFormData = {
   difficulty: string;
   topic_id: string;
   explanation?: string;
+  question_type: string;
+  passage_text?: string;
 };
 
 type QuestionDialogProps = {
@@ -47,6 +49,7 @@ export function QuestionDialog({
           ...initialData,
           correct_answer: String(initialData.correct_answer),
           difficulty: String(initialData.difficulty),
+          question_type: initialData.question_type || "normal",
         }
       : {
           question_text: "",
@@ -58,6 +61,8 @@ export function QuestionDialog({
           difficulty: "1",
           topic_id: "",
           explanation: "",
+          question_type: "normal",
+          passage_text: "",
         },
   });
 
