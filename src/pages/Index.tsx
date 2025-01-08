@@ -5,7 +5,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { AuthError } from "@supabase/supabase-js";
+import { AuthError, AuthApiError } from "@supabase/supabase-js";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -41,16 +41,21 @@ const Index = () => {
   }, [navigate, toast]);
 
   const getErrorMessage = (error: AuthError) => {
-    switch (error.message) {
-      case "Invalid login credentials":
-        return "Invalid email or password. Please check your credentials and try again.";
-      case "Email not confirmed":
-        return "Please verify your email address before signing in.";
-      case "User not found":
-        return "No user found with these credentials.";
-      default:
-        return error.message;
+    if (error instanceof AuthApiError) {
+      switch (error.code) {
+        case 'invalid_credentials':
+          return 'Invalid email or password. Please check your credentials and try again.';
+        case 'invalid_grant':
+          return 'Invalid login credentials. Please check your email and password.';
+        case 'email_not_confirmed':
+          return 'Please verify your email address before signing in.';
+        case 'user_not_found':
+          return 'No user found with these credentials.';
+        default:
+          return error.message;
+      }
     }
+    return error.message;
   };
 
   return (
