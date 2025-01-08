@@ -4,6 +4,7 @@ import { BookOpen, PenTool, MonitorPlay } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const TopicProgress = ({ name, value, questionsCorrect }: { name: string; value: number; questionsCorrect: number }) => (
   <div className="space-y-2">
@@ -30,7 +31,7 @@ const LearningCard = ({
 
 const GAT = () => {
   // First, fetch the Achieve test type ID
-  const { data: testType, isError: isTestTypeError } = useQuery({
+  const { data: testType, isError: isTestTypeError, isLoading: isTestTypeLoading } = useQuery({
     queryKey: ["testType", "Achieve"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -46,7 +47,7 @@ const GAT = () => {
   });
 
   // Then fetch subjects for Achieve
-  const { data: subjects, isError: isSubjectsError } = useQuery({
+  const { data: subjects, isError: isSubjectsError, isLoading: isSubjectsLoading } = useQuery({
     queryKey: ["subjects", testType?.id],
     enabled: !!testType?.id,
     queryFn: async () => {
@@ -67,8 +68,9 @@ const GAT = () => {
   });
 
   // Fetch user progress for all topics
-  const { data: userProgress } = useQuery({
+  const { data: userProgress, isLoading: isProgressLoading } = useQuery({
     queryKey: ["userProgress"],
+    enabled: !!subjects,
     queryFn: async () => {
       const { data: progress, error } = await supabase
         .from("user_progress")
@@ -90,12 +92,31 @@ const GAT = () => {
     };
   };
 
+  if (isTestTypeLoading || isSubjectsLoading || isProgressLoading) {
+    return (
+      <div className="min-h-screen bg-white p-8">
+        <div className="max-w-7xl mx-auto space-y-12">
+          <h1 className="text-4xl font-bold text-center text-[#1B2B2B]">
+            Dashboard
+          </h1>
+          <div className="space-y-6">
+            <Skeleton className="h-8 w-48" />
+            <div className="grid md:grid-cols-2 gap-8">
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isTestTypeError) {
     return (
       <div className="min-h-screen bg-white p-8">
         <Alert variant="destructive" className="max-w-2xl mx-auto">
           <AlertDescription>
-            Unable to load test type 'Achieve'. Please make sure it exists in the database.
+            Unable to load test type 'Achieve'. Please try refreshing the page.
           </AlertDescription>
         </Alert>
       </div>
