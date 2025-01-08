@@ -46,7 +46,6 @@ export default function GAT() {
     },
   });
 
-  // Transform the data to match what ProgressSection expects
   const userProgress = subjects?.map(subject => ({
     id: subject.id,
     name: subject.name,
@@ -63,7 +62,6 @@ export default function GAT() {
   })) || [];
 
   const calculateTopicProgress = (topicId: string) => {
-    // Find the topic across all subjects
     const topic = userProgress
       .flatMap(subject => subject.topics)
       .find(topic => topic.id === topicId);
@@ -71,14 +69,16 @@ export default function GAT() {
     if (!topic) {
       return {
         percentage: 0,
-        questionsCorrect: 0
+        questionsCorrect: 0,
+        questionsAttempted: 0
       };
     }
 
     const { questions_attempted, questions_correct } = topic.progress;
     return {
       percentage: questions_attempted === 0 ? 0 : Math.round((questions_correct / questions_attempted) * 100),
-      questionsCorrect: questions_correct || 0
+      questionsCorrect: questions_correct || 0,
+      questionsAttempted: questions_attempted || 0
     };
   };
 

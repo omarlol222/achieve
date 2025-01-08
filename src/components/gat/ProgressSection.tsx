@@ -16,6 +16,7 @@ export type ProgressSectionProps = {
   calculateTopicProgress: (topicId: string) => {
     percentage: number;
     questionsCorrect: number;
+    questionsAttempted: number;
   };
 };
 
@@ -36,6 +37,7 @@ export const ProgressSection = ({ subjects, calculateTopicProgress }: ProgressSe
                     name={topic.name}
                     value={progress.percentage}
                     questionsCorrect={progress.questionsCorrect}
+                    questionsAttempted={progress.questionsAttempted}
                   />
                 );
               })}
