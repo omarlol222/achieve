@@ -1,23 +1,14 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QuestionDialog } from "@/components/questions/QuestionDialog";
 import { QuestionFilters } from "@/components/questions/QuestionFilters";
 import { QuestionList } from "@/components/questions/QuestionList";
 import { QuestionPagination } from "@/components/questions/QuestionPagination";
+import { DeleteQuestionDialog } from "@/components/questions/DeleteQuestionDialog";
+import { QuestionHeader } from "@/components/questions/QuestionHeader";
+import { useQuestions } from "@/hooks/useQuestions";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -35,83 +26,15 @@ const Questions = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<any>(null);
 
-  const { data: subjects } = useQuery({
-    queryKey: ["subjects"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: topics } = useQuery({
-    queryKey: ["topics"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("topics")
-        .select("*, subject:subjects(name)")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: questionsData, isLoading } = useQuery({
-    queryKey: ["questions", search, subjectFilter, topicFilter, difficultyFilter, typeFilter, currentPage],
-    queryFn: async () => {
-      let query = supabase
-        .from("questions")
-        .select(
-          `
-          *,
-          topic:topics(
-            name,
-            subject:subjects(
-              name
-            )
-          )
-        `,
-          { count: "exact" }
-        )
-        .order("created_at", { ascending: false });
-
-      if (search) {
-        query = query.ilike("question_text", `%${search}%`);
-      }
-
-      if (topicFilter && topicFilter !== "all") {
-        query = query.eq("topic_id", topicFilter);
-      } else if (subjectFilter && subjectFilter !== "all") {
-        const filteredTopicIds = topics
-          ?.filter((topic) => topic.subject_id === subjectFilter)
-          .map((topic) => topic.id);
-        query = query.in("topic_id", filteredTopicIds);
-      }
-
-      if (difficultyFilter && difficultyFilter !== "all") {
-        query = query.eq("difficulty", parseInt(difficultyFilter));
-      }
-
-      if (typeFilter && typeFilter !== "all") {
-        query = query.eq("question_type", typeFilter);
-      }
-
-      const from = (currentPage - 1) * ITEMS_PER_PAGE;
-      const to = from + ITEMS_PER_PAGE - 1;
-
-      const { data, error, count } = await query.range(from, to);
-
-      if (error) throw error;
-
-      return {
-        questions: data,
-        total: count || 0,
-      };
-    },
-  });
+  const { subjects, topics, questionsData, isLoading } = useQuestions(
+    search,
+    subjectFilter,
+    topicFilter,
+    difficultyFilter,
+    typeFilter,
+    currentPage,
+    ITEMS_PER_PAGE
+  );
 
   const handleDelete = async () => {
     if (!questionToDelete) return;
@@ -145,18 +68,12 @@ const Questions = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Questions</h1>
-        <Button
-          onClick={() => {
-            setSelectedQuestion(null);
-            setDialogOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Question
-        </Button>
-      </div>
+      <QuestionHeader
+        onAddClick={() => {
+          setSelectedQuestion(null);
+          setDialogOpen(true);
+        }}
+      />
 
       <QuestionFilters
         search={search}
@@ -201,21 +118,11 @@ const Questions = () => {
         }}
       />
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              question.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteQuestionDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 };
