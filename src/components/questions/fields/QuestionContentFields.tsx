@@ -3,10 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { QuestionFormData } from "@/types/question";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { ImageUploadField } from "./ImageUploadField";
 
 type QuestionContentFieldsProps = {
   form: UseFormReturn<QuestionFormData>;
@@ -14,43 +11,6 @@ type QuestionContentFieldsProps = {
 
 export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
   const questionType = form.watch("question_type");
-  const { toast } = useToast();
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, fieldName: "image_url" | "explanation_image_url") => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const filePath = `${crypto.randomUUID()}.${fileExt}`;
-
-      const { error: uploadError, data } = await supabase.storage
-        .from('question_images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('question_images')
-        .getPublicUrl(filePath);
-
-      form.setValue(fieldName, publicUrl);
-      toast({
-        title: "Image uploaded successfully",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error uploading image",
-        description: error.message,
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
 
   return (
     <>
@@ -71,52 +31,50 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
       )}
 
       {questionType === "comparison" && (
-        <>
-          <div className="space-y-4">
-            <div className="border rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr>
-                    <th className="border-b p-2 text-center w-1/2">A</th>
-                    <th className="border-b p-2 text-center w-1/2">B</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="border-r p-4">
-                      <FormField
-                        control={form.control}
-                        name="comparison_value1"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input {...field} placeholder="First Value" className="text-center" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                    <td className="p-4">
-                      <FormField
-                        control={form.control}
-                        name="comparison_value2"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input {...field} placeholder="Second Value" className="text-center" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+        <div className="space-y-4">
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="border-b p-2 text-center w-1/2">A</th>
+                  <th className="border-b p-2 text-center w-1/2">B</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border-r p-4">
+                    <FormField
+                      control={form.control}
+                      name="comparison_value1"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="First Value" className="text-center" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </td>
+                  <td className="p-4">
+                    <FormField
+                      control={form.control}
+                      name="comparison_value2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input {...field} placeholder="Second Value" className="text-center" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        </>
+        </div>
       )}
 
       <FormField
@@ -138,68 +96,15 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
 
       {(questionType === "normal" || questionType === "analogy") && (
         <>
-          <FormField
-            control={form.control}
-            name="image_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Question Image (Optional)</FormLabel>
-                <FormControl>
-                  <div className="space-y-2">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, "image_url")}
-                      disabled={isUploading}
-                    />
-                    {isUploading && (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Uploading...</span>
-                      </div>
-                    )}
-                    {field.value && (
-                      <div className="mt-2">
-                        <img src={field.value} alt="Question" className="max-w-xs rounded-md" />
-                      </div>
-                    )}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          <ImageUploadField
+            form={form}
+            fieldName="image_url"
+            label="Question Image (Optional)"
           />
-
-          <FormField
-            control={form.control}
-            name="explanation_image_url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Explanation Image (Optional)</FormLabel>
-                <FormControl>
-                  <div className="space-y-2">
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, "explanation_image_url")}
-                      disabled={isUploading}
-                    />
-                    {isUploading && (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Uploading...</span>
-                      </div>
-                    )}
-                    {field.value && (
-                      <div className="mt-2">
-                        <img src={field.value} alt="Explanation" className="max-w-xs rounded-md" />
-                      </div>
-                    )}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+          <ImageUploadField
+            form={form}
+            fieldName="explanation_image_url"
+            label="Explanation Image (Optional)"
           />
         </>
       )}
