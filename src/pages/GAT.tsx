@@ -4,13 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { Brain } from "lucide-react";
 
 const GAT = () => {
-  const navigate = useNavigate();
-  
   const { data: testType, isError: isTestTypeError, isLoading: isTestTypeLoading } = useQuery({
     queryKey: ["testType", "GAT"],
     queryFn: async () => {
@@ -82,10 +77,6 @@ const GAT = () => {
     };
   };
 
-  const handleStartPractice = () => {
-    navigate("/practice/setup");
-  };
-
   if (isTestTypeLoading || isSubjectsLoading || isProgressLoading) {
     return (
       <div className="min-h-screen bg-white p-8">
@@ -140,17 +131,6 @@ const GAT = () => {
           subjects={subjects || []} 
           calculateTopicProgress={calculateTopicProgress} 
         />
-
-        <div className="flex justify-center">
-          <Button 
-            size="lg" 
-            onClick={handleStartPractice}
-            className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-          >
-            <Brain className="mr-2 h-5 w-5" />
-            Start Practice Mode
-          </Button>
-        </div>
 
         <LearningSection />
       </div>
