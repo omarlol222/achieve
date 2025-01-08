@@ -3,6 +3,16 @@ import { Card } from "@/components/ui/card";
 import { BarChart, Users, BookOpen, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
+type ChangeType = "positive" | "negative" | "neutral";
+
+type Stat = {
+  name: string;
+  value: string;
+  icon: React.ComponentType<{ className?: string }>;
+  change: string;
+  changeType: ChangeType;
+};
+
 const Dashboard = () => {
   const { data: usersCount } = useQuery({
     queryKey: ["users-count"],
@@ -55,34 +65,34 @@ const Dashboard = () => {
     },
   });
 
-  const stats = [
+  const stats: Stat[] = [
     {
       name: "Total Users",
       value: usersCount?.toString() || "0",
       icon: Users,
       change: "+0%",
-      changeType: "positive" as const,
+      changeType: "positive",
     },
     {
       name: "Active Questions",
       value: questionsCount?.toString() || "0",
       icon: BookOpen,
       change: "+0%",
-      changeType: "positive" as const,
+      changeType: "positive",
     },
     {
       name: "Total Revenue",
       value: `SAR ${totalRevenue?.toFixed(2) || "0"}`,
       icon: CreditCard,
       change: "+0%",
-      changeType: "positive" as const,
+      changeType: "positive",
     },
     {
       name: "Avg. Score",
       value: `${averageScore || 0}%`,
       icon: BarChart,
       change: "0%",
-      changeType: "neutral" as const,
+      changeType: "neutral",
     },
   ];
 
