@@ -11,20 +11,26 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        console.log('Initial session check - user found:', session.user);
+        navigate("/admin");
+      }
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event, session);
         
-        if (event === "SIGNED_IN") {
-          if (session?.user) {
-            console.log('User signed in successfully:', session.user);
-            navigate("/admin");
-          } else {
-            console.error('Sign in failed: No user in session');
-            setError("Sign in failed. Please try again.");
-          }
+        if (event === "SIGNED_IN" && session?.user) {
+          console.log('User signed in successfully:', session.user);
+          navigate("/admin");
         }
 
         if (event === "SIGNED_OUT") {
@@ -34,12 +40,6 @@ const Index = () => {
       }
     );
 
-    // Log the current URL and auth configuration
-    console.log('Current URL:', window.location.origin);
-    console.log('Auth configuration:', {
-      redirectTo: window.location.origin,
-    });
-    
     return () => subscription.unsubscribe();
   }, [navigate]);
 
@@ -61,6 +61,14 @@ const Index = () => {
     }
     return error.message;
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
