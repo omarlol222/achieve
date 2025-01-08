@@ -72,11 +72,17 @@ const GAT = () => {
     queryKey: ["userProgress"],
     enabled: !!subjects,
     queryFn: async () => {
+      // Get the current user's ID
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const { data: progress, error } = await supabase
         .from("user_progress")
-        .select("*");
+        .select("*")
+        .eq("user_id", user.id);
+      
       if (error) throw error;
-      return progress;
+      return progress || [];
     },
   });
 
@@ -84,11 +90,15 @@ const GAT = () => {
   const calculateTopicProgress = (topicId: string) => {
     const progress = userProgress?.find(p => p.topic_id === topicId);
     if (!progress) return { percentage: 0, questionsCorrect: 0 };
+    
+    const questionsCorrect = progress.questions_correct || 0;
+    const questionsAttempted = progress.questions_attempted || 0;
+    
     return {
-      percentage: progress.questions_attempted > 0
-        ? (progress.questions_correct / progress.questions_attempted) * 100
+      percentage: questionsAttempted > 0
+        ? (questionsCorrect / questionsAttempted) * 100
         : 0,
-      questionsCorrect: progress.questions_correct || 0
+      questionsCorrect
     };
   };
 
