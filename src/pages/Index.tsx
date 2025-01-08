@@ -17,26 +17,16 @@ const Index = () => {
       async (event, session) => {
         console.log('Auth state changed:', event, session);
         
-        if (event === "SIGNED_IN" && session?.user) {
-          console.log('User signed in successfully:', session.user);
-          navigate("/admin");
-        }
-
-        // Handle auth errors
-        if (event === "USER_UPDATED") {
-          const { error } = await supabase.auth.getSession();
-          if (error) {
-            console.error('Auth error:', error);
-            const message = getErrorMessage(error);
-            setError(message);
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: message,
-            });
+        if (event === "SIGNED_IN") {
+          if (session?.user) {
+            console.log('User signed in successfully:', session.user);
+            navigate("/admin");
+          } else {
+            console.error('Sign in failed: No user in session');
+            setError("Sign in failed. Please try again.");
           }
         }
-        
+
         if (event === "SIGNED_OUT") {
           console.log('User signed out');
           setError(null);
@@ -51,7 +41,7 @@ const Index = () => {
     });
     
     return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  }, [navigate]);
 
   const getErrorMessage = (error: AuthError) => {
     console.log('Auth Error:', error);
