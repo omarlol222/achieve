@@ -1,163 +1,91 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Brain } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useState } from "react";
 
 const PracticeSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [difficulty, setDifficulty] = useState<string>("all");
-  const [questionCount, setQuestionCount] = useState<number>(10);
+  const [selectedOption, setSelectedOption] = useState<string>("option1");
 
-  const { data: subjects } = useQuery({
-    queryKey: ["subjects"],
+  // Check session and handle authentication
+  const { data: session, error: sessionError } = useQuery({
+    queryKey: ["session"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("*")
-        .order("name");
+      const { data: { session }, error } = await supabase.auth.getSession();
       if (error) throw error;
-      return data;
+      return session;
     },
   });
 
-  const { data: topics } = useQuery({
-    queryKey: ["topics", selectedSubject],
-    enabled: !!selectedSubject,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("topics")
-        .select("*")
-        .eq("subject_id", selectedSubject)
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const handleStartPractice = () => {
-    if (!selectedTopics.length) {
+  useEffect(() => {
+    if (sessionError) {
       toast({
         variant: "destructive",
-        title: "Please select at least one topic",
+        title: "Authentication Error",
+        description: "Please sign in to continue.",
       });
-      return;
+      navigate("/signin");
     }
+  }, [sessionError, navigate, toast]);
 
-    navigate("/practice/test", {
-      state: {
-        subjectId: selectedSubject,
-        topicIds: selectedTopics,
-        difficulty,
-        questionCount,
-      },
-    });
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!session) {
+      navigate("/signin");
+    }
+  }, [session, navigate]);
+
+  const handleStartPractice = () => {
+    navigate(`/practice/${selectedOption}`);
   };
 
   return (
-    <div className="min-h-screen bg-white p-8">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="flex items-center justify-center gap-3">
-          <Brain className="h-8 w-8 text-[#1B2B2B]" />
-          <h1 className="text-3xl font-bold text-center text-[#1B2B2B]">
-            Practice Mode Setup
-          </h1>
-        </div>
+    <div className="container mx-auto px-4 py-8">
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Practice Setup</CardTitle>
+          <CardDescription>Choose your practice mode</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <RadioGroup
+              value={selectedOption}
+              onValueChange={setSelectedOption}
+              className="space-y-4"
+            >
+              <div>
+                <RadioGroupItem value="option1" id="option1" />
+                <Label htmlFor="option1" className="ml-2">
+                  Option 1
+                </Label>
+              </div>
+              <div>
+                <RadioGroupItem value="option2" id="option2" />
+                <Label htmlFor="option2" className="ml-2">
+                  Option 2
+                </Label>
+              </div>
+              <div>
+                <RadioGroupItem value="option3" id="option3" />
+                <Label htmlFor="option3" className="ml-2">
+                  Option 3
+                </Label>
+              </div>
+            </RadioGroup>
 
-        <Card className="p-6 space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Subject</Label>
-              <Select
-                value={selectedSubject}
-                onValueChange={(value) => {
-                  setSelectedSubject(value);
-                  setSelectedTopics([]);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects?.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Topics</Label>
-              <Select
-                value={selectedTopics[0]}
-                onValueChange={(value) => setSelectedTopics([value])}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select topics" />
-                </SelectTrigger>
-                <SelectContent>
-                  {topics?.map((topic) => (
-                    <SelectItem key={topic.id} value={topic.id}>
-                      {topic.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Difficulty</Label>
-              <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="Easy">Easy</SelectItem>
-                  <SelectItem value="Moderate">Moderate</SelectItem>
-                  <SelectItem value="Hard">Hard</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Number of Questions</Label>
-              <Input
-                type="number"
-                min="1"
-                max="50"
-                value={questionCount}
-                onChange={(e) => setQuestionCount(Number(e.target.value))}
-              />
-            </div>
+            <Button onClick={handleStartPractice} className="w-full">
+              Start Practice
+            </Button>
           </div>
-
-          <Button
-            className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-            size="lg"
-            onClick={handleStartPractice}
-          >
-            Start Practice
-          </Button>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
