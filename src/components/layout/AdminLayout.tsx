@@ -22,7 +22,6 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check if user is authenticated and has admin role
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
@@ -100,52 +99,50 @@ const AdminLayout = () => {
     <div className="min-h-screen bg-background">
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <div className="mr-4 flex items-center gap-6">
-            {/* Mobile Menu */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-                >
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Toggle Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="pr-0">
-                <div className="px-7">
-                  <Link to="/" className="flex items-center mb-4">
-                    <img
-                      src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
-                      alt="Achieve"
-                      className="h-12"
-                    />
-                  </Link>
-                  <nav className="flex flex-col gap-2">
-                    {menuItems.map((item) => (
-                      <NavLink key={item.path} item={item} />
-                    ))}
-                  </nav>
-                </div>
-              </SheetContent>
-            </Sheet>
-
-            <Link to="/">
-              <img
-                src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
-                alt="Achieve"
-                className="h-12"
-              />
-            </Link>
-          </div>
+        <div className="container flex h-24 items-center justify-between">
+          <Link to="/">
+            <img
+              src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
+              alt="Achieve"
+              className="h-24"
+            />
+          </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mx-6">
+          <nav className="hidden md:flex items-center space-x-8 text-lg font-medium">
             {menuItems.map((item) => (
               <NavLink key={item.path} item={item} />
             ))}
           </nav>
+
+          {/* Mobile Menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                className="px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+              >
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="pr-0">
+              <div className="px-7">
+                <Link to="/" className="flex items-center mb-4">
+                  <img
+                    src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
+                    alt="Achieve"
+                    className="h-24"
+                  />
+                </Link>
+                <nav className="flex flex-col gap-2">
+                  {menuItems.map((item) => (
+                    <NavLink key={item.path} item={item} />
+                  ))}
+                </nav>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </header>
 
