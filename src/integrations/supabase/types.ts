@@ -50,6 +50,7 @@ export type Database = {
           created_at: string
           id: string
           module_id: string | null
+          percentage: number
           question_count: number
           topic_id: string | null
         }
@@ -57,6 +58,7 @@ export type Database = {
           created_at?: string
           id?: string
           module_id?: string | null
+          percentage?: number
           question_count?: number
           topic_id?: string | null
         }
@@ -64,6 +66,7 @@ export type Database = {
           created_at?: string
           id?: string
           module_id?: string | null
+          percentage?: number
           question_count?: number
           topic_id?: string | null
         }
@@ -233,6 +236,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          subject_id: string | null
           test_template_id: string | null
           time_limit: number
           updated_at: string
@@ -242,6 +246,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          subject_id?: string | null
           test_template_id?: string | null
           time_limit: number
           updated_at?: string
@@ -251,11 +256,19 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          subject_id?: string | null
           test_template_id?: string | null
           time_limit?: number
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "test_modules_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "test_modules_test_template_id_fkey"
             columns: ["test_template_id"]

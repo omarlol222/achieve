@@ -20,20 +20,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const Tests = () => {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
-  const [newTest, setNewTest] = useState({
+  const [newModule, setNewModule] = useState({
     name: "",
     description: "",
-    total_time: 0,
+    time_limit: 0,
+    subject_id: "",
+    test_template_id: "",
   });
 
   // Fetch test templates
-  const { data: tests, refetch } = useQuery({
+  const { data: testTemplates } = useQuery({
     queryKey: ["test-templates"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -46,14 +49,48 @@ const Tests = () => {
     },
   });
 
-  // Create new test template
-  const handleCreateTest = async () => {
+  // Fetch subjects
+  const { data: subjects } = useQuery({
+    queryKey: ["subjects"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subjects")
+        .select("*")
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch test modules with subject information
+  const { data: modules, refetch } = useQuery({
+    queryKey: ["test-modules"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("test_modules")
+        .select(`
+          *,
+          subjects (name),
+          test_templates (name)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Create new test module
+  const handleCreateModule = async () => {
     try {
-      const { error } = await supabase.from("test_templates").insert([
+      const { error } = await supabase.from("test_modules").insert([
         {
-          name: newTest.name,
-          description: newTest.description,
-          total_time: newTest.total_time,
+          name: newModule.name,
+          description: newModule.description,
+          time_limit: newModule.time_limit,
+          subject_id: newModule.subject_id,
+          test_template_id: newModule.test_template_id,
         },
       ]);
 
@@ -61,17 +98,23 @@ const Tests = () => {
 
       toast({
         title: "Success",
-        description: "Test template created successfully",
+        description: "Test module created successfully",
       });
 
       setIsOpen(false);
-      setNewTest({ name: "", description: "", total_time: 0 });
+      setNewModule({
+        name: "",
+        description: "",
+        time_limit: 0,
+        subject_id: "",
+        test_template_id: "",
+      });
       refetch();
     } catch (error) {
-      console.error("Error creating test:", error);
+      console.error("Error creating module:", error);
       toast({
         title: "Error",
-        description: "Failed to create test template",
+        description: "Failed to create test module",
         variant: "destructive",
       });
     }
@@ -80,54 +123,101 @@ const Tests = () => {
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Test Management</h1>
+        <h1 className="text-2xl font-bold">Test Module Management</h1>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Test
+              New Module
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Create New Test Template</DialogTitle>
+              <DialogTitle>Create New Test Module</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Input
                   id="name"
-                  value={newTest.name}
+                  value={newModule.name}
                   onChange={(e) =>
-                    setNewTest({ ...newTest, name: e.target.value })
+                    setNewModule({ ...newModule, name: e.target.value })
                   }
                 />
               </div>
-              <div>
+              
+              <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  value={newTest.description}
+                  value={newModule.description}
                   onChange={(e) =>
-                    setNewTest({ ...newTest, description: e.target.value })
+                    setNewModule({ ...newModule, description: e.target.value })
                   }
                 />
               </div>
-              <div>
-                <Label htmlFor="time">Total Time (minutes)</Label>
+
+              <div className="space-y-2">
+                <Label htmlFor="template">Test Template</Label>
+                <Select
+                  value={newModule.test_template_id}
+                  onValueChange={(value) =>
+                    setNewModule({ ...newModule, test_template_id: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {testTemplates?.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subject">Subject</Label>
+                <Select
+                  value={newModule.subject_id}
+                  onValueChange={(value) =>
+                    setNewModule({ ...newModule, subject_id: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects?.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="time">Time Limit (minutes)</Label>
                 <Input
                   id="time"
                   type="number"
-                  value={newTest.total_time}
+                  value={newModule.time_limit}
                   onChange={(e) =>
-                    setNewTest({
-                      ...newTest,
-                      total_time: parseInt(e.target.value) || 0,
+                    setNewModule({
+                      ...newModule,
+                      time_limit: parseInt(e.target.value) || 0,
                     })
                   }
                 />
               </div>
-              <Button onClick={handleCreateTest}>Create Test</Button>
+
+              <Button onClick={handleCreateModule} className="w-full">
+                Create Module
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -138,18 +228,22 @@ const Tests = () => {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
-            <TableHead>Total Time (min)</TableHead>
+            <TableHead>Subject</TableHead>
+            <TableHead>Template</TableHead>
+            <TableHead>Time Limit (min)</TableHead>
             <TableHead>Created At</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tests?.map((test) => (
-            <TableRow key={test.id}>
-              <TableCell>{test.name}</TableCell>
-              <TableCell>{test.description}</TableCell>
-              <TableCell>{test.total_time}</TableCell>
+          {modules?.map((module) => (
+            <TableRow key={module.id}>
+              <TableCell>{module.name}</TableCell>
+              <TableCell>{module.description}</TableCell>
+              <TableCell>{module.subjects?.name}</TableCell>
+              <TableCell>{module.test_templates?.name}</TableCell>
+              <TableCell>{module.time_limit}</TableCell>
               <TableCell>
-                {new Date(test.created_at).toLocaleDateString()}
+                {new Date(module.created_at).toLocaleDateString()}
               </TableCell>
             </TableRow>
           ))}
