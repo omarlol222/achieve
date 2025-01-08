@@ -402,6 +402,47 @@ export type Database = {
           },
         ]
       }
+      user_progress: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_activity: string | null
+          questions_attempted: number | null
+          questions_correct: number | null
+          topic_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          questions_attempted?: number | null
+          questions_correct?: number | null
+          topic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_activity?: string | null
+          questions_attempted?: number | null
+          questions_correct?: number | null
+          topic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
-import { BarChart, Users, BookOpen, CreditCard } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { BarChart, Users, BookOpen, CreditCard, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type ChangeType = "positive" | "negative" | "neutral";
@@ -11,6 +12,20 @@ type Stat = {
   icon: React.ComponentType<{ className?: string }>;
   change: string;
   changeType: ChangeType;
+};
+
+type UserProgress = {
+  user: {
+    full_name: string;
+  };
+  topic: {
+    name: string;
+    subject: {
+      name: string;
+    };
+  };
+  questions_attempted: number;
+  questions_correct: number;
 };
 
 const Dashboard = () => {
@@ -96,6 +111,27 @@ const Dashboard = () => {
     },
   ];
 
+  const { data: userProgress, isLoading: isLoadingProgress } = useQuery({
+    queryKey: ["user-progress"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_progress")
+        .select(`
+          questions_attempted,
+          questions_correct,
+          user:profiles(full_name),
+          topic:topics(
+            name,
+            subject:subjects(name)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as UserProgress[];
+    },
+  });
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
@@ -134,12 +170,50 @@ const Dashboard = () => {
         ))}
       </div>
 
+      {/* User Progress Section */}
+      <Card className="mt-8 p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <TrendingUp className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold text-gray-900">User Progress</h2>
+        </div>
+        
+        {isLoadingProgress ? (
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {userProgress?.map((progress, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-medium">{progress.user.full_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {progress.topic.subject.name} - {progress.topic.name}
+                    </p>
+                  </div>
+                  <p className="text-sm font-medium">
+                    {progress.questions_correct} / {progress.questions_attempted}
+                  </p>
+                </div>
+                <Progress 
+                  value={progress.questions_attempted > 0 
+                    ? (progress.questions_correct / progress.questions_attempted) * 100 
+                    : 0
+                  } 
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Keep existing activity and performance cards */}
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
           <div className="mt-4">
             <div className="space-y-4">
-              {/* We'll implement the activity feed in the next iteration */}
               <p className="text-sm text-gray-600">No recent activity</p>
             </div>
           </div>
@@ -149,7 +223,6 @@ const Dashboard = () => {
             Performance Overview
           </h2>
           <div className="mt-4">
-            {/* We'll implement the performance chart in the next iteration */}
             <p className="text-sm text-gray-600">No data available</p>
           </div>
         </Card>
