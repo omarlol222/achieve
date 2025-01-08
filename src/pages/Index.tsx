@@ -21,6 +21,21 @@ const Index = () => {
           console.log('User signed in successfully:', session.user);
           navigate("/admin");
         }
+
+        // Handle auth errors
+        if (event === "USER_UPDATED") {
+          const { error } = await supabase.auth.getSession();
+          if (error) {
+            console.error('Auth error:', error);
+            const message = getErrorMessage(error);
+            setError(message);
+            toast({
+              variant: "destructive",
+              title: "Authentication Error",
+              description: message,
+            });
+          }
+        }
         
         if (event === "SIGNED_OUT") {
           console.log('User signed out');
@@ -36,7 +51,7 @@ const Index = () => {
     });
     
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const getErrorMessage = (error: AuthError) => {
     console.log('Auth Error:', error);
@@ -91,15 +106,6 @@ const Index = () => {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
-          onError={(error) => {
-            const message = getErrorMessage(error);
-            setError(message);
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: message,
-            });
-          }}
         />
       </div>
     </div>
