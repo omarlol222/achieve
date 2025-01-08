@@ -81,9 +81,9 @@ const AdminLayout = () => {
 
   return (
     <div className="flex h-screen">
-      <Sidebar>
+      <Sidebar variant="sidebar" collapsible="icon">
         <SidebarHeader className="border-b">
-          <h2 className="px-6 text-lg font-semibold">Admin Panel</h2>
+          <h2 className="px-6 text-lg font-semibold tracking-tight">Admin Panel</h2>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
@@ -95,10 +95,11 @@ const AdminLayout = () => {
                     <SidebarMenuButton
                       asChild
                       isActive={location.pathname === item.path}
+                      tooltip={item.label}
                     >
-                      <Link to={item.path} className="w-full">
-                        <item.icon className="mr-2" />
-                        {item.label}
+                      <Link to={item.path} className="flex items-center gap-2">
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span>{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
