@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -52,7 +52,7 @@ export function QuestionDialog({
   });
 
   // Reset form when initialData changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialData) {
       form.reset({
         question_text: initialData.question_text || "",
