@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,34 +12,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QuestionDialog } from "@/components/questions/QuestionDialog";
+import { QuestionFilters } from "@/components/questions/QuestionFilters";
+import { QuestionList } from "@/components/questions/QuestionList";
+import { QuestionPagination } from "@/components/questions/QuestionPagination";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -47,8 +26,8 @@ const Questions = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [topicFilter, setTopicFilter] = useState<string>("");
-  const [difficultyFilter, setDifficultyFilter] = useState<string>("");
+  const [topicFilter, setTopicFilter] = useState<string>("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -92,7 +71,6 @@ const Questions = () => {
         query = query.eq("difficulty", parseInt(difficultyFilter));
       }
 
-      // Calculate offset based on current page
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
@@ -141,159 +119,45 @@ const Questions = () => {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Questions</h1>
-        <Button onClick={() => {
-          setSelectedQuestion(null);
-          setDialogOpen(true);
-        }}>
+        <Button
+          onClick={() => {
+            setSelectedQuestion(null);
+            setDialogOpen(true);
+          }}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Question
         </Button>
       </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
-        <div className="flex gap-2">
-          <Input
-            placeholder="Search questions..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full"
-          />
-        </div>
+      <QuestionFilters
+        search={search}
+        setSearch={setSearch}
+        topicFilter={topicFilter}
+        setTopicFilter={setTopicFilter}
+        difficultyFilter={difficultyFilter}
+        setDifficultyFilter={setDifficultyFilter}
+        topics={topics || []}
+      />
 
-        <Select value={topicFilter} onValueChange={setTopicFilter}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by topic" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All Topics</SelectItem>
-            {topics?.map((topic) => (
-              <SelectItem key={topic.id} value={topic.id}>
-                {topic.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <QuestionList
+        questions={questionsData?.questions || []}
+        isLoading={isLoading}
+        onEdit={(question) => {
+          setSelectedQuestion(question);
+          setDialogOpen(true);
+        }}
+        onDelete={(question) => {
+          setQuestionToDelete(question);
+          setDeleteDialogOpen(true);
+        }}
+      />
 
-        <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filter by difficulty" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All Levels</SelectItem>
-            {[1, 2, 3, 4, 5].map((level) => (
-              <SelectItem key={level} value={String(level)}>
-                Level {level}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="bg-white rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Question</TableHead>
-              <TableHead>Topic</TableHead>
-              <TableHead>Difficulty</TableHead>
-              <TableHead className="w-24">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
-                  Loading questions...
-                </TableCell>
-              </TableRow>
-            ) : questionsData?.questions.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={4}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  No questions found. Add your first question to get started.
-                </TableCell>
-              </TableRow>
-            ) : (
-              questionsData?.questions.map((question) => (
-                <TableRow key={question.id}>
-                  <TableCell className="font-medium">
-                    {question.question_text}
-                  </TableCell>
-                  <TableCell>{question.topic?.name || "Uncategorized"}</TableCell>
-                  <TableCell>Level {question.difficulty || "N/A"}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedQuestion(question);
-                          setDialogOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setQuestionToDelete(question);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {totalPages > 1 && (
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage > 1) setCurrentPage(currentPage - 1);
-                  }}
-                />
-              </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setCurrentPage(page);
-                    }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-                  }}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+      <QuestionPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       <QuestionDialog
         open={dialogOpen}
