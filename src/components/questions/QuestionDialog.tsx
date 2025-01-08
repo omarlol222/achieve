@@ -99,7 +99,6 @@ export function QuestionDialog({
       const questionData = {
         ...data,
         correct_answer: parseInt(data.correct_answer),
-        difficulty: parseInt(data.difficulty),
       };
 
       if (initialData?.id) {

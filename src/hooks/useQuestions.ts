@@ -69,7 +69,7 @@ const fetchQuestions = async (
   }
 
   if (difficultyFilter && difficultyFilter !== "all") {
-    query = query.eq("difficulty", parseInt(difficultyFilter));
+    query = query.eq("difficulty", difficultyFilter);
   }
 
   if (typeFilter && typeFilter !== "all") {
