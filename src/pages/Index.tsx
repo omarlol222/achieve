@@ -4,12 +4,9 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { AuthError, AuthApiError } from "@supabase/supabase-js";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -28,6 +25,7 @@ const Index = () => {
 
           if (profile?.role === "admin") {
             navigate("/admin");
+            return;
           } else {
             setError("Access denied. Admin privileges required.");
           }
@@ -55,6 +53,7 @@ const Index = () => {
 
           if (profile?.role === "admin") {
             navigate("/admin");
+            return;
           } else {
             setError("Access denied. Admin privileges required.");
           }
@@ -68,24 +67,6 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
-
-  const getErrorMessage = (error: AuthError) => {
-    if (error instanceof AuthApiError) {
-      switch (error.status) {
-        case 400:
-          return 'Invalid email or password. Please check your credentials and try again.';
-        case 422:
-          return 'Invalid login credentials. Please check your email and password.';
-        case 401:
-          return 'Please verify your email address before signing in.';
-        case 404:
-          return 'No user found with these credentials.';
-        default:
-          return error.message;
-      }
-    }
-    return error.message;
-  };
 
   if (isLoading) {
     return (
