@@ -33,7 +33,7 @@ const Shop = () => {
       <nav className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="text-2xl font-bold">
-            <img src="/lovable-uploads/1846549e-af07-434b-bee7-b5cb99f68fa9.png" alt="Achieve" className="h-8" />
+            <img src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png" alt="Achieve" className="h-8" />
           </Link>
           <div className="flex items-center gap-8">
             <Link to="/about" className="hover:underline">ABOUT</Link>
