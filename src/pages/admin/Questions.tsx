@@ -23,17 +23,19 @@ const Questions = () => {
   const [topicFilter, setTopicFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [testTypeFilter, setTestTypeFilter] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [questionToDelete, setQuestionToDelete] = useState<any>(null);
 
-  const { subjects, topics, questionsData, isLoading } = useQuestions(
+  const { subjects, topics, questionsData, isLoading, testTypes } = useQuestions(
     search,
     subjectFilter,
     topicFilter,
     difficultyFilter,
     typeFilter,
+    testTypeFilter,
     currentPage,
     ITEMS_PER_PAGE
   );
@@ -95,8 +97,11 @@ const Questions = () => {
             setDifficultyFilter={setDifficultyFilter}
             typeFilter={typeFilter}
             setTypeFilter={setTypeFilter}
+            testTypeFilter={testTypeFilter}
+            setTestTypeFilter={setTestTypeFilter}
             subjects={subjects || []}
             topics={topics || []}
+            testTypes={testTypes || []}
           />
 
           <QuestionList

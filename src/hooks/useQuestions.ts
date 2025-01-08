@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useQuestions(
@@ -7,6 +7,7 @@ export function useQuestions(
   topicFilter: string,
   difficultyFilter: string,
   typeFilter: string,
+  testTypeFilter: string,
   currentPage: number,
   itemsPerPage: number
 ) {
@@ -34,8 +35,20 @@ export function useQuestions(
     },
   });
 
+  const { data: testTypes } = useQuery({
+    queryKey: ["testTypes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("test_types")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: questionsData, isLoading } = useQuery({
-    queryKey: ["questions", search, subjectFilter, topicFilter, difficultyFilter, typeFilter, currentPage],
+    queryKey: ["questions", search, subjectFilter, topicFilter, difficultyFilter, typeFilter, testTypeFilter, currentPage],
     queryFn: async () => {
       let query = supabase
         .from("questions")
@@ -74,6 +87,10 @@ export function useQuestions(
         query = query.eq("question_type", typeFilter);
       }
 
+      if (testTypeFilter && testTypeFilter !== "all") {
+        query = query.eq("test_type_id", testTypeFilter);
+      }
+
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
 
@@ -91,6 +108,7 @@ export function useQuestions(
   return {
     subjects,
     topics,
+    testTypes,
     questionsData,
     isLoading,
   };
