@@ -1,17 +1,20 @@
-import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { BarChart, Users, BookOpen, CreditCard, TrendingUp } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-type ChangeType = "positive" | "negative" | "neutral";
+import {
+  BarChart,
+  BookOpen,
+  CreditCard,
+  Users,
+} from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 type Stat = {
   name: string;
   value: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: any;
   change: string;
-  changeType: ChangeType;
+  changeType: "positive" | "negative" | "neutral";
 };
 
 type UserProgress = {
@@ -147,74 +150,89 @@ const Dashboard = () => {
   ];
 
   return (
-    <div>
+    <div className="container mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
       </div>
 
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.name} className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <stat.icon className="h-6 w-6 text-primary" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {stat.value}
+                </p>
+              </div>
+              <div
+                className={`rounded-full p-3 ${
+                  stat.changeType === "positive"
+                    ? "bg-green-100"
+                    : stat.changeType === "negative"
+                    ? "bg-red-100"
+                    : "bg-gray-100"
+                }`}
+              >
+                <stat.icon className="h-5 w-5 text-gray-600" />
               </div>
             </div>
             <div className="mt-4">
-              <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-              <p className="mt-2 text-3xl font-semibold text-gray-900">
-                {stat.value}
-              </p>
-              <p className="mt-2 text-sm text-gray-600">
-                <span
-                  className={`${
-                    stat.changeType === "positive"
-                      ? "text-green-600"
-                      : stat.changeType === "negative"
-                      ? "text-red-600"
-                      : "text-gray-600"
-                  }`}
-                >
-                  {stat.change}
-                </span>{" "}
-                vs last month
-              </p>
+              <span
+                className={`text-sm ${
+                  stat.changeType === "positive"
+                    ? "text-green-600"
+                    : stat.changeType === "negative"
+                    ? "text-red-600"
+                    : "text-gray-600"
+                }`}
+              >
+                {stat.change} from last month
+              </span>
             </div>
           </Card>
         ))}
       </div>
 
-      {/* User Progress Section */}
+      {/* User Progress */}
       <Card className="mt-8 p-6">
-        <div className="flex items-center gap-2 mb-6">
-          <TrendingUp className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold text-gray-900">User Progress</h2>
-        </div>
-        
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          User Progress
+        </h2>
         {isLoadingProgress ? (
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+          <div className="animate-pulse space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-16 bg-gray-100 rounded" />
+            ))}
           </div>
         ) : (
           <div className="space-y-6">
-            {userProgress?.map((progress, index) => (
-              <div key={index} className="space-y-2">
+            {userProgress?.map((progress, idx) => (
+              <div key={idx} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-medium">{progress.user.full_name}</p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="font-medium text-gray-900">
+                      {progress.user.full_name}
+                    </p>
+                    <p className="text-sm text-gray-600">
                       {progress.topic.subject.name} - {progress.topic.name}
                     </p>
                   </div>
-                  <p className="text-sm font-medium">
-                    {progress.questions_correct} / {progress.questions_attempted}
+                  <p className="text-sm font-medium text-gray-900">
+                    {Math.round(
+                      (progress.questions_correct / progress.questions_attempted) *
+                        100
+                    )}
+                    %
                   </p>
                 </div>
-                <Progress 
-                  value={progress.questions_attempted > 0 
-                    ? (progress.questions_correct / progress.questions_attempted) * 100 
-                    : 0
-                  } 
+                <Progress
+                  value={
+                    (progress.questions_correct / progress.questions_attempted) *
+                    100
+                  }
+                  className="h-2"
                 />
               </div>
             ))}
@@ -226,19 +244,13 @@ const Dashboard = () => {
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-          <div className="mt-4">
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600">No recent activity</p>
-            </div>
-          </div>
+          {/* Activity content */}
         </Card>
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-gray-900">
             Performance Overview
           </h2>
-          <div className="mt-4">
-            <p className="text-sm text-gray-600">No data available</p>
-          </div>
+          {/* Performance content */}
         </Card>
       </div>
     </div>

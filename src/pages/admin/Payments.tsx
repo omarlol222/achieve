@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 
 const Payments = () => {
   return (
-    <div>
+    <div className="container mx-auto">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
       </div>
