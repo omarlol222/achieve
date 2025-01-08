@@ -10,4 +10,5 @@ export type QuestionFormData = {
   explanation?: string;
   question_type: string;
   passage_text?: string;
+  test_type_id: string;
 };

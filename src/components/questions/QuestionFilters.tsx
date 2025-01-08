@@ -18,8 +18,11 @@ type QuestionFiltersProps = {
   setDifficultyFilter: (value: string) => void;
   typeFilter: string;
   setTypeFilter: (value: string) => void;
+  testTypeFilter: string;
+  setTestTypeFilter: (value: string) => void;
   subjects: any[];
   topics: any[];
+  testTypes: any[];
 };
 
 export function QuestionFilters({
@@ -33,15 +36,18 @@ export function QuestionFilters({
   setDifficultyFilter,
   typeFilter,
   setTypeFilter,
+  testTypeFilter,
+  setTestTypeFilter,
   subjects,
   topics,
+  testTypes,
 }: QuestionFiltersProps) {
   const filteredTopics = topics?.filter(
     (topic) => !subjectFilter || subjectFilter === "all" || topic.subject_id === subjectFilter
   );
 
   return (
-    <div className="mb-6 grid gap-4 md:grid-cols-5">
+    <div className="mb-6 grid gap-4 md:grid-cols-6">
       <div className="md:col-span-2">
         <Input
           placeholder="Search questions..."
@@ -51,9 +57,23 @@ export function QuestionFilters({
         />
       </div>
 
+      <Select value={testTypeFilter} onValueChange={setTestTypeFilter}>
+        <SelectTrigger>
+          <SelectValue placeholder="Filter by test type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Test Types</SelectItem>
+          {testTypes?.map((type) => (
+            <SelectItem key={type.id} value={type.id}>
+              {type.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
       <Select value={subjectFilter} onValueChange={(value) => {
         setSubjectFilter(value);
-        setTopicFilter("all"); // Reset topic when subject changes
+        setTopicFilter("all");
       }}>
         <SelectTrigger>
           <SelectValue placeholder="Filter by subject" />

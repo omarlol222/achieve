@@ -37,6 +37,7 @@ export function QuestionDialog({
           correct_answer: String(initialData.correct_answer),
           difficulty: String(initialData.difficulty),
           question_type: initialData.question_type || "normal",
+          test_type_id: initialData.test_type_id || "",
         }
       : {
           question_text: "",
@@ -50,6 +51,7 @@ export function QuestionDialog({
           explanation: "",
           question_type: "normal",
           passage_text: "",
+          test_type_id: "",
         },
   });
 
@@ -71,6 +73,18 @@ export function QuestionDialog({
       const { data, error } = await supabase
         .from("topics")
         .select("*, subject:subjects(name)")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: testTypes } = useQuery({
+    queryKey: ["testTypes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("test_types")
+        .select("*")
         .order("name");
       if (error) throw error;
       return data;
@@ -130,6 +144,7 @@ export function QuestionDialog({
               form={form} 
               topics={topics || []} 
               subjects={subjects || []}
+              testTypes={testTypes || []}
             />
 
             <div className="flex justify-end gap-2">
