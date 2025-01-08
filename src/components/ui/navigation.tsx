@@ -66,7 +66,7 @@ export const Navigation = () => {
             </Link>
           ) : (
             <>
-              {hasPurchased && (
+              {session && hasPurchased && (
                 <Link to="/gat" className="hover:text-primary mr-4">
                   Dashboard
                 </Link>
@@ -87,7 +87,7 @@ export const Navigation = () => {
                   <DropdownMenuItem onClick={() => navigate("/faq")}>
                     FAQ
                   </DropdownMenuItem>
-                  {hasPurchased && (
+                  {session && hasPurchased && (
                     <DropdownMenuItem onClick={() => navigate("/gat")}>
                       Dashboard
                     </DropdownMenuItem>
