@@ -1,17 +1,18 @@
-import { Card } from "@/components/ui/card";
 import { TopicProgress } from "./TopicProgress";
 
-type Subject = {
-  id: string;
-  name: string;
-  topics: Array<{
+export type ProgressSectionProps = {
+  subjects: {
     id: string;
     name: string;
-  }>;
-};
-
-type ProgressSectionProps = {
-  subjects: Subject[];
+    topics: {
+      id: string;
+      name: string;
+      progress: {
+        questions_attempted: number;
+        questions_correct: number;
+      };
+    }[];
+  }[];
   calculateTopicProgress: (topicId: string) => {
     percentage: number;
     questionsCorrect: number;
@@ -25,7 +26,7 @@ export const ProgressSection = ({ subjects, calculateTopicProgress, onPracticeCl
       Progress
       <button
         onClick={onPracticeClick}
-        className="px-4 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md"
+        className="bg-[#1A2B2B] text-white px-8 py-3 rounded-lg hover:bg-[#1A2B2B]/90 transition-colors"
       >
         Practice
       </button>
@@ -33,35 +34,21 @@ export const ProgressSection = ({ subjects, calculateTopicProgress, onPracticeCl
     <div className="grid md:grid-cols-2 gap-8">
       {subjects && subjects.length > 0 ? (
         subjects.map((subject) => (
-          <Card key={subject.id} className="p-6 space-y-4">
-            <h3 className="text-xl font-semibold text-center">
-              {subject.name}
-            </h3>
-            <div className="space-y-4">
-              {subject.topics && subject.topics.length > 0 ? (
-                subject.topics.map((topic) => {
-                  const progress = calculateTopicProgress(topic.id);
-                  return (
-                    <TopicProgress
-                      key={topic.id}
-                      name={topic.name}
-                      value={progress.percentage}
-                      questionsCorrect={progress.questionsCorrect}
-                    />
-                  );
-                })
-              ) : (
-                <p className="text-center text-muted-foreground">No topics available for this subject</p>
-              )}
+          <div key={subject.id} className="space-y-4">
+            <h3 className="text-xl font-semibold">{subject.name}</h3>
+            <div className="space-y-3">
+              {subject.topics.map((topic) => (
+                <TopicProgress
+                  key={topic.id}
+                  name={topic.name}
+                  progress={calculateTopicProgress(topic.id)}
+                />
+              ))}
             </div>
-          </Card>
+          </div>
         ))
       ) : (
-        <div className="col-span-2">
-          <Card className="p-6">
-            <p className="text-center text-muted-foreground">No subjects available</p>
-          </Card>
-        </div>
+        <p className="text-muted-foreground">No subjects available.</p>
       )}
     </div>
   </section>
