@@ -16,11 +16,20 @@ type ProgressSectionProps = {
     percentage: number;
     questionsCorrect: number;
   };
+  onPracticeClick: () => void;
 };
 
-export const ProgressSection = ({ subjects, calculateTopicProgress }: ProgressSectionProps) => (
+export const ProgressSection = ({ subjects, calculateTopicProgress, onPracticeClick }: ProgressSectionProps) => (
   <section className="space-y-6">
-    <h2 className="text-2xl font-bold text-[#1B2B2B]">Progress</h2>
+    <h2 className="text-2xl font-bold text-[#1B2B2B] flex justify-between items-center">
+      Progress
+      <button
+        onClick={onPracticeClick}
+        className="px-4 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 rounded-md"
+      >
+        Practice
+      </button>
+    </h2>
     <div className="grid md:grid-cols-2 gap-8">
       {subjects && subjects.length > 0 ? (
         subjects.map((subject) => (
