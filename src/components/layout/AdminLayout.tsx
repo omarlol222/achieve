@@ -2,23 +2,21 @@ import { useEffect } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  Sidebar, 
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-} from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import { 
   LayoutDashboard, 
   Users, 
   HelpCircle,
-  CreditCard 
+  CreditCard,
+  Menu,
+  X
 } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -79,37 +77,67 @@ const AdminLayout = () => {
     { path: "/admin/payments", icon: CreditCard, label: "Payments" },
   ];
 
+  const NavLink = ({ item }: { item: typeof menuItems[0] }) => {
+    const isActive = location.pathname === item.path;
+    return (
+      <Link
+        to={item.path}
+        className={cn(
+          "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors",
+          isActive
+            ? "text-primary bg-primary/10 rounded-md"
+            : "text-muted-foreground hover:text-primary"
+        )}
+      >
+        <item.icon className="h-4 w-4" />
+        <span>{item.label}</span>
+      </Link>
+    );
+  };
+
   return (
-    <div className="flex h-screen">
-      <Sidebar variant="sidebar" collapsible="icon">
-        <SidebarHeader className="border-b">
-          <h2 className="px-6 text-lg font-semibold tracking-tight">Admin Panel</h2>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {menuItems.map((item) => (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname === item.path}
-                      tooltip={item.label}
-                    >
-                      <Link to={item.path} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4 shrink-0" />
-                        <span>{item.label}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-      <main className="flex-1 overflow-y-auto p-8">
+    <div className="min-h-screen bg-background">
+      {/* Top Navigation Bar */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-14 items-center">
+          <div className="mr-4 hidden md:flex">
+            <h2 className="text-lg font-semibold">Admin Panel</h2>
+          </div>
+
+          {/* Mobile Menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                className="mr-2 px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 md:hidden"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle Menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="pr-0">
+              <div className="px-7">
+                <h2 className="text-lg font-semibold mb-4">Admin Panel</h2>
+                <nav className="flex flex-col gap-2">
+                  {menuItems.map((item) => (
+                    <NavLink key={item.path} item={item} />
+                  ))}
+                </nav>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mx-6">
+            {menuItems.map((item) => (
+              <NavLink key={item.path} item={item} />
+            ))}
+          </nav>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container py-8">
         <Outlet />
       </main>
     </div>
