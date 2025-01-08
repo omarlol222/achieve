@@ -20,13 +20,12 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
     // Calculate new values
     const totalQuestions = existingProgress.questions_attempted + 1;
     const correctQuestions = existingProgress.questions_correct + (isCorrect ? 1 : 0);
-    const percentage = (correctQuestions / totalQuestions) * 100;
     
-    // Calculate points adjustment
-    let pointsAdjustment = isCorrect ? 50 : -30;
+    // Calculate points adjustment - decrease for incorrect, increase for correct
+    const pointsAdjustment = isCorrect ? 50 : -30;
     
     // Calculate new points value, ensuring it stays within 0-1000 range
-    const newPoints = Math.min(1000, Math.max(0, existingProgress.points + pointsAdjustment));
+    const newPoints = Math.max(0, Math.min(1000, existingProgress.points + pointsAdjustment));
 
     // Update existing progress
     const { error: updateError } = await supabase
