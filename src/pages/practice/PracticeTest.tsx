@@ -35,7 +35,6 @@ const PracticeTest = () => {
   const { data: questions } = useQuery({
     queryKey: ["practice-questions", topicIds, difficulty],
     queryFn: async () => {
-      // First, get all questions that match our criteria
       let query = supabase
         .from("questions")
         .select("*")
@@ -48,7 +47,6 @@ const PracticeTest = () => {
       const { data: allQuestions, error } = await query;
       if (error) throw error;
 
-      // Group questions by topic
       const questionsByTopic = allQuestions.reduce((acc: { [key: string]: Question[] }, question) => {
         if (!acc[question.topic_id]) {
           acc[question.topic_id] = [];
@@ -57,17 +55,13 @@ const PracticeTest = () => {
         return acc;
       }, {});
 
-      // Select 2 random questions from each topic
       const selectedQuestions: Question[] = [];
       Object.values(questionsByTopic).forEach(topicQuestions => {
-        // Shuffle the questions
         const shuffled = [...topicQuestions].sort(() => Math.random() - 0.5);
-        // Take the first 2 questions (or all if less than 2)
         const selected = shuffled.slice(0, 2);
         selectedQuestions.push(...selected);
       });
 
-      // Shuffle the final array of questions
       return selectedQuestions.sort(() => Math.random() - 0.5);
     },
   });
@@ -91,33 +85,55 @@ const PracticeTest = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { data: existingProgress } = await supabase
+      // First, check if there's existing progress for this topic
+      const { data: existingProgress, error: progressError } = await supabase
         .from("user_progress")
         .select("*")
         .eq("user_id", user.id)
         .eq("topic_id", currentQuestion.topic_id)
         .single();
 
+      if (progressError && progressError.code !== 'PGRST116') {
+        throw progressError;
+      }
+
+      const now = new Date().toISOString();
+
       if (existingProgress) {
-        await supabase
+        // Update existing progress
+        const { error: updateError } = await supabase
           .from("user_progress")
           .update({
             questions_attempted: existingProgress.questions_attempted + 1,
             questions_correct: existingProgress.questions_correct + (isCorrect ? 1 : 0),
-            last_activity: new Date().toISOString(),
+            last_activity: now,
+            updated_at: now
           })
           .eq("id", existingProgress.id);
+
+        if (updateError) throw updateError;
       } else {
-        await supabase
+        // Create new progress entry
+        const { error: insertError } = await supabase
           .from("user_progress")
           .insert({
             user_id: user.id,
             topic_id: currentQuestion.topic_id,
             questions_attempted: 1,
             questions_correct: isCorrect ? 1 : 0,
+            last_activity: now,
+            created_at: now,
+            updated_at: now
           });
+
+        if (insertError) throw insertError;
       }
+
+      // Log success or error
+      console.log(`Progress ${existingProgress ? 'updated' : 'created'} for topic ${currentQuestion.topic_id}`);
+
     } catch (error: any) {
+      console.error("Error updating progress:", error);
       toast({
         variant: "destructive",
         title: "Error updating progress",
