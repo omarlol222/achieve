@@ -33,15 +33,20 @@ export const Navigation = () => {
     <nav className="border-b border-gray-200">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
+          {/* Logo */}
           <Link to="/" className="flex-shrink-0">
             <img src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png" alt="Achieve" className="h-8" />
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          {/* Desktop Navigation - Centered */}
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
             <Link to="/about" className="text-[#1B2E35] hover:text-gray-600">ABOUT</Link>
             <Link to="/shop" className="text-[#1B2E35] hover:text-gray-600">SHOP</Link>
             <Link to="/faq" className="text-[#1B2E35] hover:text-gray-600">FAQ</Link>
+          </div>
+
+          {/* Sign In/Out Button */}
+          <div className="hidden md:block">
             {!isAuthenticated ? (
               <Link to="/signin" className="border border-black px-6 py-2">SIGN IN</Link>
             ) : (
