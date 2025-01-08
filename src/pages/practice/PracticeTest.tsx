@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { QuestionContent } from "@/components/practice/QuestionContent";
+import { handleQuestionProgress } from "./utils/progressUtils";
 
 type Question = {
   id: string;
@@ -82,56 +83,7 @@ const PracticeTest = () => {
     }));
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      // First, check if there's existing progress for this topic
-      const { data: existingProgress, error: progressError } = await supabase
-        .from("user_progress")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("topic_id", currentQuestion.topic_id)
-        .single();
-
-      if (progressError && progressError.code !== 'PGRST116') {
-        throw progressError;
-      }
-
-      const now = new Date().toISOString();
-
-      if (existingProgress) {
-        // Update existing progress
-        const { error: updateError } = await supabase
-          .from("user_progress")
-          .update({
-            questions_attempted: existingProgress.questions_attempted + 1,
-            questions_correct: existingProgress.questions_correct + (isCorrect ? 1 : 0),
-            last_activity: now,
-            updated_at: now
-          })
-          .eq("id", existingProgress.id);
-
-        if (updateError) throw updateError;
-      } else {
-        // Create new progress entry
-        const { error: insertError } = await supabase
-          .from("user_progress")
-          .insert({
-            user_id: user.id,
-            topic_id: currentQuestion.topic_id,
-            questions_attempted: 1,
-            questions_correct: isCorrect ? 1 : 0,
-            last_activity: now,
-            created_at: now,
-            updated_at: now
-          });
-
-        if (insertError) throw insertError;
-      }
-
-      // Log success or error
-      console.log(`Progress ${existingProgress ? 'updated' : 'created'} for topic ${currentQuestion.topic_id}`);
-
+      await handleQuestionProgress(currentQuestion.topic_id, isCorrect);
     } catch (error: any) {
       console.error("Error updating progress:", error);
       toast({
