@@ -1,85 +1,52 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, BookOpen, CreditCard } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Sidebar } from "@/components/ui/sidebar";
 
 const AdminLayout = () => {
-  const location = useLocation();
+  const navigate = useNavigate();
 
-  const navigation = [
-    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { name: "Questions", href: "/admin/questions", icon: BookOpen },
-    { name: "Users", href: "/admin/users", icon: Users },
-    { name: "Payments", href: "/admin/payments", icon: CreditCard },
-  ];
+  // Check if user is authenticated and has admin role
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
 
-  const getCurrentTab = () => {
-    return location.pathname.split("/")[2] || "";
-  };
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+      if (!profile || profile.role !== "admin") throw new Error("Not authorized");
+
+      return profile;
+    },
+  });
+
+  useEffect(() => {
+    if (!isLoading && !profile) {
+      navigate("/");
+    }
+  }, [isLoading, profile, navigate]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!profile) {
+    return null;
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <div className="hidden md:flex md:w-64 md:flex-col">
-          <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white border-r">
-            <div className="px-4">
-              <h1 className="text-2xl font-bold text-primary">AchievePrep</h1>
-            </div>
-            <div className="mt-8 flex-grow">
-              <nav className="px-2 space-y-1">
-                {navigation.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
-                        isActive
-                          ? "bg-primary text-white"
-                          : "text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      <item.icon
-                        className={`mr-3 h-5 w-5 ${
-                          isActive ? "text-white" : "text-gray-400"
-                        }`}
-                      />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-          </div>
-        </div>
-
-        {/* Main content */}
-        <div className="flex flex-col flex-1">
-          {/* Mobile tabs navigation */}
-          <div className="md:hidden p-4 bg-white border-b">
-            <Tabs value={getCurrentTab()} className="w-full">
-              <TabsList className="w-full">
-                {navigation.map((item) => (
-                  <TabsTrigger
-                    key={item.name}
-                    value={item.href.split("/")[2] || ""}
-                    className="flex-1"
-                    asChild
-                  >
-                    <Link to={item.href}>
-                      <item.icon className="h-4 w-4 mr-2" />
-                      {item.name}
-                    </Link>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-          </div>
-          <main className="flex-1 p-6">
-            <Outlet />
-          </main>
-        </div>
-      </div>
+    <div className="flex h-screen">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto p-8">
+        <Outlet />
+      </main>
     </div>
   );
 };
