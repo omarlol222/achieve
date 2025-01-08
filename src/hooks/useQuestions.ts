@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+type Difficulty = "Easy" | "Moderate" | "Hard";
+
 const fetchSubjects = async () => {
   const { data, error } = await supabase
     .from("subjects")
@@ -69,7 +71,11 @@ const fetchQuestions = async (
   }
 
   if (difficultyFilter && difficultyFilter !== "all") {
-    query = query.eq("difficulty", difficultyFilter);
+    // Ensure difficultyFilter is one of the valid values
+    const validDifficulty = ["Easy", "Moderate", "Hard"].includes(difficultyFilter) 
+      ? (difficultyFilter as Difficulty) 
+      : "Easy";
+    query = query.eq("difficulty", validDifficulty);
   }
 
   if (typeFilter && typeFilter !== "all") {
