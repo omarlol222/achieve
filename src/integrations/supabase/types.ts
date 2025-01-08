@@ -9,6 +9,81 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      module_questions: {
+        Row: {
+          created_at: string
+          id: string
+          module_id: string | null
+          question_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module_id?: string | null
+          question_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module_id?: string | null
+          question_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_questions_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "test_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      module_topics: {
+        Row: {
+          created_at: string
+          id: string
+          module_id: string | null
+          question_count: number
+          topic_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          module_id?: string | null
+          question_count?: number
+          topic_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          module_id?: string | null
+          question_count?: number
+          topic_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_topics_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "test_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_topics_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -152,6 +227,44 @@ export type Database = {
         }
         Relationships: []
       }
+      test_modules: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          test_template_id: string | null
+          time_limit: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          test_template_id?: string | null
+          time_limit: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          test_template_id?: string | null
+          time_limit?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_modules_test_template_id_fkey"
+            columns: ["test_template_id"]
+            isOneToOne: false
+            referencedRelation: "test_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test_question_results: {
         Row: {
           created_at: string
@@ -224,6 +337,33 @@ export type Database = {
           total_questions?: number
           total_score?: number
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      test_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          total_time: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          total_time: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          total_time?: number
+          updated_at?: string
         }
         Relationships: []
       }

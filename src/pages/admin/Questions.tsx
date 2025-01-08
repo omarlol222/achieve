@@ -8,7 +8,9 @@ import { QuestionList } from "@/components/questions/QuestionList";
 import { QuestionPagination } from "@/components/questions/QuestionPagination";
 import { DeleteQuestionDialog } from "@/components/questions/DeleteQuestionDialog";
 import { QuestionHeader } from "@/components/questions/QuestionHeader";
+import { SubjectManager } from "@/components/subjects/SubjectManager";
 import { useQuestions } from "@/hooks/useQuestions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -68,46 +70,59 @@ const Questions = () => {
 
   return (
     <div>
-      <QuestionHeader
-        onAddClick={() => {
-          setSelectedQuestion(null);
-          setDialogOpen(true);
-        }}
-      />
+      <Tabs defaultValue="questions">
+        <TabsList>
+          <TabsTrigger value="questions">Questions</TabsTrigger>
+          <TabsTrigger value="subjects">Subjects & Topics</TabsTrigger>
+        </TabsList>
 
-      <QuestionFilters
-        search={search}
-        setSearch={setSearch}
-        subjectFilter={subjectFilter}
-        setSubjectFilter={setSubjectFilter}
-        topicFilter={topicFilter}
-        setTopicFilter={setTopicFilter}
-        difficultyFilter={difficultyFilter}
-        setDifficultyFilter={setDifficultyFilter}
-        typeFilter={typeFilter}
-        setTypeFilter={setTypeFilter}
-        subjects={subjects || []}
-        topics={topics || []}
-      />
+        <TabsContent value="questions" className="mt-6">
+          <QuestionHeader
+            onAddClick={() => {
+              setSelectedQuestion(null);
+              setDialogOpen(true);
+            }}
+          />
 
-      <QuestionList
-        questions={questionsData?.questions || []}
-        isLoading={isLoading}
-        onEdit={(question) => {
-          setSelectedQuestion(question);
-          setDialogOpen(true);
-        }}
-        onDelete={(question) => {
-          setQuestionToDelete(question);
-          setDeleteDialogOpen(true);
-        }}
-      />
+          <QuestionFilters
+            search={search}
+            setSearch={setSearch}
+            subjectFilter={subjectFilter}
+            setSubjectFilter={setSubjectFilter}
+            topicFilter={topicFilter}
+            setTopicFilter={setTopicFilter}
+            difficultyFilter={difficultyFilter}
+            setDifficultyFilter={setDifficultyFilter}
+            typeFilter={typeFilter}
+            setTypeFilter={setTypeFilter}
+            subjects={subjects || []}
+            topics={topics || []}
+          />
 
-      <QuestionPagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
+          <QuestionList
+            questions={questionsData?.questions || []}
+            isLoading={isLoading}
+            onEdit={(question) => {
+              setSelectedQuestion(question);
+              setDialogOpen(true);
+            }}
+            onDelete={(question) => {
+              setQuestionToDelete(question);
+              setDeleteDialogOpen(true);
+            }}
+          />
+
+          <QuestionPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </TabsContent>
+
+        <TabsContent value="subjects" className="mt-6">
+          <SubjectManager />
+        </TabsContent>
+      </Tabs>
 
       <QuestionDialog
         open={dialogOpen}
