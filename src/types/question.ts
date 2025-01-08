@@ -5,10 +5,12 @@ export type QuestionFormData = {
   choice3: string;
   choice4: string;
   correct_answer: string;
-  difficulty: string;
+  difficulty: 'Easy' | 'Moderate' | 'Hard';
   topic_id: string;
   explanation?: string;
   question_type: string;
   passage_text?: string;
   test_type_id: string;
+  image_url?: string;
+  explanation_image_url?: string;
 };

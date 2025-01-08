@@ -35,7 +35,7 @@ export function QuestionDialog({
       ? {
           ...initialData,
           correct_answer: String(initialData.correct_answer),
-          difficulty: String(initialData.difficulty),
+          difficulty: initialData.difficulty || "Easy",
           question_type: initialData.question_type || "normal",
           test_type_id: initialData.test_type_id || "",
         }
@@ -46,12 +46,14 @@ export function QuestionDialog({
           choice3: "",
           choice4: "",
           correct_answer: "1",
-          difficulty: "1",
+          difficulty: "Easy",
           topic_id: "",
           explanation: "",
           question_type: "normal",
           passage_text: "",
           test_type_id: "",
+          image_url: "",
+          explanation_image_url: "",
         },
   });
 

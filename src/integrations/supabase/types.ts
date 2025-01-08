@@ -152,8 +152,9 @@ export type Database = {
           choice4: string
           correct_answer: number
           created_at: string
-          difficulty: number | null
+          difficulty: Database["public"]["Enums"]["question_difficulty"] | null
           explanation: string | null
+          explanation_image_url: string | null
           id: string
           image_url: string | null
           passage_text: string | null
@@ -170,8 +171,9 @@ export type Database = {
           choice4: string
           correct_answer: number
           created_at?: string
-          difficulty?: number | null
+          difficulty?: Database["public"]["Enums"]["question_difficulty"] | null
           explanation?: string | null
+          explanation_image_url?: string | null
           id?: string
           image_url?: string | null
           passage_text?: string | null
@@ -188,8 +190,9 @@ export type Database = {
           choice4?: string
           correct_answer?: number
           created_at?: string
-          difficulty?: number | null
+          difficulty?: Database["public"]["Enums"]["question_difficulty"] | null
           explanation?: string | null
+          explanation_image_url?: string | null
           id?: string
           image_url?: string | null
           passage_text?: string | null
@@ -529,7 +532,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      question_difficulty: "Easy" | "Moderate" | "Hard"
     }
     CompositeTypes: {
       [_ in never]: never

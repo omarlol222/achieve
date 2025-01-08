@@ -37,6 +37,20 @@ export function QuestionList({
     );
   };
 
+  const getDifficultyBadge = (difficulty: string) => {
+    const colors = {
+      Easy: "bg-green-100 text-green-800",
+      Moderate: "bg-yellow-100 text-yellow-800",
+      Hard: "bg-red-100 text-red-800",
+    };
+    
+    return (
+      <Badge variant="secondary" className={colors[difficulty as keyof typeof colors]}>
+        {difficulty}
+      </Badge>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg border">
       <Table>
@@ -71,11 +85,18 @@ export function QuestionList({
               <TableRow key={question.id}>
                 <TableCell className="font-medium">
                   {question.question_text}
+                  {question.image_url && (
+                    <img 
+                      src={question.image_url} 
+                      alt="Question" 
+                      className="mt-2 max-w-xs rounded-md"
+                    />
+                  )}
                 </TableCell>
                 <TableCell>{question.topic?.subject?.name || "Uncategorized"}</TableCell>
                 <TableCell>{question.topic?.name || "Uncategorized"}</TableCell>
                 <TableCell>{getQuestionTypeBadge(question.question_type)}</TableCell>
-                <TableCell>Level {question.difficulty || "N/A"}</TableCell>
+                <TableCell>{getDifficultyBadge(question.difficulty || "Easy")}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
                     <Button
