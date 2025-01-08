@@ -30,12 +30,12 @@ const LearningCard = ({
 const GAT = () => {
   // First, fetch the GAT test type ID
   const { data: testType } = useQuery({
-    queryKey: ["testType", "GAT"],
+    queryKey: ["testType", "Achieve"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("test_types")
         .select("id")
-        .eq("name", "GAT")
+        .eq("name", "Achieve")
         .single();
       if (error) throw error;
       return data;
@@ -125,7 +125,7 @@ const GAT = () => {
           <div className="grid md:grid-cols-3 gap-8">
             <LearningCard title="Course" icon={BookOpen} />
             <LearningCard title="Practice" icon={PenTool} />
-            <LearningCard title="GAT Simulator" icon={MonitorPlay} />
+            <LearningCard title="Achieve Simulator" icon={MonitorPlay} />
           </div>
         </section>
       </div>
