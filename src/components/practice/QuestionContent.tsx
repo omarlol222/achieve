@@ -13,6 +13,7 @@ type Question = {
   question_type: string;
   comparison_value1?: string;
   comparison_value2?: string;
+  image_url?: string;
 };
 
 interface QuestionContentProps {
@@ -59,35 +60,48 @@ export const QuestionContent = ({
 
   return (
     <Card className="p-6 space-y-6">
-      {renderQuestionText()}
+      <div className="flex gap-6">
+        <div className="flex-1">
+          {renderQuestionText()}
 
-      <div className="space-y-4">
-        {[1, 2, 3, 4].map((choice) => (
-          <Button
-            key={choice}
-            variant={selectedAnswer === choice ? "default" : "outline"}
-            className={`w-full justify-start h-auto p-4 ${
-              showFeedback
-                ? choice === question.correct_answer
-                  ? "bg-green-100 hover:bg-green-100"
-                  : choice === selectedAnswer
-                  ? "bg-red-100 hover:bg-red-100"
-                  : ""
-                : ""
-            }`}
-            onClick={() => onAnswerSelect(choice)}
-          >
-            {question[`choice${choice}` as keyof Question]}
-            {showFeedback && choice === question.correct_answer && (
-              <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
-            )}
-            {showFeedback &&
-              choice === selectedAnswer &&
-              choice !== question.correct_answer && (
-                <XCircle className="ml-2 h-4 w-4 text-red-500" />
-              )}
-          </Button>
-        ))}
+          <div className="space-y-4 mt-6">
+            {[1, 2, 3, 4].map((choice) => (
+              <Button
+                key={choice}
+                variant={selectedAnswer === choice ? "default" : "outline"}
+                className={`w-full justify-start h-auto p-4 ${
+                  showFeedback
+                    ? choice === question.correct_answer
+                      ? "bg-green-100 hover:bg-green-100"
+                      : choice === selectedAnswer
+                      ? "bg-red-100 hover:bg-red-100"
+                      : ""
+                    : ""
+                }`}
+                onClick={() => onAnswerSelect(choice)}
+              >
+                {question[`choice${choice}` as keyof Question]}
+                {showFeedback && choice === question.correct_answer && (
+                  <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
+                )}
+                {showFeedback &&
+                  choice === selectedAnswer &&
+                  choice !== question.correct_answer && (
+                    <XCircle className="ml-2 h-4 w-4 text-red-500" />
+                  )}
+              </Button>
+            ))}
+          </div>
+        </div>
+        {question.image_url && (
+          <div className="flex-1">
+            <img
+              src={question.image_url}
+              alt="Question illustration"
+              className="rounded-lg w-full h-auto object-contain"
+            />
+          </div>
+        )}
       </div>
     </Card>
   );
