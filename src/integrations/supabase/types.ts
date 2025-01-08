@@ -494,6 +494,7 @@ export type Database = {
           created_at: string | null
           id: string
           last_activity: string | null
+          points: number
           questions_attempted: number | null
           questions_correct: number | null
           topic_id: string | null
@@ -504,6 +505,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_activity?: string | null
+          points?: number
           questions_attempted?: number | null
           questions_correct?: number | null
           topic_id?: string | null
@@ -514,6 +516,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_activity?: string | null
+          points?: number
           questions_attempted?: number | null
           questions_correct?: number | null
           topic_id?: string | null

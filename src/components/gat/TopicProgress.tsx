@@ -17,9 +17,9 @@ export const TopicProgress = ({
     <div className="flex justify-between items-center">
       <div className="text-sm font-medium">{name}</div>
       <div className="text-sm text-muted-foreground">
-        {questionsCorrect}/{questionsAttempted}
+        {value}/1000 points
       </div>
     </div>
-    <Progress value={value} className="h-2" />
+    <Progress value={(value / 1000) * 100} className="h-2" />
   </div>
 );
