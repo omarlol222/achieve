@@ -10,6 +10,7 @@ export type ProgressSectionProps = {
       progress: {
         questions_attempted: number;
         questions_correct: number;
+        points: number;
       };
     }[];
   }[];
@@ -17,6 +18,7 @@ export type ProgressSectionProps = {
     percentage: number;
     questionsCorrect: number;
     questionsAttempted: number;
+    points: number;
   };
 };
 
@@ -35,7 +37,7 @@ export const ProgressSection = ({ subjects, calculateTopicProgress }: ProgressSe
                   <TopicProgress
                     key={topic.id}
                     name={topic.name}
-                    value={progress.percentage}
+                    value={progress.points}
                     questionsCorrect={progress.questionsCorrect}
                     questionsAttempted={progress.questionsAttempted}
                   />
