@@ -30,24 +30,45 @@ const PracticeTest = () => {
   const [answers, setAnswers] = useState<{ [key: string]: number }>({});
   const [showFeedback, setShowFeedback] = useState(false);
 
-  const { subjectId, topicIds, difficulty, questionCount } = location.state || {};
+  const { subjectId, topicIds, difficulty } = location.state || {};
 
   const { data: questions } = useQuery({
-    queryKey: ["practice-questions", topicIds, difficulty, questionCount],
+    queryKey: ["practice-questions", topicIds, difficulty],
     queryFn: async () => {
+      // First, get all questions that match our criteria
       let query = supabase
         .from("questions")
         .select("*")
-        .in("topic_id", topicIds)
-        .limit(questionCount);
+        .in("topic_id", topicIds);
 
       if (difficulty !== "all") {
         query = query.eq("difficulty", difficulty);
       }
 
-      const { data, error } = await query;
+      const { data: allQuestions, error } = await query;
       if (error) throw error;
-      return data.sort(() => Math.random() - 0.5);
+
+      // Group questions by topic
+      const questionsByTopic = allQuestions.reduce((acc: { [key: string]: Question[] }, question) => {
+        if (!acc[question.topic_id]) {
+          acc[question.topic_id] = [];
+        }
+        acc[question.topic_id].push(question);
+        return acc;
+      }, {});
+
+      // Select 2 random questions from each topic
+      const selectedQuestions: Question[] = [];
+      Object.values(questionsByTopic).forEach(topicQuestions => {
+        // Shuffle the questions
+        const shuffled = [...topicQuestions].sort(() => Math.random() - 0.5);
+        // Take the first 2 questions (or all if less than 2)
+        const selected = shuffled.slice(0, 2);
+        selectedQuestions.push(...selected);
+      });
+
+      // Shuffle the final array of questions
+      return selectedQuestions.sort(() => Math.random() - 0.5);
     },
   });
 
