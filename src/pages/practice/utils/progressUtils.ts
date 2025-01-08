@@ -10,11 +10,9 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
     .select("*")
     .eq("user_id", user.id)
     .eq("topic_id", topicId)
-    .single();
+    .maybeSingle();
 
-  if (progressError && progressError.code !== 'PGRST116') {
-    throw progressError;
-  }
+  if (progressError) throw progressError;
 
   const now = new Date().toISOString();
 
@@ -43,8 +41,7 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
         questions_attempted: totalQuestions,
         questions_correct: correctQuestions,
         points: newPoints,
-        last_activity: now,
-        updated_at: now
+        last_activity: now
       })
       .eq("id", existingProgress.id);
 
@@ -61,9 +58,7 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
         questions_attempted: 1,
         questions_correct: isCorrect ? 1 : 0,
         points: initialPoints,
-        last_activity: now,
-        created_at: now,
-        updated_at: now
+        last_activity: now
       });
 
     if (insertError) throw insertError;

@@ -21,5 +21,8 @@ export const TopicProgress = ({
       </div>
     </div>
     <Progress value={(value / 1000) * 100} className="h-2" />
+    <div className="text-xs text-muted-foreground">
+      {questionsCorrect} correct out of {questionsAttempted} attempted
+    </div>
   </div>
 );
