@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { BookOpen, PenTool, MonitorPlay } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const TopicProgress = ({ name, value, questionsCorrect }: { name: string; value: number; questionsCorrect: number }) => (
   <div className="space-y-2">
@@ -28,22 +29,24 @@ const LearningCard = ({
 );
 
 const GAT = () => {
-  // First, fetch the GAT test type ID
-  const { data: testType } = useQuery({
+  // First, fetch the Achieve test type ID
+  const { data: testType, isError: isTestTypeError } = useQuery({
     queryKey: ["testType", "Achieve"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("test_types")
         .select("id")
         .eq("name", "Achieve")
-        .single();
+        .maybeSingle();
+      
       if (error) throw error;
+      if (!data) throw new Error("Test type 'Achieve' not found");
       return data;
     },
   });
 
-  // Then fetch subjects for GAT
-  const { data: subjects } = useQuery({
+  // Then fetch subjects for Achieve
+  const { data: subjects, isError: isSubjectsError } = useQuery({
     queryKey: ["subjects", testType?.id],
     enabled: !!testType?.id,
     queryFn: async () => {
@@ -86,6 +89,30 @@ const GAT = () => {
       questionsCorrect: progress.questions_correct || 0
     };
   };
+
+  if (isTestTypeError) {
+    return (
+      <div className="min-h-screen bg-white p-8">
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertDescription>
+            Unable to load test type 'Achieve'. Please make sure it exists in the database.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (isSubjectsError) {
+    return (
+      <div className="min-h-screen bg-white p-8">
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertDescription>
+            Unable to load subjects. Please try again later.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white p-8">
