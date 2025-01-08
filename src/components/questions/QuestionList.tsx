@@ -28,6 +28,7 @@ export function QuestionList({
       normal: "bg-blue-100 text-blue-800",
       passage: "bg-purple-100 text-purple-800",
       analogy: "bg-green-100 text-green-800",
+      comparison: "bg-orange-100 text-orange-800",
     };
     
     return (
@@ -85,6 +86,12 @@ export function QuestionList({
               <TableRow key={question.id}>
                 <TableCell className="font-medium">
                   {question.question_text}
+                  {question.question_type === 'comparison' && (
+                    <div className="mt-2 text-sm text-gray-500">
+                      <div>Value 1: {question.comparison_value1}</div>
+                      <div>Value 2: {question.comparison_value2}</div>
+                    </div>
+                  )}
                   {question.image_url && (
                     <img 
                       src={question.image_url} 

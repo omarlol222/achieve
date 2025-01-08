@@ -3,7 +3,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import { QuestionFormData } from "@/types/question";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,14 +16,12 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
   const questionType = form.watch("question_type");
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
-  const [isUploadingExplanation, setIsUploadingExplanation] = useState(false);
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, field: "image_url" | "explanation_image_url") => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const isUploading = field === "image_url" ? setIsUploading : setIsUploadingExplanation;
-    isUploading(true);
+    setIsUploading(true);
 
     try {
       const fileExt = file.name.split('.').pop();
@@ -40,7 +37,7 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
         .from('question_images')
         .getPublicUrl(filePath);
 
-      form.setValue(field, publicUrl);
+      form.setValue("image_url", publicUrl);
       toast({
         title: "Image uploaded successfully",
       });
@@ -51,7 +48,7 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
         description: error.message,
       });
     } finally {
-      isUploading(false);
+      setIsUploading(false);
     }
   };
 
@@ -71,6 +68,37 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
             </FormItem>
           )}
         />
+      )}
+
+      {questionType === "comparison" && (
+        <>
+          <FormField
+            control={form.control}
+            name="comparison_value1"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Value</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="comparison_value2"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Second Value</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
       )}
 
       <FormField
@@ -99,7 +127,7 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
                   <Input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleImageUpload(e, "image_url")}
+                    onChange={handleImageUpload}
                     disabled={isUploading}
                   />
                   {isUploading && (

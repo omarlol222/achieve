@@ -1,4 +1,4 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { QuestionFormData } from "@/types/question";
@@ -15,7 +15,7 @@ export function QuestionTypeField({ form }: QuestionTypeFieldProps) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Question Type</FormLabel>
-          <Select onValueChange={field.onChange} value={field.value}>
+          <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Select question type" />
@@ -25,9 +25,9 @@ export function QuestionTypeField({ form }: QuestionTypeFieldProps) {
               <SelectItem value="normal">Normal Question</SelectItem>
               <SelectItem value="passage">Passage-Based Question</SelectItem>
               <SelectItem value="analogy">Analogy Question</SelectItem>
+              <SelectItem value="comparison">Comparison Question</SelectItem>
             </SelectContent>
           </Select>
-          <FormMessage />
         </FormItem>
       )}
     />

@@ -150,6 +150,8 @@ export type Database = {
           choice2: string
           choice3: string
           choice4: string
+          comparison_value1: string | null
+          comparison_value2: string | null
           correct_answer: number
           created_at: string
           difficulty: Database["public"]["Enums"]["question_difficulty"] | null
@@ -169,6 +171,8 @@ export type Database = {
           choice2: string
           choice3: string
           choice4: string
+          comparison_value1?: string | null
+          comparison_value2?: string | null
           correct_answer: number
           created_at?: string
           difficulty?: Database["public"]["Enums"]["question_difficulty"] | null
@@ -188,6 +192,8 @@ export type Database = {
           choice2?: string
           choice3?: string
           choice4?: string
+          comparison_value1?: string | null
+          comparison_value2?: string | null
           correct_answer?: number
           created_at?: string
           difficulty?: Database["public"]["Enums"]["question_difficulty"] | null
