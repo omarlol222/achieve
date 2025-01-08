@@ -26,10 +26,12 @@ const queryClient = new QueryClient({
     queries: {
       retry: false,
       refetchOnWindowFocus: false,
-      onError: (error: any) => {
-        if (error?.message?.includes('refresh_token_not_found')) {
-          window.location.href = '/signin';
-        }
+      meta: {
+        onError: (error: any) => {
+          if (error?.message?.includes('refresh_token_not_found')) {
+            window.location.href = '/signin';
+          }
+        },
       },
     },
   },
