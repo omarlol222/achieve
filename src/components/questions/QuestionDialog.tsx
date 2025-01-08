@@ -117,6 +117,15 @@ export function QuestionDialog({
       const questionData = {
         ...data,
         correct_answer: parseInt(data.correct_answer),
+        // Ensure these fields are not empty strings if they're optional
+        topic_id: data.topic_id || null,
+        test_type_id: data.test_type_id || null,
+        explanation: data.explanation || null,
+        passage_text: data.passage_text || null,
+        image_url: data.image_url || null,
+        explanation_image_url: data.explanation_image_url || null,
+        comparison_value1: data.comparison_value1 || null,
+        comparison_value2: data.comparison_value2 || null,
       };
 
       if (initialData?.id) {
