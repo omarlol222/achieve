@@ -17,6 +17,9 @@ type Question = {
   choice4: string;
   correct_answer: number;
   topic_id: string;
+  question_type: string;
+  comparison_value1?: string;
+  comparison_value2?: string;
 };
 
 const PracticeTest = () => {
@@ -46,7 +49,6 @@ const PracticeTest = () => {
       const { data, error } = await query;
       if (error) throw error;
 
-      // Shuffle questions
       return data.sort(() => Math.random() - 0.5);
     },
   });
@@ -66,7 +68,6 @@ const PracticeTest = () => {
       [currentQuestion.id]: answer
     }));
 
-    // Update user progress
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
@@ -108,7 +109,6 @@ const PracticeTest = () => {
 
   const handleNext = () => {
     if (currentQuestionIndex === questions!.length - 1) {
-      // Calculate results
       const results = questions!.map(q => ({
         questionId: q.id,
         topicId: q.topic_id,
@@ -132,6 +132,34 @@ const PracticeTest = () => {
     return <div>Loading...</div>;
   }
 
+  const renderQuestionContent = () => {
+    if (currentQuestion.question_type === 'comparison') {
+      return (
+        <div className="space-y-4">
+          <p className="text-lg">{currentQuestion.question_text}</p>
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="border-b p-2 text-center w-1/2 bg-gray-50">A</th>
+                  <th className="border-b p-2 text-center w-1/2 bg-gray-50">B</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border-r p-4 text-center">{currentQuestion.comparison_value1}</td>
+                  <td className="p-4 text-center">{currentQuestion.comparison_value2}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    return <p className="text-lg">{currentQuestion.question_text}</p>;
+  };
+
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
@@ -143,7 +171,7 @@ const PracticeTest = () => {
         </div>
 
         <Card className="p-6 space-y-6">
-          <p className="text-lg">{currentQuestion?.question_text}</p>
+          {renderQuestionContent()}
 
           <div className="space-y-4">
             {[1, 2, 3, 4].map((choice) => (
