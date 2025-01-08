@@ -43,16 +43,50 @@ const PracticeResults = () => {
     enabled: !!results,
   });
 
+  const { data: previousProgress } = useQuery({
+    queryKey: ["previous-progress"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const uniqueTopicIds = [...new Set(results?.map(r => r.topicId))] as string[];
+      const { data, error } = await supabase
+        .from("user_progress")
+        .select("*")
+        .in("topic_id", uniqueTopicIds)
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!results,
+  });
+
   const calculateTopicProgress = (topicId: string): TopicProgress => {
     const topicResults = results?.filter((r) => r.topicId === topicId);
     const correctCount = topicResults?.filter((r) => r.isCorrect).length || 0;
     const totalCount = topicResults?.length || 0;
     const percentage = totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
 
+    // Get previous progress for comparison
+    const previousTopicProgress = previousProgress?.find(p => p.topic_id === topicId);
+    const previousPercentage = previousTopicProgress ? 
+      (previousTopicProgress.questions_correct / previousTopicProgress.questions_attempted) * 100 : 0;
+
+    // Calculate points based on performance comparison
     let points = 0;
-    if (percentage >= 90) points = 50;
-    else if (percentage >= 80) points = 30;
-    else if (percentage >= 70) points = 20;
+    const percentageDiff = percentage - previousPercentage;
+
+    if (percentageDiff >= 0) {
+      // Positive progress
+      if (percentage >= 90) points = 50;
+      else if (percentage >= 80) points = 30;
+      else if (percentage >= 70) points = 20;
+    } else {
+      // Negative progress - deduct points
+      if (percentageDiff <= -20) points = -30;
+      else if (percentageDiff <= -10) points = -20;
+      else points = -10;
+    }
 
     return {
       topicId,
@@ -109,7 +143,7 @@ const PracticeResults = () => {
                     ) : (
                       <>
                         <TrendingDown className="text-red-500" />
-                        <span className="text-red-500">No points gained</span>
+                        <span className="text-red-500">{progress.points} points</span>
                       </>
                     )}
                   </div>

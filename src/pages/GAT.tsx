@@ -132,10 +132,16 @@ const GAT = () => {
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-7xl mx-auto space-y-12">
-        <div className="flex flex-col items-center gap-6">
-          <h1 className="text-4xl font-bold text-center text-[#1B2B2B]">
-            Dashboard
-          </h1>
+        <h1 className="text-4xl font-bold text-center text-[#1B2B2B]">
+          Dashboard
+        </h1>
+
+        <ProgressSection 
+          subjects={subjects || []} 
+          calculateTopicProgress={calculateTopicProgress} 
+        />
+
+        <div className="flex justify-center">
           <Button 
             size="lg" 
             onClick={handleStartPractice}
@@ -145,11 +151,6 @@ const GAT = () => {
             Start Practice Mode
           </Button>
         </div>
-
-        <ProgressSection 
-          subjects={subjects || []} 
-          calculateTopicProgress={calculateTopicProgress} 
-        />
 
         <LearningSection />
       </div>
