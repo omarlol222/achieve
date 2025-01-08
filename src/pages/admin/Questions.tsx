@@ -84,11 +84,11 @@ const Questions = () => {
         query = query.ilike("question_text", `%${search}%`);
       }
 
-      if (topicFilter) {
+      if (topicFilter && topicFilter !== "all") {
         query = query.eq("topic_id", topicFilter);
       }
 
-      if (difficultyFilter) {
+      if (difficultyFilter && difficultyFilter !== "all") {
         query = query.eq("difficulty", parseInt(difficultyFilter));
       }
 
