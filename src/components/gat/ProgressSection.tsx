@@ -37,13 +37,17 @@ export const ProgressSection = ({ subjects, calculateTopicProgress, onPracticeCl
           <div key={subject.id} className="space-y-4">
             <h3 className="text-xl font-semibold">{subject.name}</h3>
             <div className="space-y-3">
-              {subject.topics.map((topic) => (
-                <TopicProgress
-                  key={topic.id}
-                  name={topic.name}
-                  progress={calculateTopicProgress(topic.id)}
-                />
-              ))}
+              {subject.topics.map((topic) => {
+                const progress = calculateTopicProgress(topic.id);
+                return (
+                  <TopicProgress
+                    key={topic.id}
+                    name={topic.name}
+                    value={progress.percentage}
+                    questionsCorrect={progress.questionsCorrect}
+                  />
+                );
+              })}
             </div>
           </div>
         ))
