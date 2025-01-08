@@ -1,11 +1,5 @@
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SearchField } from "./filters/SearchField";
+import { FilterSelect } from "./filters/FilterSelect";
 
 type QuestionFiltersProps = {
   search: string;
@@ -46,87 +40,80 @@ export function QuestionFilters({
     (topic) => !subjectFilter || subjectFilter === "all" || topic.subject_id === subjectFilter
   );
 
+  const questionTypeOptions = [
+    { value: "all", label: "All Types" },
+    { value: "normal", label: "Normal Questions" },
+    { value: "passage", label: "Passage-Based Questions" },
+    { value: "analogy", label: "Analogy Questions" },
+  ];
+
+  const difficultyOptions = [
+    { value: "all", label: "All Levels" },
+    ...Array.from({ length: 5 }, (_, i) => ({
+      value: String(i + 1),
+      label: `Level ${i + 1}`,
+    })),
+  ];
+
   return (
     <div className="mb-6 grid gap-4 md:grid-cols-6">
-      <div className="md:col-span-2">
-        <Input
-          placeholder="Search questions..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full"
-        />
-      </div>
+      <SearchField search={search} setSearch={setSearch} />
 
-      <Select value={testTypeFilter} onValueChange={setTestTypeFilter}>
-        <SelectTrigger>
-          <SelectValue placeholder="Filter by test type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Test Types</SelectItem>
-          {testTypes?.map((type) => (
-            <SelectItem key={type.id} value={type.id}>
-              {type.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterSelect
+        value={testTypeFilter}
+        onValueChange={setTestTypeFilter}
+        placeholder="Filter by test type"
+        options={[
+          { value: "all", label: "All Test Types" },
+          ...(testTypes?.map((type) => ({
+            value: type.id,
+            label: type.name,
+          })) || []),
+        ]}
+      />
 
-      <Select value={subjectFilter} onValueChange={(value) => {
-        setSubjectFilter(value);
-        setTopicFilter("all");
-      }}>
-        <SelectTrigger>
-          <SelectValue placeholder="Filter by subject" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Subjects</SelectItem>
-          {subjects?.map((subject) => (
-            <SelectItem key={subject.id} value={subject.id}>
-              {subject.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterSelect
+        value={subjectFilter}
+        onValueChange={(value) => {
+          setSubjectFilter(value);
+          setTopicFilter("all");
+        }}
+        placeholder="Filter by subject"
+        options={[
+          { value: "all", label: "All Subjects" },
+          ...(subjects?.map((subject) => ({
+            value: subject.id,
+            label: subject.name,
+          })) || []),
+        ]}
+      />
 
-      <Select value={topicFilter} onValueChange={setTopicFilter}>
-        <SelectTrigger>
-          <SelectValue placeholder="Filter by topic" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Topics</SelectItem>
-          {filteredTopics?.map((topic) => (
-            <SelectItem key={topic.id} value={topic.id}>
-              {topic.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterSelect
+        value={topicFilter}
+        onValueChange={setTopicFilter}
+        placeholder="Filter by topic"
+        options={[
+          { value: "all", label: "All Topics" },
+          ...(filteredTopics?.map((topic) => ({
+            value: topic.id,
+            label: topic.name,
+          })) || []),
+        ]}
+      />
 
-      <Select value={typeFilter} onValueChange={setTypeFilter}>
-        <SelectTrigger>
-          <SelectValue placeholder="Filter by type" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Types</SelectItem>
-          <SelectItem value="normal">Normal Questions</SelectItem>
-          <SelectItem value="passage">Passage-Based Questions</SelectItem>
-          <SelectItem value="analogy">Analogy Questions</SelectItem>
-        </SelectContent>
-      </Select>
+      <FilterSelect
+        value={typeFilter}
+        onValueChange={setTypeFilter}
+        placeholder="Filter by type"
+        options={questionTypeOptions}
+      />
 
-      <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
-        <SelectTrigger>
-          <SelectValue placeholder="Filter by difficulty" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Levels</SelectItem>
-          {[1, 2, 3, 4, 5].map((level) => (
-            <SelectItem key={level} value={String(level)}>
-              Level {level}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <FilterSelect
+        value={difficultyFilter}
+        onValueChange={setDifficultyFilter}
+        placeholder="Filter by difficulty"
+        options={difficultyOptions}
+      />
     </div>
   );
 }
