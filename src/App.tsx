@@ -15,6 +15,7 @@ import Questions from "./pages/admin/Questions";
 import Tests from "./pages/admin/Tests";
 import Users from "./pages/admin/Users";
 import Payments from "./pages/admin/Payments";
+import GAT from "./pages/GAT";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/shop" element={<Shop />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/gat" element={<GAT />} />
           <Route
             path="/admin"
             element={
