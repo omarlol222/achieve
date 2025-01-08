@@ -4,8 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
+import { useNavigate } from "react-router-dom";
 
 const GAT = () => {
+  const navigate = useNavigate();
+
   const { data: testType, isError: isTestTypeError, isLoading: isTestTypeLoading } = useQuery({
     queryKey: ["testType", "GAT"],
     queryFn: async () => {
@@ -75,6 +78,10 @@ const GAT = () => {
         : 0,
       questionsCorrect
     };
+  };
+
+  const handleStartPractice = () => {
+    navigate("/practice/setup");
   };
 
   if (isTestTypeLoading || isSubjectsLoading || isProgressLoading) {
