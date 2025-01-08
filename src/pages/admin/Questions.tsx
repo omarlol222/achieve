@@ -9,6 +9,7 @@ import { QuestionPagination } from "@/components/questions/QuestionPagination";
 import { DeleteQuestionDialog } from "@/components/questions/DeleteQuestionDialog";
 import { QuestionHeader } from "@/components/questions/QuestionHeader";
 import { SubjectManager } from "@/components/subjects/SubjectManager";
+import { TopicManager } from "@/components/topics/TopicManager";
 import { useQuestions } from "@/hooks/useQuestions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -75,7 +76,8 @@ const Questions = () => {
       <Tabs defaultValue="questions">
         <TabsList>
           <TabsTrigger value="questions">Questions</TabsTrigger>
-          <TabsTrigger value="subjects">Subjects & Topics</TabsTrigger>
+          <TabsTrigger value="subjects">Subjects</TabsTrigger>
+          <TabsTrigger value="topics">Topics</TabsTrigger>
         </TabsList>
 
         <TabsContent value="questions" className="mt-6">
@@ -126,6 +128,10 @@ const Questions = () => {
 
         <TabsContent value="subjects" className="mt-6">
           <SubjectManager />
+        </TabsContent>
+
+        <TabsContent value="topics" className="mt-6">
+          <TopicManager />
         </TabsContent>
       </Tabs>
 

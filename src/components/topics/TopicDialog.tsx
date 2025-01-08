@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,71 +22,65 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-type SubjectFormData = {
+type TopicFormData = {
   name: string;
   description?: string;
+  subject_id: string;
   test_type_id: string;
 };
 
-type SubjectDialogProps = {
+type TopicDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialData?: any;
   onSuccess: () => void;
+  subjects: any[];
+  testTypes: any[];
 };
 
-export function SubjectDialog({
+export function TopicDialog({
   open,
   onOpenChange,
   initialData,
   onSuccess,
-}: SubjectDialogProps) {
+  subjects,
+  testTypes,
+}: TopicDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: testTypes } = useQuery({
-    queryKey: ["testTypes"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("test_types")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const form = useForm<SubjectFormData>({
+  const form = useForm<TopicFormData>({
     defaultValues: initialData || {
       name: "",
       description: "",
+      subject_id: "",
       test_type_id: "",
     },
   });
 
-  const onSubmit = async (data: SubjectFormData) => {
+  const onSubmit = async (data: TopicFormData) => {
     try {
       setIsSubmitting(true);
 
       if (initialData?.id) {
         const { error } = await supabase
-          .from("subjects")
+          .from("topics")
           .update(data)
           .eq("id", initialData.id);
         if (error) throw error;
         toast({
-          title: "Subject updated successfully",
+          title: "Topic updated successfully",
         });
       } else {
-        const { error } = await supabase.from("subjects").insert(data);
+        const { error } = await supabase.from("topics").insert(data);
         if (error) throw error;
         toast({
-          title: "Subject created successfully",
+          title: "Topic created successfully",
         });
       }
 
-      queryClient.invalidateQueries({ queryKey: ["subjects"] });
+      queryClient.invalidateQueries({ queryKey: ["topics"] });
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -105,7 +99,7 @@ export function SubjectDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {initialData ? "Edit Subject" : "Add New Subject"}
+            {initialData ? "Edit Topic" : "Add New Topic"}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -133,6 +127,31 @@ export function SubjectDialog({
                   <FormControl>
                     <Textarea {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="subject_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subject</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a subject" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {subjects?.map((subject) => (
+                        <SelectItem key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -175,8 +194,8 @@ export function SubjectDialog({
                 {isSubmitting
                   ? "Saving..."
                   : initialData
-                  ? "Update Subject"
-                  : "Add Subject"}
+                  ? "Update Topic"
+                  : "Add Topic"}
               </Button>
             </div>
           </form>
