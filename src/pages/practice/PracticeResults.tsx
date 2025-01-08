@@ -5,6 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown } from "lucide-react";
 
+type Result = {
+  questionId: string;
+  topicId: string;
+  isCorrect: boolean;
+};
+
 type TopicProgress = {
   topicId: string;
   correctCount: number;
@@ -13,15 +19,20 @@ type TopicProgress = {
   points: number;
 };
 
+type LocationState = {
+  results: Result[];
+  totalQuestions: number;
+};
+
 const PracticeResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { results, totalQuestions } = location.state || {};
+  const { results, totalQuestions } = (location.state || {}) as LocationState;
 
   const { data: topics } = useQuery({
     queryKey: ["topics-results"],
     queryFn: async () => {
-      const uniqueTopicIds = [...new Set(results.map((r: any) => r.topicId))];
+      const uniqueTopicIds = [...new Set(results?.map(r => r.topicId))] as string[];
       const { data, error } = await supabase
         .from("topics")
         .select("*")
@@ -29,13 +40,14 @@ const PracticeResults = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !!results,
   });
 
   const calculateTopicProgress = (topicId: string): TopicProgress => {
-    const topicResults = results.filter((r: any) => r.topicId === topicId);
-    const correctCount = topicResults.filter((r: any) => r.isCorrect).length;
-    const totalCount = topicResults.length;
-    const percentage = (correctCount / totalCount) * 100;
+    const topicResults = results?.filter((r) => r.topicId === topicId);
+    const correctCount = topicResults?.filter((r) => r.isCorrect).length || 0;
+    const totalCount = topicResults?.length || 0;
+    const percentage = totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
 
     let points = 0;
     if (percentage >= 90) points = 50;
@@ -51,8 +63,8 @@ const PracticeResults = () => {
     };
   };
 
-  const totalCorrect = results?.filter((r: any) => r.isCorrect).length || 0;
-  const overallPercentage = (totalCorrect / totalQuestions) * 100;
+  const totalCorrect = results?.filter((r) => r.isCorrect).length || 0;
+  const overallPercentage = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-white p-8">
