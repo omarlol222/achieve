@@ -159,6 +159,7 @@ export type Database = {
           passage_text: string | null
           question_text: string
           question_type: string
+          test_type_id: string | null
           topic_id: string | null
           updated_at: string
         }
@@ -176,6 +177,7 @@ export type Database = {
           passage_text?: string | null
           question_text: string
           question_type?: string
+          test_type_id?: string | null
           topic_id?: string | null
           updated_at?: string
         }
@@ -193,10 +195,18 @@ export type Database = {
           passage_text?: string | null
           question_text?: string
           question_type?: string
+          test_type_id?: string | null
           topic_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "questions_test_type_id_fkey"
+            columns: ["test_type_id"]
+            isOneToOne: false
+            referencedRelation: "test_types"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "questions_topic_id_fkey"
             columns: ["topic_id"]
@@ -212,6 +222,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          test_type_id: string | null
           updated_at: string
         }
         Insert: {
@@ -219,6 +230,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          test_type_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -226,9 +238,18 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          test_type_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subjects_test_type_id_fkey"
+            columns: ["test_type_id"]
+            isOneToOne: false
+            referencedRelation: "test_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       test_modules: {
         Row: {
@@ -238,6 +259,7 @@ export type Database = {
           name: string
           subject_id: string | null
           test_template_id: string | null
+          test_type_id: string | null
           time_limit: number
           updated_at: string
         }
@@ -248,6 +270,7 @@ export type Database = {
           name: string
           subject_id?: string | null
           test_template_id?: string | null
+          test_type_id?: string | null
           time_limit: number
           updated_at?: string
         }
@@ -258,6 +281,7 @@ export type Database = {
           name?: string
           subject_id?: string | null
           test_template_id?: string | null
+          test_type_id?: string | null
           time_limit?: number
           updated_at?: string
         }
@@ -274,6 +298,13 @@ export type Database = {
             columns: ["test_template_id"]
             isOneToOne: false
             referencedRelation: "test_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_modules_test_type_id_fkey"
+            columns: ["test_type_id"]
+            isOneToOne: false
+            referencedRelation: "test_types"
             referencedColumns: ["id"]
           },
         ]
@@ -380,6 +411,30 @@ export type Database = {
         }
         Relationships: []
       }
+      test_types: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       topics: {
         Row: {
           created_at: string
@@ -387,6 +442,7 @@ export type Database = {
           id: string
           name: string
           subject_id: string | null
+          test_type_id: string | null
           updated_at: string
         }
         Insert: {
@@ -395,6 +451,7 @@ export type Database = {
           id?: string
           name: string
           subject_id?: string | null
+          test_type_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -403,6 +460,7 @@ export type Database = {
           id?: string
           name?: string
           subject_id?: string | null
+          test_type_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -411,6 +469,13 @@ export type Database = {
             columns: ["subject_id"]
             isOneToOne: false
             referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topics_test_type_id_fkey"
+            columns: ["test_type_id"]
+            isOneToOne: false
+            referencedRelation: "test_types"
             referencedColumns: ["id"]
           },
         ]
