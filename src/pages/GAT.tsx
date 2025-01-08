@@ -4,9 +4,12 @@ import { BookOpen, PenTool, MonitorPlay } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const TopicProgress = ({ name, value }: { name: string; value: number }) => (
+const TopicProgress = ({ name, value, questionsCorrect }: { name: string; value: number; questionsCorrect: number }) => (
   <div className="space-y-2">
-    <div className="text-sm font-medium">{name}</div>
+    <div className="flex justify-between items-center">
+      <div className="text-sm font-medium">{name}</div>
+      <div className="text-sm text-muted-foreground">{questionsCorrect}/1000</div>
+    </div>
     <Progress value={value} className="h-2" />
   </div>
 );
@@ -75,10 +78,13 @@ const GAT = () => {
   // Calculate progress for each topic
   const calculateTopicProgress = (topicId: string) => {
     const progress = userProgress?.find(p => p.topic_id === topicId);
-    if (!progress) return 0;
-    return progress.questions_attempted > 0
-      ? (progress.questions_correct / progress.questions_attempted) * 100
-      : 0;
+    if (!progress) return { percentage: 0, questionsCorrect: 0 };
+    return {
+      percentage: progress.questions_attempted > 0
+        ? (progress.questions_correct / progress.questions_attempted) * 100
+        : 0,
+      questionsCorrect: progress.questions_correct || 0
+    };
   };
 
   return (
@@ -97,13 +103,17 @@ const GAT = () => {
                   {subject.name}
                 </h3>
                 <div className="space-y-4">
-                  {subject.topics?.map((topic) => (
-                    <TopicProgress
-                      key={topic.id}
-                      name={topic.name}
-                      value={calculateTopicProgress(topic.id)}
-                    />
-                  ))}
+                  {subject.topics?.map((topic) => {
+                    const progress = calculateTopicProgress(topic.id);
+                    return (
+                      <TopicProgress
+                        key={topic.id}
+                        name={topic.name}
+                        value={progress.percentage}
+                        questionsCorrect={progress.questionsCorrect}
+                      />
+                    );
+                  })}
                 </div>
               </Card>
             ))}
