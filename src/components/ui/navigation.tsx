@@ -22,6 +22,21 @@ export const Navigation = () => {
     },
   });
 
+  const { data: hasPurchased } = useQuery({
+    queryKey: ["hasPurchased", session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return false;
+      const { data: purchases } = await supabase
+        .from("purchases")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("status", "completed")
+        .limit(1);
+      return purchases && purchases.length > 0;
+    },
+    enabled: !!session?.user?.id,
+  });
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
@@ -42,7 +57,6 @@ export const Navigation = () => {
           <Link to="/about" className="hover:text-primary">About</Link>
           <Link to="/shop" className="hover:text-primary">Shop</Link>
           <Link to="/faq" className="hover:text-primary">FAQ</Link>
-          <Link to="/gat" className="hover:text-primary">GAT</Link>
         </div>
         
         <div className="flex items-center gap-4">
@@ -51,30 +65,39 @@ export const Navigation = () => {
               <Button variant="outline">Sign In</Button>
             </Link>
           ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate("/about")}>
-                  About
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/shop")}>
-                  Shop
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/faq")}>
-                  FAQ
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/gat")}>
-                  GAT
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <>
+              {hasPurchased && (
+                <Link to="/gat" className="hover:text-primary mr-4">
+                  Dashboard
+                </Link>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/about")}>
+                    About
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/shop")}>
+                    Shop
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/faq")}>
+                    FAQ
+                  </DropdownMenuItem>
+                  {hasPurchased && (
+                    <DropdownMenuItem onClick={() => navigate("/gat")}>
+                      Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           )}
         </div>
       </div>
