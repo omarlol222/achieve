@@ -1,12 +1,52 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
 import { Navigation } from "@/components/ui/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function GAT() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Check authentication and purchase status
+  useEffect(() => {
+    const checkAccess = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to access GAT practice.",
+          variant: "destructive",
+        });
+        navigate("/signin");
+        return;
+      }
+
+      // Check if user has purchased access
+      const { data: purchases } = await supabase
+        .from("purchases")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("status", "completed")
+        .limit(1);
+
+      if (!purchases || purchases.length === 0) {
+        toast({
+          title: "Purchase Required",
+          description: "Please purchase access to use GAT practice.",
+          variant: "destructive",
+        });
+        navigate("/shop");
+        return;
+      }
+    };
+
+    checkAccess();
+  }, [navigate, toast]);
 
   const { data: subjects } = useQuery({
     queryKey: ["subjects"],
