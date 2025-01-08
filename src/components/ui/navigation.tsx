@@ -31,26 +31,35 @@ export const Navigation = () => {
 
   return (
     <nav className="border-b border-gray-200">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between relative">
           {/* Logo */}
           <Link to="/" className="flex-shrink-0">
             <img src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png" alt="Achieve" className="h-8" />
           </Link>
 
           {/* Desktop Navigation - Centered */}
-          <div className="hidden md:flex items-center gap-8 absolute left-1/2 transform -translate-x-1/2">
-            <Link to="/about" className="text-[#1B2E35] hover:text-gray-600">ABOUT</Link>
-            <Link to="/shop" className="text-[#1B2E35] hover:text-gray-600">SHOP</Link>
-            <Link to="/faq" className="text-[#1B2E35] hover:text-gray-600">FAQ</Link>
+          <div className="hidden md:flex items-center space-x-12 absolute left-1/2 transform -translate-x-1/2">
+            <Link to="/about" className="text-[#1B2E35] hover:text-gray-600 font-medium">ABOUT</Link>
+            <Link to="/shop" className="text-[#1B2E35] hover:text-gray-600 font-medium">SHOP</Link>
+            <Link to="/faq" className="text-[#1B2E35] hover:text-gray-600 font-medium">FAQ</Link>
           </div>
 
           {/* Sign In/Out Button */}
           <div className="hidden md:block">
             {!isAuthenticated ? (
-              <Link to="/signin" className="border border-black px-6 py-2">SIGN IN</Link>
+              <Link 
+                to="/signin" 
+                className="border border-[#1B2E35] px-8 py-2 text-[#1B2E35] hover:bg-[#1B2E35] hover:text-white transition-colors"
+              >
+                SIGN IN
+              </Link>
             ) : (
-              <Button onClick={handleSignOut} variant="ghost">
+              <Button 
+                onClick={handleSignOut} 
+                variant="outline"
+                className="px-8 hover:bg-[#1B2E35] hover:text-white"
+              >
                 SIGN OUT
               </Button>
             )}
@@ -72,9 +81,18 @@ export const Navigation = () => {
             <Link to="/shop" className="block text-[#1B2E35] hover:text-gray-600">SHOP</Link>
             <Link to="/faq" className="block text-[#1B2E35] hover:text-gray-600">FAQ</Link>
             {!isAuthenticated ? (
-              <Link to="/signin" className="block border border-black px-6 py-2 text-center">SIGN IN</Link>
+              <Link 
+                to="/signin" 
+                className="block border border-[#1B2E35] px-6 py-2 text-center text-[#1B2E35] hover:bg-[#1B2E35] hover:text-white transition-colors"
+              >
+                SIGN IN
+              </Link>
             ) : (
-              <Button onClick={handleSignOut} variant="ghost" className="w-full">
+              <Button 
+                onClick={handleSignOut} 
+                variant="outline"
+                className="w-full hover:bg-[#1B2E35] hover:text-white"
+              >
                 SIGN OUT
               </Button>
             )}
