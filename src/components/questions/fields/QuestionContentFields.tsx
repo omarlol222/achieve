@@ -17,7 +17,7 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
   const { toast } = useToast();
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, fieldName: "image_url" | "explanation_image_url") => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -37,7 +37,7 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
         .from('question_images')
         .getPublicUrl(filePath);
 
-      form.setValue("image_url", publicUrl);
+      form.setValue(fieldName, publicUrl);
       toast({
         title: "Image uploaded successfully",
       });
@@ -126,45 +126,82 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
           <FormItem>
             <FormLabel>Question Text</FormLabel>
             <FormControl>
-              <Textarea {...field} />
+              <Textarea 
+                {...field} 
+                className={questionType === "analogy" ? "text-center" : ""}
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
         )}
       />
 
-      {questionType === "normal" && (
-        <FormField
-          control={form.control}
-          name="image_url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Question Image (Optional)</FormLabel>
-              <FormControl>
-                <div className="space-y-2">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={isUploading}
-                  />
-                  {isUploading && (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Uploading...</span>
-                    </div>
-                  )}
-                  {field.value && (
-                    <div className="mt-2">
-                      <img src={field.value} alt="Question" className="max-w-xs rounded-md" />
-                    </div>
-                  )}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      {(questionType === "normal" || questionType === "analogy") && (
+        <>
+          <FormField
+            control={form.control}
+            name="image_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Question Image (Optional)</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, "image_url")}
+                      disabled={isUploading}
+                    />
+                    {isUploading && (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Uploading...</span>
+                      </div>
+                    )}
+                    {field.value && (
+                      <div className="mt-2">
+                        <img src={field.value} alt="Question" className="max-w-xs rounded-md" />
+                      </div>
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="explanation_image_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Explanation Image (Optional)</FormLabel>
+                <FormControl>
+                  <div className="space-y-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload(e, "explanation_image_url")}
+                      disabled={isUploading}
+                    />
+                    {isUploading && (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Uploading...</span>
+                      </div>
+                    )}
+                    {field.value && (
+                      <div className="mt-2">
+                        <img src={field.value} alt="Explanation" className="max-w-xs rounded-md" />
+                      </div>
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </>
       )}
 
       {["choice1", "choice2", "choice3", "choice4"].map((choiceName) => (
