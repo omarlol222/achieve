@@ -83,10 +83,6 @@ export default function GAT() {
     };
   };
 
-  const handleStartPractice = () => {
-    navigate("/practice/setup");
-  };
-
   return (
     <div className="container py-8 space-y-8">
       <div className="flex items-center justify-between">
@@ -97,16 +93,6 @@ export default function GAT() {
         subjects={userProgress}
         calculateTopicProgress={calculateTopicProgress}
       />
-
-      <div className="flex justify-center">
-        <Button
-          onClick={handleStartPractice}
-          className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-          size="lg"
-        >
-          Start Practice
-        </Button>
-      </div>
 
       <LearningSection />
     </div>
