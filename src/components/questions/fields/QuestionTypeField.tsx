@@ -1,11 +1,7 @@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
-
-type QuestionFormData = {
-  question_type: string;
-  [key: string]: any;
-};
+import { QuestionFormData } from "@/types/question";
 
 type QuestionTypeFieldProps = {
   form: UseFormReturn<QuestionFormData>;

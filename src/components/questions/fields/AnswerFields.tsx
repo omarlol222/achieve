@@ -2,13 +2,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { UseFormReturn } from "react-hook-form";
-
-type QuestionFormData = {
-  correct_answer: string;
-  difficulty: string;
-  explanation?: string;
-  [key: string]: any;
-};
+import { QuestionFormData } from "@/types/question";
 
 type AnswerFieldsProps = {
   form: UseFormReturn<QuestionFormData>;

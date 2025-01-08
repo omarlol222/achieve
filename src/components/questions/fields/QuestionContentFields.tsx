@@ -2,17 +2,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
-
-type QuestionFormData = {
-  question_text: string;
-  passage_text?: string;
-  choice1: string;
-  choice2: string;
-  choice3: string;
-  choice4: string;
-  question_type: string;
-  [key: string]: any;
-};
+import { QuestionFormData } from "@/types/question";
 
 type QuestionContentFieldsProps = {
   form: UseFormReturn<QuestionFormData>;
@@ -53,14 +43,14 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
         )}
       />
 
-      {[1, 2, 3, 4].map((num) => (
+      {["choice1", "choice2", "choice3", "choice4"].map((choiceName) => (
         <FormField
-          key={num}
+          key={choiceName}
           control={form.control}
-          name={`choice${num}` as keyof QuestionFormData}
+          name={choiceName as keyof QuestionFormData}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Choice {num}</FormLabel>
+              <FormLabel>Choice {choiceName.slice(-1)}</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
