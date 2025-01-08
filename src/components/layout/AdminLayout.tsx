@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { LayoutDashboard, Users, BookOpen, CreditCard } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdminLayout = () => {
   const location = useLocation();
@@ -10,6 +11,10 @@ const AdminLayout = () => {
     { name: "Users", href: "/admin/users", icon: Users },
     { name: "Payments", href: "/admin/payments", icon: CreditCard },
   ];
+
+  const getCurrentTab = () => {
+    return location.pathname.split("/")[2] || "";
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -50,6 +55,26 @@ const AdminLayout = () => {
 
         {/* Main content */}
         <div className="flex flex-col flex-1">
+          {/* Mobile tabs navigation */}
+          <div className="md:hidden p-4 bg-white border-b">
+            <Tabs value={getCurrentTab()} className="w-full">
+              <TabsList className="w-full">
+                {navigation.map((item) => (
+                  <TabsTrigger
+                    key={item.name}
+                    value={item.href.split("/")[2] || ""}
+                    className="flex-1"
+                    asChild
+                  >
+                    <Link to={item.href}>
+                      <item.icon className="h-4 w-4 mr-2" />
+                      {item.name}
+                    </Link>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
           <main className="flex-1 p-6">
             <Outlet />
           </main>
