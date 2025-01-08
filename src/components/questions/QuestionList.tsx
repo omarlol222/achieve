@@ -56,13 +56,13 @@ export function QuestionList({
     if (question.question_type === 'comparison') {
       return (
         <div className="space-y-2">
-          <p>{question.question_text}</p>
-          <div className="border rounded-lg overflow-hidden max-w-md">
+          <p className="mb-2">{question.question_text}</p>
+          <div className="border rounded-lg overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr>
-                  <th className="border-b p-2 text-center w-1/2">A</th>
-                  <th className="border-b p-2 text-center w-1/2">B</th>
+                  <th className="border-b p-2 text-center w-1/2 bg-gray-50">A</th>
+                  <th className="border-b p-2 text-center w-1/2 bg-gray-50">B</th>
                 </tr>
               </thead>
               <tbody>
