@@ -101,7 +101,14 @@ const AdminLayout = () => {
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
-          <div className="mr-4 hidden md:flex">
+          <div className="mr-4 flex items-center">
+            <Link to="/" className="mr-4">
+              <img
+                src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
+                alt="Achieve"
+                className="h-8"
+              />
+            </Link>
             <h2 className="text-lg font-semibold">Admin Panel</h2>
           </div>
 
@@ -118,7 +125,14 @@ const AdminLayout = () => {
             </SheetTrigger>
             <SheetContent side="left" className="pr-0">
               <div className="px-7">
-                <h2 className="text-lg font-semibold mb-4">Admin Panel</h2>
+                <Link to="/" className="flex items-center mb-4">
+                  <img
+                    src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
+                    alt="Achieve"
+                    className="h-8 mr-2"
+                  />
+                  <h2 className="text-lg font-semibold">Admin Panel</h2>
+                </Link>
                 <nav className="flex flex-col gap-2">
                   {menuItems.map((item) => (
                     <NavLink key={item.path} item={item} />

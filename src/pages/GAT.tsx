@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
+import { Navigation } from "@/components/ui/navigation";
 
 export default function GAT() {
   const navigate = useNavigate();
@@ -86,17 +87,20 @@ export default function GAT() {
   };
 
   return (
-    <div className="container py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">GAT Practice</h1>
+    <div className="min-h-screen bg-white">
+      <Navigation />
+      <div className="container py-8 space-y-8">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">GAT Practice</h1>
+        </div>
+
+        <ProgressSection
+          subjects={userProgress}
+          calculateTopicProgress={calculateTopicProgress}
+        />
+
+        <LearningSection />
       </div>
-
-      <ProgressSection
-        subjects={userProgress}
-        calculateTopicProgress={calculateTopicProgress}
-      />
-
-      <LearningSection />
     </div>
   );
 }
