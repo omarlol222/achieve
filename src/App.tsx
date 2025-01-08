@@ -12,6 +12,7 @@ import SignIn from "./pages/SignIn";
 import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Questions from "./pages/admin/Questions";
+import Tests from "./pages/admin/Tests";
 import Users from "./pages/admin/Users";
 import Payments from "./pages/admin/Payments";
 
@@ -39,6 +40,7 @@ const App = () => (
           >
             <Route index element={<Dashboard />} />
             <Route path="questions" element={<Questions />} />
+            <Route path="tests" element={<Tests />} />
             <Route path="users" element={<Users />} />
             <Route path="payments" element={<Payments />} />
           </Route>

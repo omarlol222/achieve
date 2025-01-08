@@ -9,7 +9,7 @@ import {
   HelpCircle,
   CreditCard,
   Menu,
-  X
+  ClipboardList
 } from "lucide-react";
 import {
   Sheet,
@@ -73,6 +73,7 @@ const AdminLayout = () => {
   const menuItems = [
     { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/admin/questions", icon: HelpCircle, label: "Questions" },
+    { path: "/admin/tests", icon: ClipboardList, label: "Tests" },
     { path: "/admin/users", icon: Users, label: "Users" },
     { path: "/admin/payments", icon: CreditCard, label: "Payments" },
   ];
