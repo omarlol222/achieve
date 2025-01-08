@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
-import { Button } from "@/components/ui/button";
 
 export default function GAT() {
   const navigate = useNavigate();
@@ -92,6 +91,7 @@ export default function GAT() {
       <ProgressSection
         subjects={userProgress}
         calculateTopicProgress={calculateTopicProgress}
+        onPracticeClick={() => navigate("/practice/setup")}
       />
 
       <LearningSection />
