@@ -72,32 +72,50 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
 
       {questionType === "comparison" && (
         <>
-          <FormField
-            control={form.control}
-            name="comparison_value1"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>First Value</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="comparison_value2"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Second Value</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="space-y-4">
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="border-b p-2 text-center w-1/2">A</th>
+                    <th className="border-b p-2 text-center w-1/2">B</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border-r p-4">
+                      <FormField
+                        control={form.control}
+                        name="comparison_value1"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input {...field} placeholder="First Value" className="text-center" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </td>
+                    <td className="p-4">
+                      <FormField
+                        control={form.control}
+                        name="comparison_value2"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input {...field} placeholder="Second Value" className="text-center" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </>
       )}
 

@@ -52,6 +52,45 @@ export function QuestionList({
     );
   };
 
+  const renderQuestionContent = (question: any) => {
+    if (question.question_type === 'comparison') {
+      return (
+        <div className="space-y-2">
+          <p>{question.question_text}</p>
+          <div className="border rounded-lg overflow-hidden max-w-md">
+            <table className="w-full">
+              <thead>
+                <tr>
+                  <th className="border-b p-2 text-center w-1/2">A</th>
+                  <th className="border-b p-2 text-center w-1/2">B</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border-r p-4 text-center">{question.comparison_value1}</td>
+                  <td className="p-4 text-center">{question.comparison_value2}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div>{question.question_text}</div>
+        {question.image_url && (
+          <img 
+            src={question.image_url} 
+            alt="Question" 
+            className="mt-2 max-w-xs rounded-md"
+          />
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg border">
       <Table>
@@ -85,20 +124,7 @@ export function QuestionList({
             questions.map((question) => (
               <TableRow key={question.id}>
                 <TableCell className="font-medium">
-                  {question.question_text}
-                  {question.question_type === 'comparison' && (
-                    <div className="mt-2 text-sm text-gray-500">
-                      <div>Value 1: {question.comparison_value1}</div>
-                      <div>Value 2: {question.comparison_value2}</div>
-                    </div>
-                  )}
-                  {question.image_url && (
-                    <img 
-                      src={question.image_url} 
-                      alt="Question" 
-                      className="mt-2 max-w-xs rounded-md"
-                    />
-                  )}
+                  {renderQuestionContent(question)}
                 </TableCell>
                 <TableCell>{question.topic?.subject?.name || "Uncategorized"}</TableCell>
                 <TableCell>{question.topic?.name || "Uncategorized"}</TableCell>
