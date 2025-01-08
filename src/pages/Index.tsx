@@ -37,10 +37,14 @@ const Index = () => {
       }
     );
 
+    // Log the current URL to help with debugging
+    console.log('Current URL:', window.location.origin);
+    
     return () => subscription.unsubscribe();
   }, [navigate, toast]);
 
   const getErrorMessage = (error: AuthError) => {
+    console.log('Auth Error:', error); // Add this line for debugging
     if (error instanceof AuthApiError) {
       switch (error.code) {
         case 'invalid_credentials':
@@ -52,7 +56,7 @@ const Index = () => {
         case 'user_not_found':
           return 'No user found with these credentials.';
         default:
-          return error.message;
+          return `${error.message} (Code: ${error.code})`;
       }
     }
     return error.message;
