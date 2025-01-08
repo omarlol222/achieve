@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const GAT = () => {
   const navigate = useNavigate();
@@ -138,6 +139,16 @@ const GAT = () => {
           subjects={subjects || []} 
           calculateTopicProgress={calculateTopicProgress} 
         />
+
+        <div className="flex justify-center">
+          <Button 
+            onClick={handleStartPractice}
+            className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+            size="lg"
+          >
+            Practice
+          </Button>
+        </div>
 
         <LearningSection />
       </div>
