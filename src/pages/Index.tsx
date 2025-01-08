@@ -15,26 +15,52 @@ const Index = () => {
 
   useEffect(() => {
     // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        console.log('Initial session check - user found:', session.user);
-        navigate("/admin");
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          // Check if user has a profile and is an admin
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", session.user.id)
+            .single();
+
+          if (profile?.role === "admin") {
+            navigate("/admin");
+          } else {
+            setError("Access denied. Admin privileges required.");
+          }
+        }
+      } catch (err) {
+        console.error("Session check error:", err);
+        setError("An error occurred while checking your session.");
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
+
+    checkSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
-        
         if (event === "SIGNED_IN" && session?.user) {
-          console.log('User signed in successfully:', session.user);
-          navigate("/admin");
+          // Check if user is admin
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", session.user.id)
+            .single();
+
+          if (profile?.role === "admin") {
+            navigate("/admin");
+          } else {
+            setError("Access denied. Admin privileges required.");
+          }
         }
 
         if (event === "SIGNED_OUT") {
-          console.log('User signed out');
           setError(null);
         }
       }
@@ -44,7 +70,6 @@ const Index = () => {
   }, [navigate]);
 
   const getErrorMessage = (error: AuthError) => {
-    console.log('Auth Error:', error);
     if (error instanceof AuthApiError) {
       switch (error.status) {
         case 400:

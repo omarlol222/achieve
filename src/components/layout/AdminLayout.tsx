@@ -12,7 +12,10 @@ const AdminLayout = () => {
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      if (!user) {
+        navigate("/");
+        throw new Error("Not authenticated");
+      }
 
       const { data: profile, error } = await supabase
         .from("profiles")
@@ -20,8 +23,15 @@ const AdminLayout = () => {
         .eq("id", user.id)
         .single();
 
-      if (error) throw error;
-      if (!profile || profile.role !== "admin") throw new Error("Not authorized");
+      if (error) {
+        navigate("/");
+        throw error;
+      }
+      
+      if (!profile || profile.role !== "admin") {
+        navigate("/");
+        throw new Error("Not authorized");
+      }
 
       return profile;
     },
@@ -34,7 +44,11 @@ const AdminLayout = () => {
   }, [isLoading, profile, navigate]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+      </div>
+    );
   }
 
   if (!profile) {
