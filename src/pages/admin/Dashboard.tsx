@@ -16,7 +16,7 @@ type Stat = {
 
 type UserProgress = {
   user: {
-    full_name: string;
+    full_name: string | null;
   };
   topic: {
     name: string;
@@ -80,6 +80,41 @@ const Dashboard = () => {
     },
   });
 
+  const { data: userProgress, isLoading: isLoadingProgress } = useQuery({
+    queryKey: ["user-progress"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_progress")
+        .select(`
+          questions_attempted,
+          questions_correct,
+          user_id,
+          topic:topics(
+            name,
+            subject:subjects(name)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch user profiles separately
+      const userIds = [...new Set(data?.map(progress => progress.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+
+      // Map profiles to progress data
+      const progressWithProfiles = data?.map(progress => ({
+        ...progress,
+        user: profiles?.find(profile => profile.id === progress.user_id) || { full_name: 'Unknown User' }
+      }));
+
+      return progressWithProfiles as UserProgress[];
+    },
+  });
+
   const stats: Stat[] = [
     {
       name: "Total Users",
@@ -110,27 +145,6 @@ const Dashboard = () => {
       changeType: "neutral",
     },
   ];
-
-  const { data: userProgress, isLoading: isLoadingProgress } = useQuery({
-    queryKey: ["user-progress"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_progress")
-        .select(`
-          questions_attempted,
-          questions_correct,
-          user:profiles(full_name),
-          topic:topics(
-            name,
-            subject:subjects(name)
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as UserProgress[];
-    },
-  });
 
   return (
     <div>
@@ -208,7 +222,7 @@ const Dashboard = () => {
         )}
       </Card>
 
-      {/* Keep existing activity and performance cards */}
+      {/* Recent Activity and Performance Overview cards */}
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
