@@ -4,9 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Brain } from "lucide-react";
 
 const GAT = () => {
-  // First, fetch the GAT test type ID
+  const navigate = useNavigate();
+  
   const { data: testType, isError: isTestTypeError, isLoading: isTestTypeLoading } = useQuery({
     queryKey: ["testType", "GAT"],
     queryFn: async () => {
@@ -78,6 +82,10 @@ const GAT = () => {
     };
   };
 
+  const handleStartPractice = () => {
+    navigate("/practice/setup");
+  };
+
   if (isTestTypeLoading || isSubjectsLoading || isProgressLoading) {
     return (
       <div className="min-h-screen bg-white p-8">
@@ -124,9 +132,19 @@ const GAT = () => {
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-7xl mx-auto space-y-12">
-        <h1 className="text-4xl font-bold text-center text-[#1B2B2B]">
-          Dashboard
-        </h1>
+        <div className="flex flex-col items-center gap-6">
+          <h1 className="text-4xl font-bold text-center text-[#1B2B2B]">
+            Dashboard
+          </h1>
+          <Button 
+            size="lg" 
+            onClick={handleStartPractice}
+            className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+          >
+            <Brain className="mr-2 h-5 w-5" />
+            Start Practice Mode
+          </Button>
+        </div>
 
         <ProgressSection 
           subjects={subjects || []} 

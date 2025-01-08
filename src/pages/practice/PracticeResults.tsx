@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Brain } from "lucide-react";
 
 type Result = {
   questionId: string;
@@ -69,9 +69,12 @@ const PracticeResults = () => {
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-center text-[#1B2B2B]">
-          Practice Results
-        </h1>
+        <div className="flex items-center justify-center gap-3">
+          <Brain className="h-8 w-8 text-[#1B2B2B]" />
+          <h1 className="text-3xl font-bold text-center text-[#1B2B2B]">
+            Practice Results
+          </h1>
+        </div>
 
         <Card className="p-6">
           <div className="text-center space-y-4">
@@ -117,10 +120,16 @@ const PracticeResults = () => {
         </div>
 
         <div className="flex justify-center gap-4">
-          <Button onClick={() => navigate("/practice/setup")}>
+          <Button 
+            onClick={() => navigate("/practice/setup")}
+            className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+          >
             Start New Practice
           </Button>
-          <Button variant="outline" onClick={() => navigate("/gat")}>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/gat")}
+          >
             Back to Dashboard
           </Button>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -174,7 +174,7 @@ const PracticeTest = () => {
 
           {showFeedback && (
             <Button
-              className="w-full"
+              className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
               onClick={handleNext}
             >
               {currentQuestionIndex === questions.length - 1 ? "See Results" : "Next Question"}

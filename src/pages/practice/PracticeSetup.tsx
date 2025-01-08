@@ -14,6 +14,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Brain } from "lucide-react";
 
 const PracticeSetup = () => {
   const navigate = useNavigate();
@@ -71,9 +72,12 @@ const PracticeSetup = () => {
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-2xl mx-auto space-y-8">
-        <h1 className="text-3xl font-bold text-center text-[#1B2B2B]">
-          Practice Mode Setup
-        </h1>
+        <div className="flex items-center justify-center gap-3">
+          <Brain className="h-8 w-8 text-[#1B2B2B]" />
+          <h1 className="text-3xl font-bold text-center text-[#1B2B2B]">
+            Practice Mode Setup
+          </h1>
+        </div>
 
         <Card className="p-6 space-y-6">
           <div className="space-y-4">
@@ -146,7 +150,7 @@ const PracticeSetup = () => {
           </div>
 
           <Button
-            className="w-full"
+            className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
             size="lg"
             onClick={handleStartPractice}
           >
