@@ -1,14 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { AuthError } from "@supabase/supabase-js";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -16,26 +18,39 @@ const Index = () => {
         if (event === "SIGNED_IN" && session?.user) {
           navigate("/admin");
         }
+        // Handle auth errors
+        if (event === "USER_UPDATED") {
+          const { error } = await supabase.auth.getSession();
+          if (error) {
+            const message = getErrorMessage(error);
+            setError(message);
+            toast({
+              variant: "destructive",
+              title: "Authentication Error",
+              description: message,
+            });
+          }
+        }
+        if (event === "SIGNED_OUT") {
+          setError(null);
+        }
       }
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, toast]);
 
-  const getErrorMessage = (error: any) => {
-    if (error?.message) {
-      switch (error.message) {
-        case "Invalid login credentials":
-          return "Invalid email or password. Please check your credentials and try again.";
-        case "Email not confirmed":
-          return "Please verify your email address before signing in.";
-        case "User not found":
-          return "No user found with these credentials.";
-        default:
-          return error.message;
-      }
+  const getErrorMessage = (error: AuthError) => {
+    switch (error.message) {
+      case "Invalid login credentials":
+        return "Invalid email or password. Please check your credentials and try again.";
+      case "Email not confirmed":
+        return "Please verify your email address before signing in.";
+      case "User not found":
+        return "No user found with these credentials.";
+      default:
+        return error.message;
     }
-    return "An error occurred during authentication.";
   };
 
   return (
@@ -49,6 +64,12 @@ const Index = () => {
             Please sign in to your account
           </p>
         </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <Auth
           supabaseClient={supabase}
@@ -65,13 +86,6 @@ const Index = () => {
           }}
           theme="light"
           providers={[]}
-          onError={(error) => {
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: getErrorMessage(error),
-            });
-          }}
         />
       </div>
     </div>
