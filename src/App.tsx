@@ -19,8 +19,21 @@ import GAT from "./pages/GAT";
 import PracticeSetup from "./pages/practice/PracticeSetup";
 import PracticeTest from "./pages/practice/PracticeTest";
 import PracticeResults from "./pages/practice/PracticeResults";
+import Index from "./pages/Index";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+      onError: (error: any) => {
+        if (error?.message?.includes('refresh_token_not_found')) {
+          window.location.href = '/signin';
+        }
+      },
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -29,7 +42,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/faq" element={<FAQ />} />

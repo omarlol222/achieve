@@ -1,72 +1,11 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 
 const Index = () => {
-  const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check initial session
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          // Check if user has a profile and is an admin
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
-
-          if (profile?.role === "admin") {
-            navigate("/admin");
-            return;
-          } else {
-            setError("Access denied. Admin privileges required.");
-          }
-        }
-      } catch (err) {
-        console.error("Session check error:", err);
-        setError("An error occurred while checking your session.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session?.user) {
-          // Check if user is admin
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
-
-          if (profile?.role === "admin") {
-            navigate("/admin");
-            return;
-          } else {
-            setError("Access denied. Admin privileges required.");
-          }
-        }
-
-        if (event === "SIGNED_OUT") {
-          setError(null);
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+  const { error, isLoading } = useAuthRedirect();
 
   if (isLoading) {
     return (
