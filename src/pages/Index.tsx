@@ -22,20 +22,6 @@ const Index = () => {
           navigate("/admin");
         }
         
-        // Handle auth errors
-        if (event === "USER_UPDATED") {
-          const { error } = await supabase.auth.getSession();
-          if (error) {
-            console.error('Auth error:', error);
-            const message = getErrorMessage(error);
-            setError(message);
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: message,
-            });
-          }
-        }
         if (event === "SIGNED_OUT") {
           console.log('User signed out');
           setError(null);
@@ -50,22 +36,22 @@ const Index = () => {
     });
     
     return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  }, [navigate]);
 
   const getErrorMessage = (error: AuthError) => {
-    console.log('Auth Error:', error); // Add this line for debugging
+    console.log('Auth Error:', error);
     if (error instanceof AuthApiError) {
-      switch (error.code) {
-        case 'invalid_credentials':
+      switch (error.status) {
+        case 400:
           return 'Invalid email or password. Please check your credentials and try again.';
-        case 'invalid_grant':
+        case 422:
           return 'Invalid login credentials. Please check your email and password.';
-        case 'email_not_confirmed':
+        case 401:
           return 'Please verify your email address before signing in.';
-        case 'user_not_found':
+        case 404:
           return 'No user found with these credentials.';
         default:
-          return `${error.message} (Code: ${error.code})`;
+          return error.message;
       }
     }
     return error.message;
@@ -105,6 +91,15 @@ const Index = () => {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
+          onError={(error) => {
+            const message = getErrorMessage(error);
+            setError(message);
+            toast({
+              variant: "destructive",
+              title: "Authentication Error",
+              description: message,
+            });
+          }}
         />
       </div>
     </div>
