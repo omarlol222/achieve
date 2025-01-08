@@ -17,20 +17,14 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
   const now = new Date().toISOString();
 
   if (existingProgress) {
-    // Calculate new points based on performance
+    // Calculate new values
     const totalQuestions = existingProgress.questions_attempted + 1;
     const correctQuestions = existingProgress.questions_correct + (isCorrect ? 1 : 0);
     const percentage = (correctQuestions / totalQuestions) * 100;
     
     // Calculate points adjustment
-    let pointsAdjustment = 0;
-    if (percentage >= 90) pointsAdjustment = 50;
-    else if (percentage >= 80) pointsAdjustment = 30;
-    else if (percentage >= 70) pointsAdjustment = 20;
-    else if (percentage < 50) pointsAdjustment = -30;
-    else if (percentage < 60) pointsAdjustment = -20;
-    else pointsAdjustment = -10;
-
+    let pointsAdjustment = isCorrect ? 50 : -30;
+    
     // Calculate new points value, ensuring it stays within 0-1000 range
     const newPoints = Math.min(1000, Math.max(0, existingProgress.points + pointsAdjustment));
 
@@ -47,7 +41,7 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
 
     if (updateError) throw updateError;
   } else {
-    // Create new progress entry with initial points based on first answer
+    // Create new progress entry with initial points
     const initialPoints = isCorrect ? 50 : 0;
     
     const { error: insertError } = await supabase
