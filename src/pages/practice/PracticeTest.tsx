@@ -2,11 +2,10 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, XCircle } from "lucide-react";
+import { QuestionContent } from "@/components/practice/QuestionContent";
 
 type Question = {
   id: string;
@@ -48,7 +47,6 @@ const PracticeTest = () => {
 
       const { data, error } = await query;
       if (error) throw error;
-
       return data.sort(() => Math.random() - 0.5);
     },
   });
@@ -132,34 +130,6 @@ const PracticeTest = () => {
     return <div>Loading...</div>;
   }
 
-  const renderQuestionContent = () => {
-    if (currentQuestion.question_type === 'comparison') {
-      return (
-        <div className="space-y-4">
-          <p className="text-lg">{currentQuestion.question_text}</p>
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="border-b p-2 text-center w-1/2 bg-gray-50">A</th>
-                  <th className="border-b p-2 text-center w-1/2 bg-gray-50">B</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border-r p-4 text-center">{currentQuestion.comparison_value1}</td>
-                  <td className="p-4 text-center">{currentQuestion.comparison_value2}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      );
-    }
-
-    return <p className="text-lg">{currentQuestion.question_text}</p>;
-  };
-
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
@@ -170,45 +140,23 @@ const PracticeTest = () => {
           <Progress value={progress} className="w-64" />
         </div>
 
-        <Card className="p-6 space-y-6">
-          {renderQuestionContent()}
+        <QuestionContent
+          question={currentQuestion}
+          selectedAnswer={selectedAnswer}
+          showFeedback={showFeedback}
+          onAnswerSelect={handleAnswer}
+        />
 
-          <div className="space-y-4">
-            {[1, 2, 3, 4].map((choice) => (
-              <Button
-                key={choice}
-                variant={selectedAnswer === choice ? "default" : "outline"}
-                className={`w-full justify-start h-auto p-4 ${
-                  showFeedback
-                    ? choice === currentQuestion?.correct_answer
-                      ? "bg-green-100 hover:bg-green-100"
-                      : choice === selectedAnswer
-                      ? "bg-red-100 hover:bg-red-100"
-                      : ""
-                    : ""
-                }`}
-                onClick={() => handleAnswer(choice)}
-              >
-                {currentQuestion?.[`choice${choice}` as keyof Question]}
-                {showFeedback && choice === currentQuestion?.correct_answer && (
-                  <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
-                )}
-                {showFeedback && choice === selectedAnswer && choice !== currentQuestion?.correct_answer && (
-                  <XCircle className="ml-2 h-4 w-4 text-red-500" />
-                )}
-              </Button>
-            ))}
-          </div>
-
-          {showFeedback && (
-            <Button
-              className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-              onClick={handleNext}
-            >
-              {currentQuestionIndex === questions.length - 1 ? "See Results" : "Next Question"}
-            </Button>
-          )}
-        </Card>
+        {showFeedback && (
+          <Button
+            className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+            onClick={handleNext}
+          >
+            {currentQuestionIndex === questions.length - 1
+              ? "See Results"
+              : "Next Question"}
+          </Button>
+        )}
       </div>
     </div>
   );
