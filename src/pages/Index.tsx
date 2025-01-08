@@ -15,13 +15,18 @@ const Index = () => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        
         if (event === "SIGNED_IN" && session?.user) {
+          console.log('User signed in successfully:', session.user);
           navigate("/admin");
         }
+        
         // Handle auth errors
         if (event === "USER_UPDATED") {
           const { error } = await supabase.auth.getSession();
           if (error) {
+            console.error('Auth error:', error);
             const message = getErrorMessage(error);
             setError(message);
             toast({
@@ -32,13 +37,17 @@ const Index = () => {
           }
         }
         if (event === "SIGNED_OUT") {
+          console.log('User signed out');
           setError(null);
         }
       }
     );
 
-    // Log the current URL to help with debugging
+    // Log the current URL and auth configuration
     console.log('Current URL:', window.location.origin);
+    console.log('Auth configuration:', {
+      redirectTo: window.location.origin,
+    });
     
     return () => subscription.unsubscribe();
   }, [navigate, toast]);
@@ -95,6 +104,7 @@ const Index = () => {
           }}
           theme="light"
           providers={[]}
+          redirectTo={window.location.origin}
         />
       </div>
     </div>
