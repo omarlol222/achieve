@@ -57,10 +57,19 @@ const GAT = () => {
     }
   }, [topics, progress]);
 
-  const calculateTopicProgress = (topic: any) => {
+  const calculateTopicProgress = (topicId: string) => {
+    const topic = userProgress.find(t => t.id === topicId);
+    if (!topic) {
+      return {
+        percentage: 0,
+        questionsCorrect: 0
+      };
+    }
     const { questions_attempted, questions_correct } = topic.progress;
-    if (questions_attempted === 0) return 0;
-    return Math.round((questions_correct / questions_attempted) * 100);
+    return {
+      percentage: questions_attempted === 0 ? 0 : Math.round((questions_correct / questions_attempted) * 100),
+      questionsCorrect: questions_correct || 0
+    };
   };
 
   const handleStartPractice = () => {
@@ -75,7 +84,7 @@ const GAT = () => {
         </div>
 
         <ProgressSection
-          topics={userProgress}
+          subjects={userProgress}
           calculateTopicProgress={calculateTopicProgress}
         />
 
