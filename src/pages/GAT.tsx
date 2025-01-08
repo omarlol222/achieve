@@ -91,7 +91,6 @@ export default function GAT() {
       <ProgressSection
         subjects={userProgress}
         calculateTopicProgress={calculateTopicProgress}
-        onPracticeClick={() => navigate("/practice/setup")}
       />
 
       <LearningSection />
