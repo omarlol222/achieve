@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { GATHeader } from "@/components/gat/GATHeader";
 
 type TestResult = {
   id: string;
@@ -36,10 +35,8 @@ export default function Simulator() {
     <div className="min-h-screen bg-white">
       <Navigation />
       <div className="container py-8">
-        <GATHeader />
         <div className="space-y-8">
           <h2 className="text-2xl font-semibold">Previous tests</h2>
-
           {testResults?.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-4xl text-gray-500 font-light mb-16">

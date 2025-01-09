@@ -6,7 +6,6 @@ import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
 import { Navigation } from "@/components/ui/navigation";
 import { useToast } from "@/components/ui/use-toast";
-import { GATHeader } from "@/components/gat/GATHeader";
 
 export default function GAT() {
   const navigate = useNavigate();
@@ -122,7 +121,6 @@ export default function GAT() {
     <div className="min-h-screen bg-white">
       <Navigation />
       <div className="container py-8 space-y-8">
-        <GATHeader />
         <ProgressSection
           subjects={userProgress}
           calculateTopicProgress={calculateTopicProgress}

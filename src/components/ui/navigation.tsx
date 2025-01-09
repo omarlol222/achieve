@@ -81,58 +81,56 @@ export const Navigation = () => {
         )}
         
         <div className="flex items-center gap-4">
+          {session && hasPurchased && (
+            <Link to="/gat" className="text-3xl font-bold hover:text-primary">
+              GAT
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to="/admin" className="hover:text-primary">
+              Admin
+            </Link>
+          )}
           {!session ? (
             <Link to="/signin">
               <Button variant="outline">Sign In</Button>
             </Link>
           ) : (
-            <>
-              {session && hasPurchased && (
-                <Link to="/gat" className="hover:text-primary mr-4">
-                  Dashboard
-                </Link>
-              )}
-              {isAdmin && (
-                <Link to="/admin" className="hover:text-primary mr-4">
-                  Admin
-                </Link>
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-6 w-6" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {!isGatRoute && (
-                    <>
-                      <DropdownMenuItem onClick={() => navigate("/about")}>
-                        About
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/shop")}>
-                        Shop
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/faq")}>
-                        FAQ
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  {session && hasPurchased && (
-                    <DropdownMenuItem onClick={() => navigate("/gat")}>
-                      Dashboard
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {!isGatRoute && (
+                  <>
+                    <DropdownMenuItem onClick={() => navigate("/about")}>
+                      About
                     </DropdownMenuItem>
-                  )}
-                  {isAdmin && (
-                    <DropdownMenuItem onClick={() => navigate("/admin")}>
-                      Admin
+                    <DropdownMenuItem onClick={() => navigate("/shop")}>
+                      Shop
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    Sign Out
+                    <DropdownMenuItem onClick={() => navigate("/faq")}>
+                      FAQ
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {session && hasPurchased && (
+                  <DropdownMenuItem onClick={() => navigate("/gat")}>
+                    Dashboard
                   </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+                )}
+                {isAdmin && (
+                  <DropdownMenuItem onClick={() => navigate("/admin")}>
+                    Admin
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={handleSignOut}>
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>

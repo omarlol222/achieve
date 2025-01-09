@@ -14,7 +14,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { GATHeader } from "@/components/gat/GATHeader";
 
 const Practice = () => {
   const navigate = useNavigate();
@@ -76,7 +75,6 @@ const Practice = () => {
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-2xl mx-auto space-y-8">
-        <GATHeader />
         <Card className="p-6 space-y-6 bg-gray-100">
           <div className="space-y-4">
             <div className="space-y-2">
