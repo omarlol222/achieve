@@ -50,7 +50,7 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
             control={form.control}
             name={`topic_percentages.${topic.id}`}
             render={({ field }) => {
-              const currentValue = field.value || 0;
+              const currentValue = Number(field.value) || 0;
               console.log(`Topic ${topic.name} (${topic.id}) current value:`, currentValue);
               
               return (

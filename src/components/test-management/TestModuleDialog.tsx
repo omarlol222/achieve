@@ -104,27 +104,19 @@ export function TestModuleDialog({
         console.log("Created new module with ID:", moduleId);
       }
 
-      // Calculate question count per topic based on percentages and insert topic percentages
+      // Calculate question count per topic based on percentages
       const totalQuestions = data.total_questions;
       console.log("Processing topic percentages. Total questions:", totalQuestions);
-      console.log("Topic percentages data:", data.topic_percentages);
       
-      // Filter topics with non-zero percentages
-      const nonZeroTopics = Object.entries(data.topic_percentages)
-        .filter(([_, percentage]) => percentage > 0);
-
-      // First pass: Calculate initial question counts
-      const topicData = nonZeroTopics.map(([topicId, percentage]) => {
-        // Ensure at least 1 question per topic with non-zero percentage
-        const rawQuestionCount = Math.max(1, Math.round((percentage / 100) * totalQuestions));
-        console.log(`Topic ${topicId}: ${percentage}% = ${rawQuestionCount} questions`);
-        return {
+      // Filter topics with non-zero percentages and prepare for insertion
+      const topicData = Object.entries(data.topic_percentages)
+        .filter(([_, percentage]) => percentage > 0)
+        .map(([topicId, percentage]) => ({
           module_id: moduleId,
           topic_id: topicId,
           percentage: percentage,
-          question_count: rawQuestionCount,
-        };
-      });
+          question_count: Math.max(1, Math.round((percentage / 100) * totalQuestions))
+        }));
 
       console.log("Prepared topic data for insertion:", topicData);
 
@@ -165,7 +157,7 @@ export function TestModuleDialog({
       // Convert module_topics array to topic_percentages object
       const topicPercentages = {};
       initialData.module_topics?.forEach((topic: any) => {
-        topicPercentages[topic.topic_id] = topic.percentage || 0;
+        topicPercentages[topic.topic_id] = Number(topic.percentage);
       });
 
       console.log("Converted topic percentages:", topicPercentages);
