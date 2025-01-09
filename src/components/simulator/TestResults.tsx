@@ -27,7 +27,8 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
             module:test_modules (
               id,
               name,
-              test_type:test_types (
+              subject:subjects (
+                id,
                 name
               )
             ),
@@ -63,11 +64,11 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
   if (!session) return null;
 
-  const calculateSectionScore = (type: string) => {
+  const calculateSubjectScore = (subjectId: string) => {
     if (!session.module_progress) return 0;
     
     const moduleAnswers = session.module_progress
-      .filter(progress => progress.module.test_type?.name.toLowerCase() === type.toLowerCase())
+      .filter(progress => progress.module.subject?.id === subjectId)
       .flatMap(progress => progress.module_answers || []);
 
     if (moduleAnswers.length === 0) return 0;
@@ -103,9 +104,24 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
     return Object.values(topicStats);
   };
 
-  const mathScore = calculateSectionScore('math');
-  const verbalScore = calculateSectionScore('verbal');
-  const totalScore = Math.round((mathScore + verbalScore) / 2);
+  // Get unique subjects from module progress
+  const subjects = [...new Set(
+    session.module_progress
+      ?.filter(progress => progress.module.subject)
+      .map(progress => progress.module.subject)
+  )];
+
+  // Calculate scores for each subject
+  const subjectScores = subjects.map(subject => ({
+    name: subject.name,
+    score: calculateSubjectScore(subject.id)
+  }));
+
+  // Calculate total score as average of all subject scores
+  const totalScore = Math.round(
+    subjectScores.reduce((acc, subject) => acc + subject.score, 0) / subjectScores.length
+  );
+
   const topicPerformance = calculateTopicPerformance();
 
   if (selectedModuleId) {
@@ -125,8 +141,7 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
   return (
     <div className="space-y-8">
       <ScoreHeader
-        mathScore={mathScore}
-        verbalScore={verbalScore}
+        subjectScores={subjectScores}
         totalScore={totalScore}
         createdAt={session.created_at}
       />

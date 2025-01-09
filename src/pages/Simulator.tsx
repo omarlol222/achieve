@@ -23,7 +23,8 @@ export default function Simulator() {
           *,
           module_progress:module_progress (
             module:test_modules (
-              test_type:test_types (
+              subject:subjects (
+                id,
                 name
               )
             ),
@@ -44,11 +45,11 @@ export default function Simulator() {
     },
   });
 
-  const calculateSectionScore = (session: any, type: string) => {
+  const calculateSubjectScore = (session: any, subjectId: string) => {
     if (!session.module_progress) return 0;
     
     const moduleAnswers = session.module_progress
-      .filter((progress: any) => progress.module.test_type?.name.toLowerCase() === type.toLowerCase())
+      .filter((progress: any) => progress.module.subject?.id === subjectId)
       .flatMap((progress: any) => progress.module_answers || []);
 
     if (moduleAnswers.length === 0) return 0;
@@ -96,9 +97,23 @@ export default function Simulator() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {testSessions.map((session) => {
-                const mathScore = calculateSectionScore(session, 'math');
-                const verbalScore = calculateSectionScore(session, 'verbal');
-                const totalScore = Math.round((mathScore + verbalScore) / 2);
+                // Get unique subjects from module progress
+                const subjects = [...new Set(
+                  session.module_progress
+                    ?.filter((progress: any) => progress.module.subject)
+                    .map((progress: any) => progress.module.subject)
+                )];
+
+                // Calculate scores for each subject
+                const subjectScores = subjects.map(subject => ({
+                  name: subject.name,
+                  score: calculateSubjectScore(session, subject.id)
+                }));
+
+                // Calculate total score as average of all subject scores
+                const totalScore = Math.round(
+                  subjectScores.reduce((acc, subject) => acc + subject.score, 0) / subjectScores.length
+                );
 
                 return (
                   <div
@@ -124,14 +139,12 @@ export default function Simulator() {
                     <div>
                       <p className="text-sm text-gray-600">SCORE:</p>
                       <div className="space-y-2">
-                        <p>
-                          <span className="font-medium">VERBAL: </span>
-                          {verbalScore}
-                        </p>
-                        <p>
-                          <span className="font-medium">MATH: </span>
-                          {mathScore}
-                        </p>
+                        {subjectScores.map(subject => (
+                          <p key={subject.name}>
+                            <span className="font-medium">{subject.name.toUpperCase()}: </span>
+                            {subject.score}
+                          </p>
+                        ))}
                         <p>
                           <span className="font-medium">TOTAL: </span>
                           {totalScore}
