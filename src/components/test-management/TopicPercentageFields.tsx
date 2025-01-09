@@ -40,12 +40,13 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
       <h3 className="font-medium text-lg">Topic Configuration</h3>
       <div className="grid grid-cols-2 gap-4">
         {topics.map((topic) => (
-          <div key={topic.id} className="space-y-4 border p-4 rounded-lg">
-            <h4 className="font-medium">{topic.name}</h4>
-            <FormField
-              control={form.control}
-              name={`topic_percentages.${topic.id}`}
-              render={({ field }) => (
+          <FormField
+            key={topic.id}
+            control={form.control}
+            name={`topic_percentages.${topic.id}`}
+            render={({ field }) => (
+              <div className="space-y-4 border p-4 rounded-lg">
+                <h4 className="font-medium">{topic.name}</h4>
                 <FormItem>
                   <FormLabel>Percentage (%)</FormLabel>
                   <FormControl>
@@ -54,14 +55,19 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
                       min="0"
                       max="100"
                       {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      value={field.value || ""}
+                      onChange={(e) => {
+                        const value = e.target.value === "" ? 0 : parseInt(e.target.value);
+                        field.onChange(value);
+                        console.log(`Setting ${topic.id} to ${value}%`);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
-              )}
-            />
-          </div>
+              </div>
+            )}
+          />
         ))}
       </div>
     </div>
