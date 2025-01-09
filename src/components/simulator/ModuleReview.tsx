@@ -55,6 +55,7 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
             explanation,
             image_url,
             topic:topics (
+              id,
               name
             )
           )
