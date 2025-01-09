@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ProtectedGatRoute } from "@/components/auth/ProtectedGatRoute";
 import Landing from "./pages/Landing";
 import About from "./pages/About";
 import Shop from "./pages/Shop";
@@ -51,13 +52,41 @@ const App = () => (
           <Route path="/shop" element={<Shop />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/signin" element={<SignIn />} />
-          <Route path="/gat" element={<GAT />} />
-          <Route path="/gat/practice" element={<Practice />} />
-          <Route path="/gat/practice/test" element={<PracticeTest />} />
-          <Route path="/gat/simulator" element={<Simulator />} />
-          <Route path="/gat/simulator/test" element={<SimulatorTest />} />
-          <Route path="/gat/simulator/results/:sessionId" element={<SimulatorResults />} />
-          <Route path="/gat/simulator/all-tests" element={<AllTests />} />
+          <Route path="/gat" element={
+            <ProtectedGatRoute>
+              <GAT />
+            </ProtectedGatRoute>
+          } />
+          <Route path="/gat/practice" element={
+            <ProtectedGatRoute>
+              <Practice />
+            </ProtectedGatRoute>
+          } />
+          <Route path="/gat/practice/test" element={
+            <ProtectedGatRoute>
+              <PracticeTest />
+            </ProtectedGatRoute>
+          } />
+          <Route path="/gat/simulator" element={
+            <ProtectedGatRoute>
+              <Simulator />
+            </ProtectedGatRoute>
+          } />
+          <Route path="/gat/simulator/test" element={
+            <ProtectedGatRoute>
+              <SimulatorTest />
+            </ProtectedGatRoute>
+          } />
+          <Route path="/gat/simulator/results/:sessionId" element={
+            <ProtectedGatRoute>
+              <SimulatorResults />
+            </ProtectedGatRoute>
+          } />
+          <Route path="/gat/simulator/all-tests" element={
+            <ProtectedGatRoute>
+              <AllTests />
+            </ProtectedGatRoute>
+          } />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="questions" element={<Questions />} />

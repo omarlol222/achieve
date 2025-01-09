@@ -1,91 +1,79 @@
-import { CheckCircle, XCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-type Answer = {
-  id: string;
-  selected_answer: number;
+type AnswerCardProps = {
   question: {
     id: string;
     question_text: string;
-    correct_answer: number;
     choice1: string;
     choice2: string;
     choice3: string;
     choice4: string;
+    correct_answer: number;
     explanation?: string;
-    image_url?: string;
     topic?: {
       id: string;
       name: string;
     };
   };
+  selectedAnswer?: number | null;
 };
 
-type AnswerCardProps = {
-  answer: Answer;
-};
+export const AnswerCard = ({ question, selectedAnswer }: AnswerCardProps) => {
+  const choices = [
+    question.choice1,
+    question.choice2,
+    question.choice3,
+    question.choice4,
+  ];
 
-export function AnswerCard({ answer }: AnswerCardProps) {
-  const isCorrect = answer.selected_answer === answer.question.correct_answer;
+  const getAnswerStyle = (index: number) => {
+    if (selectedAnswer === null || selectedAnswer === undefined) return "";
+    
+    if (index + 1 === question.correct_answer) {
+      return "bg-green-100 border-green-500";
+    }
+    
+    if (index + 1 === selectedAnswer && selectedAnswer !== question.correct_answer) {
+      return "bg-red-100 border-red-500";
+    }
+    
+    return "";
+  };
 
   return (
-    <Card className="p-6">
-      <div className="flex items-start gap-4">
-        {isCorrect ? (
-          <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
-        ) : (
-          <XCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-1" />
-        )}
-        <div className="space-y-4 flex-1">
-          <div className="space-y-4">
-            <div className="flex justify-between items-start">
-              <p className="font-medium">{answer.question.question_text}</p>
-              <span className="text-xs text-gray-500">ID: {answer.question.id}</span>
-            </div>
-            {answer.question.image_url && (
-              <img 
-                src={answer.question.image_url} 
-                alt="Question" 
-                className="max-w-full h-auto rounded-lg"
-              />
-            )}
-          </div>
+    <Card className="p-6 space-y-6">
+      <div className="space-y-4">
+        <div className="flex justify-between items-start">
           <div className="space-y-2">
-            {[1, 2, 3, 4].map((choice) => {
-              const isSelected = answer.selected_answer === choice;
-              const isCorrect = answer.question.correct_answer === choice;
-              return (
-                <div
-                  key={choice}
-                  className={`p-3 rounded-lg ${
-                    isSelected
-                      ? isCorrect
-                        ? "bg-green-50 border border-green-200"
-                        : "bg-red-50 border border-red-200"
-                      : isCorrect
-                      ? "bg-green-50 border border-green-200"
-                      : "bg-gray-50 border border-gray-200"
-                  }`}
-                >
-                  {answer.question[`choice${choice}` as keyof typeof answer.question]}
-                </div>
-              );
-            })}
+            <p className="text-sm text-gray-500">
+              Topic: {question.topic?.name || "Unknown"}
+            </p>
+            <p className="font-medium">{question.question_text}</p>
           </div>
-          {answer.question.explanation && (
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800">{answer.question.explanation}</p>
-            </div>
-          )}
-          {answer.question.topic && (
-            <div className="mt-2">
-              <span className="text-xs text-gray-500">
-                Topic: {answer.question.topic.name}
-              </span>
-            </div>
-          )}
         </div>
+
+        <div className="space-y-3">
+          {choices.map((choice, index) => (
+            <div
+              key={index}
+              className={cn(
+                "p-4 border rounded-lg",
+                getAnswerStyle(index)
+              )}
+            >
+              {choice}
+            </div>
+          ))}
+        </div>
+
+        {question.explanation && (
+          <div className="pt-4 border-t">
+            <p className="text-sm text-gray-500">Explanation:</p>
+            <p className="mt-1">{question.explanation}</p>
+          </div>
+        )}
       </div>
     </Card>
   );
-}
+};
