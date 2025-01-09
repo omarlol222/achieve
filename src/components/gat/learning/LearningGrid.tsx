@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 export const LearningGrid = () => {
   const navigate = useNavigate();
 
-  const handlePracticeClick = () => navigate("/practice");
-  const handleSimulatorClick = () => navigate("/simulator");
+  const handlePracticeClick = () => navigate("/gat/practice");
+  const handleSimulatorClick = () => navigate("/gat/simulator");
 
   return (
     <div className="grid md:grid-cols-3 gap-8">
