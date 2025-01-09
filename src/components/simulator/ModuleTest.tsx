@@ -29,11 +29,13 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
   const [showReview, setShowReview] = useState(false);
 
   useEffect(() => {
+    console.log("ModuleTest mounted, fetching questions");
     fetchQuestions();
   }, []);
 
   useEffect(() => {
     if (timeLeft <= 0) {
+      console.log("Time's up, submitting module");
       handleSubmit();
       return;
     }
@@ -47,6 +49,7 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
 
   const fetchQuestions = async () => {
     try {
+      console.log("Fetching questions for module:", moduleProgress.module.id);
       const { data, error } = await supabase
         .from("module_questions")
         .select(`
@@ -69,8 +72,22 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
         `)
         .eq("module_id", moduleProgress.module.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching questions:", error);
+        throw error;
+      }
 
+      if (!data || data.length === 0) {
+        console.log("No questions found for module");
+        toast({
+          variant: "destructive",
+          title: "No questions found",
+          description: "This module has no questions assigned.",
+        });
+        return;
+      }
+
+      console.log("Questions fetched successfully:", data.length);
       const formattedQuestions = data.map((item) => ({
         ...item.questions,
       }));
@@ -78,6 +95,7 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
       setQuestions(formattedQuestions);
       setIsLoading(false);
     } catch (error: any) {
+      console.error("Error in fetchQuestions:", error);
       toast({
         variant: "destructive",
         title: "Error loading questions",
@@ -90,6 +108,13 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
     const currentQuestion = questions[currentIndex];
     
     try {
+      console.log("Saving answer:", {
+        moduleProgressId: moduleProgress.id,
+        questionId: currentQuestion.id,
+        answer,
+        isFlagged: flagged[currentQuestion.id],
+      });
+
       const { error } = await supabase
         .from("module_answers")
         .insert({
@@ -99,13 +124,19 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
           is_flagged: flagged[currentQuestion.id] || false,
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error saving answer:", error);
+        throw error;
+      }
 
       setAnswers((prev) => ({
         ...prev,
         [currentQuestion.id]: answer,
       }));
+
+      console.log("Answer saved successfully");
     } catch (error: any) {
+      console.error("Error in handleAnswer:", error);
       toast({
         variant: "destructive",
         title: "Error saving answer",
@@ -124,15 +155,21 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
 
   const handleSubmit = async () => {
     try {
+      console.log("Submitting module progress:", moduleProgress.id);
       const { error: progressError } = await supabase
         .from("module_progress")
         .update({ completed_at: new Date().toISOString() })
         .eq("id", moduleProgress.id);
 
-      if (progressError) throw progressError;
+      if (progressError) {
+        console.error("Error updating module progress:", progressError);
+        throw progressError;
+      }
 
+      console.log("Module submitted successfully");
       setShowReview(true);
     } catch (error: any) {
+      console.error("Error in handleSubmit:", error);
       toast({
         variant: "destructive",
         title: "Error submitting module",
@@ -145,6 +182,14 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <p>Loading questions...</p>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <p>No questions available for this module.</p>
       </div>
     );
   }
