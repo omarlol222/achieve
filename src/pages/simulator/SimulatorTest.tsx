@@ -21,6 +21,7 @@ export default function SimulatorTest() {
         description: "Please start a new test from the simulator page.",
       });
       navigate("/gat/simulator");
+      return;
     }
   }, [sessionId, navigate, toast]);
 
@@ -87,16 +88,6 @@ export default function SimulatorTest() {
       setCurrentModuleIndex(prev => prev + 1);
     } else {
       try {
-        // Update test session as completed
-        const { error: updateError } = await supabase
-          .from("test_sessions")
-          .update({
-            completed_at: new Date().toISOString()
-          })
-          .eq("id", sessionId);
-
-        if (updateError) throw updateError;
-
         // Calculate scores from module progress
         const { data: progressData, error: progressError } = await supabase
           .from("module_progress")
@@ -152,7 +143,7 @@ export default function SimulatorTest() {
         if (scoresError) throw scoresError;
 
         // Navigate to results page
-        navigate(`/gat/simulator/results/${sessionId}`);
+        navigate(`/gat/simulator/results/${sessionId}`, { replace: true });
         
         toast({
           title: "Test completed",
