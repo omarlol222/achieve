@@ -52,6 +52,8 @@ export function TestModuleDialog({
 
   const onSubmit = async (data: TestModuleFormData) => {
     try {
+      let moduleId;
+      
       if (initialData) {
         // Update test module
         const { error: moduleError } = await supabase
@@ -68,12 +70,13 @@ export function TestModuleDialog({
           .eq("id", initialData.id);
 
         if (moduleError) throw moduleError;
+        moduleId = initialData.id;
 
         // Delete existing topic percentages
         const { error: deleteError } = await supabase
           .from("module_topics")
           .delete()
-          .eq("module_id", initialData.id);
+          .eq("module_id", moduleId);
 
         if (deleteError) throw deleteError;
       } else {
@@ -93,26 +96,30 @@ export function TestModuleDialog({
           .single();
 
         if (moduleError) throw moduleError;
-        initialData = moduleData;
+        moduleId = moduleData.id;
       }
 
-      // Calculate question count per topic based on percentages
+      // Calculate question count per topic based on percentages and insert topic percentages
       const totalQuestions = data.total_questions;
-      const topicData = Object.entries(data.topic_percentages).map(([topicId, percentage]) => {
-        const questionCount = Math.round((percentage / 100) * totalQuestions);
-        return {
-          module_id: initialData.id,
-          topic_id: topicId,
-          percentage: percentage,
-          question_count: questionCount || 1, // Ensure at least 1 question
-        };
-      });
+      const topicData = Object.entries(data.topic_percentages)
+        .filter(([_, percentage]) => percentage > 0) // Only include topics with percentage > 0
+        .map(([topicId, percentage]) => {
+          const questionCount = Math.round((percentage / 100) * totalQuestions);
+          return {
+            module_id: moduleId,
+            topic_id: topicId,
+            percentage: percentage,
+            question_count: questionCount || 1, // Ensure at least 1 question
+          };
+        });
 
-      const { error: topicError } = await supabase
-        .from("module_topics")
-        .insert(topicData);
+      if (topicData.length > 0) {
+        const { error: topicError } = await supabase
+          .from("module_topics")
+          .insert(topicData);
 
-      if (topicError) throw topicError;
+        if (topicError) throw topicError;
+      }
 
       toast({
         title: `Test module ${initialData ? 'updated' : 'created'} successfully`,
