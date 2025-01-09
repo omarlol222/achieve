@@ -28,6 +28,7 @@ type TestModule = {
   name: string;
   description?: string;
   time_limit: number;
+  test_type_id?: string;
 };
 
 type ModuleProgress = {
@@ -67,7 +68,13 @@ export default function Simulator() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("test_modules")
-        .select("*")
+        .select(`
+          id,
+          name,
+          description,
+          time_limit,
+          test_type_id
+        `)
         .order("order_index", { ascending: true });
 
       if (error) throw error;
@@ -121,7 +128,8 @@ export default function Simulator() {
           module:test_modules (
             id,
             name,
-            time_limit
+            time_limit,
+            test_type_id
           )
         `)
         .single();
@@ -152,21 +160,40 @@ export default function Simulator() {
     }
   };
 
-  const handleModuleComplete = () => {
-    // Move to the next module or finish test
+  const handleModuleComplete = async () => {
     if (modules) {
       const currentIndex = modules.findIndex(m => m.id === currentModule?.id);
       if (currentIndex < modules.length - 1) {
+        // Move to next module
         setCurrentModule(modules[currentIndex + 1]);
         setShowModuleStart(true);
         setModuleProgress(null);
       } else {
         // Test completed
+        if (activeSession?.id) {
+          const { error } = await supabase
+            .from("test_sessions")
+            .update({ completed_at: new Date().toISOString() })
+            .eq("id", activeSession.id);
+
+          if (error) {
+            toast({
+              variant: "destructive",
+              title: "Error completing test",
+              description: error.message,
+            });
+          }
+        }
         setActiveSession(null);
         setCurrentModule(null);
         setShowModuleStart(false);
         setModuleProgress(null);
         queryClient.invalidateQueries({ queryKey: ["test-results"] });
+        
+        toast({
+          title: "Test completed",
+          description: "Your test has been submitted successfully.",
+        });
       }
     }
   };
@@ -177,10 +204,12 @@ export default function Simulator() {
     }
 
     if (moduleProgress) {
-      return <ModuleTest 
-        moduleProgress={moduleProgress}
-        onComplete={handleModuleComplete}
-      />;
+      return (
+        <ModuleTest 
+          moduleProgress={moduleProgress}
+          onComplete={handleModuleComplete}
+        />
+      );
     }
 
     if (showModuleStart && currentModule) {
