@@ -72,9 +72,9 @@ const AdminLayout = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="w-full border-b bg-white">
         <div className="container flex h-24 items-center">
-          <Link to="/">
+          <Link to="/index" className="flex-shrink-0">
             <img
               src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
               alt="Achieve"
@@ -82,7 +82,7 @@ const AdminLayout = () => {
             />
           </Link>
 
-          <div className="mx-auto text-2xl font-semibold">
+          <div className="mx-auto text-4xl font-bold text-[#1B2B2B]">
             GAT
           </div>
 
