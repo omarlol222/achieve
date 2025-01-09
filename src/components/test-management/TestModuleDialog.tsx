@@ -109,18 +109,22 @@ export function TestModuleDialog({
       console.log("Processing topic percentages. Total questions:", totalQuestions);
       console.log("Topic percentages data:", data.topic_percentages);
       
-      const topicData = Object.entries(data.topic_percentages)
-        .filter(([_, percentage]) => percentage > 0) // Only include topics with percentage > 0
-        .map(([topicId, percentage]) => {
-          const questionCount = Math.round((percentage / 100) * totalQuestions);
-          console.log(`Topic ${topicId}: ${percentage}% = ${questionCount} questions`);
-          return {
-            module_id: moduleId,
-            topic_id: topicId,
-            percentage: percentage,
-            question_count: questionCount || 1, // Ensure at least 1 question
-          };
-        });
+      // Filter topics with non-zero percentages
+      const nonZeroTopics = Object.entries(data.topic_percentages)
+        .filter(([_, percentage]) => percentage > 0);
+
+      // First pass: Calculate initial question counts
+      const topicData = nonZeroTopics.map(([topicId, percentage]) => {
+        // Ensure at least 1 question per topic with non-zero percentage
+        const rawQuestionCount = Math.max(1, Math.round((percentage / 100) * totalQuestions));
+        console.log(`Topic ${topicId}: ${percentage}% = ${rawQuestionCount} questions`);
+        return {
+          module_id: moduleId,
+          topic_id: topicId,
+          percentage: percentage,
+          question_count: rawQuestionCount,
+        };
+      });
 
       console.log("Prepared topic data for insertion:", topicData);
 
