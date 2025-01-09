@@ -157,30 +157,46 @@ export function TestModuleDialog({
   useEffect(() => {
     if (initialData) {
       console.log("Setting form data from initialData:", initialData);
-      console.log("Initial module_topics:", initialData.module_topics);
       
-      // Convert module_topics array to topic_percentages object
-      const topicPercentages = {};
-      initialData.module_topics?.forEach((topic: any) => {
-        topicPercentages[topic.topic_id] = Number(topic.percentage);
-      });
+      // Fetch module topics for the initial data
+      const fetchModuleTopics = async () => {
+        const { data: moduleTopics, error } = await supabase
+          .from("module_topics")
+          .select("*")
+          .eq("module_id", initialData.id);
+          
+        if (error) {
+          console.error("Error fetching module topics:", error);
+          return;
+        }
+        
+        console.log("Fetched module topics:", moduleTopics);
+        
+        // Convert module_topics array to topic_percentages object
+        const topicPercentages = {};
+        moduleTopics?.forEach((topic) => {
+          topicPercentages[topic.topic_id] = Number(topic.percentage);
+        });
 
-      console.log("Converted topic percentages:", topicPercentages);
+        console.log("Converted topic percentages:", topicPercentages);
 
-      form.reset({
-        name: initialData.name || "",
-        description: initialData.description || "",
-        time_limit: initialData.time_limit || 0,
-        subject_id: initialData.subject_id || "",
-        test_type_id: initialData.test_type_id || "",
-        topic_percentages: topicPercentages,
-        total_questions: initialData.module_topics?.reduce(
-          (sum: number, topic: any) => sum + (topic.question_count || 0),
-          0
-        ) || 1,
-        difficulty_levels: initialData.difficulty_levels || ["Easy", "Moderate", "Hard"],
-        order_index: initialData.order_index || 0,
-      });
+        form.reset({
+          name: initialData.name || "",
+          description: initialData.description || "",
+          time_limit: initialData.time_limit || 0,
+          subject_id: initialData.subject_id || "",
+          test_type_id: initialData.test_type_id || "",
+          topic_percentages: topicPercentages,
+          total_questions: moduleTopics?.reduce(
+            (sum: number, topic: any) => sum + (topic.question_count || 0),
+            0
+          ) || 1,
+          difficulty_levels: initialData.difficulty_levels || ["Easy", "Moderate", "Hard"],
+          order_index: initialData.order_index || 0,
+        });
+      };
+
+      fetchModuleTopics();
     }
   }, [initialData, form]);
 
