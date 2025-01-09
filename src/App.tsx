@@ -22,6 +22,7 @@ import Simulator from "./pages/Simulator";
 import SimulatorTest from "./pages/simulator/SimulatorTest";
 import SimulatorResults from "./pages/simulator/SimulatorResults";
 import AllTests from "./pages/simulator/AllTests";
+import { useToast } from "./components/ui/use-toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,7 +31,10 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       meta: {
         onError: (error: any) => {
-          if (error?.message?.includes('refresh_token_not_found')) {
+          if (error?.message?.includes('refresh_token_not_found') || 
+              error?.message?.includes('Invalid Refresh Token')) {
+            // Clear any existing session data
+            localStorage.removeItem('supabase.auth.token');
             window.location.href = '/signin';
           }
         },
