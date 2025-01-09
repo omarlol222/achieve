@@ -63,34 +63,40 @@ export const Navigation = () => {
 
   return (
     <nav className="border-b">
-      <div className="container mx-auto px-4 h-24 flex items-center justify-between">
-        <Link to="/index" className="flex items-center">
-          <img
-            src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
-            alt="Achieve"
-            className="h-24"
-          />
-        </Link>
+      <div className="container mx-auto px-4 h-24 flex items-center">
+        <div className="flex-1">
+          <Link to="/index" className="flex items-center">
+            <img
+              src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
+              alt="Achieve"
+              className="h-24"
+            />
+          </Link>
+        </div>
 
-        {!isGatRoute && (
-          <div className="flex items-center gap-12 text-lg font-medium">
-            <Link to="/about" className="hover:text-primary">About</Link>
-            <Link to="/shop" className="hover:text-primary">Shop</Link>
-            <Link to="/faq" className="hover:text-primary">FAQ</Link>
-          </div>
-        )}
-        
-        <div className="flex items-center gap-4">
-          {session && hasPurchased && (
+        {session && hasPurchased && (
+          <div className="flex-1 flex justify-center">
             <Link to="/gat" className="text-3xl font-bold hover:text-primary">
               GAT
             </Link>
+          </div>
+        )}
+
+        <div className="flex-1 flex items-center justify-end gap-4">
+          {!isGatRoute && (
+            <div className="hidden md:flex items-center gap-12 text-lg font-medium">
+              <Link to="/about" className="hover:text-primary">About</Link>
+              <Link to="/shop" className="hover:text-primary">Shop</Link>
+              <Link to="/faq" className="hover:text-primary">FAQ</Link>
+            </div>
           )}
+          
           {isAdmin && (
             <Link to="/admin" className="hover:text-primary">
               Admin
             </Link>
           )}
+          
           {!session ? (
             <Link to="/signin">
               <Button variant="outline">Sign In</Button>
