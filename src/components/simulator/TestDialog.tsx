@@ -75,7 +75,7 @@ export function TestDialog({ open, onOpenChange }: TestDialogProps) {
 
               <Button 
                 onClick={() => createSession.mutate()}
-                className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C] text-white"
+                className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C] text-white px-12 py-6 text-lg h-auto"
               >
                 Start Test
               </Button>
