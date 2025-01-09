@@ -7,7 +7,5 @@ export type TestModuleFormData = {
   topic_percentages: {
     [key: string]: number;
   };
-  topic_question_counts: {
-    [key: string]: number;
-  };
+  total_questions: number;
 };

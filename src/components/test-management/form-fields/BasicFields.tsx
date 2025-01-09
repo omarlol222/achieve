@@ -56,6 +56,25 @@ export function BasicFields({ form }: BasicFieldsProps) {
           </FormItem>
         )}
       />
+
+      <FormField
+        control={form.control}
+        name="total_questions"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Total Questions</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min="1"
+                {...field}
+                onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </>
   );
 }

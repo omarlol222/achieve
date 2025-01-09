@@ -43,7 +43,7 @@ export function TestModuleDialog({
       subject_id: "",
       test_type_id: "",
       topic_percentages: {},
-      topic_question_counts: {},
+      total_questions: 1,
     },
   });
 
@@ -89,13 +89,17 @@ export function TestModuleDialog({
         initialData = moduleData;
       }
 
-      // Insert topic percentages and question counts
-      const topicData = Object.entries(data.topic_percentages).map(([topicId, percentage]) => ({
-        module_id: initialData.id,
-        topic_id: topicId,
-        percentage: percentage,
-        question_count: data.topic_question_counts[topicId] || 1,
-      }));
+      // Calculate question count per topic based on percentages
+      const totalQuestions = data.total_questions;
+      const topicData = Object.entries(data.topic_percentages).map(([topicId, percentage]) => {
+        const questionCount = Math.round((percentage / 100) * totalQuestions);
+        return {
+          module_id: initialData.id,
+          topic_id: topicId,
+          percentage: percentage,
+          question_count: questionCount || 1, // Ensure at least 1 question
+        };
+      });
 
       const { error: topicError } = await supabase
         .from("module_topics")
@@ -121,6 +125,12 @@ export function TestModuleDialog({
 
   useEffect(() => {
     if (initialData) {
+      // Calculate total questions from existing topic question counts
+      const totalQuestions = initialData.module_topics?.reduce(
+        (sum: number, topic: any) => sum + topic.question_count,
+        0
+      ) || 1;
+
       form.reset({
         name: initialData.name,
         description: initialData.description,
@@ -133,12 +143,7 @@ export function TestModuleDialog({
             topic.percentage,
           ]) || []
         ),
-        topic_question_counts: Object.fromEntries(
-          initialData.module_topics?.map((topic: any) => [
-            topic.topic_id,
-            topic.question_count,
-          ]) || []
-        ),
+        total_questions: totalQuestions,
       });
     }
   }, [initialData, form]);
