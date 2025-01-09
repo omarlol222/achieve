@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { QuestionContent } from "@/components/practice/QuestionContent";
 import { Flag } from "lucide-react";
+import { ModuleOverview } from "./ModuleOverview";
 
 type QuestionCardProps = {
   question: any;
@@ -10,6 +11,12 @@ type QuestionCardProps = {
   onAnswerSelect: (answer: number) => void;
   onToggleFlag: () => void;
   showFeedback: boolean;
+  moduleName: string;
+  questions: any[];
+  currentIndex: number;
+  answers: Record<string, number>;
+  flagged: Record<string, boolean>;
+  onQuestionSelect: (index: number) => void;
 };
 
 export function QuestionCard({
@@ -19,10 +26,24 @@ export function QuestionCard({
   onAnswerSelect,
   onToggleFlag,
   showFeedback,
+  moduleName,
+  questions,
+  currentIndex,
+  answers,
+  flagged,
+  onQuestionSelect,
 }: QuestionCardProps) {
   return (
     <Card className="p-6">
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-between mb-4">
+        <ModuleOverview
+          moduleName={moduleName}
+          questions={questions}
+          currentIndex={currentIndex}
+          answers={answers}
+          flagged={flagged}
+          onQuestionSelect={onQuestionSelect}
+        />
         <Button
           variant={isFlagged ? "default" : "outline"}
           size="sm"

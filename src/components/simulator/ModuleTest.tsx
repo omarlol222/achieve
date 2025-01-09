@@ -299,6 +299,12 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
         onAnswerSelect={handleAnswer}
         onToggleFlag={toggleFlag}
         showFeedback={false}
+        moduleName={moduleProgress.module.name}
+        questions={questions}
+        currentIndex={currentIndex}
+        answers={answers}
+        flagged={flagged}
+        onQuestionSelect={setCurrentIndex}
       />
 
       <QuestionNavigation
