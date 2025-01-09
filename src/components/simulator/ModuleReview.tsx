@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, XCircle, Clock, Brain, Target } from "lucide-react";
 import { formatDistanceStrict } from "date-fns";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type ModuleReviewProps = {
   moduleProgressId: string;
@@ -12,7 +13,7 @@ type ModuleReviewProps = {
 };
 
 export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps) {
-  const { data: moduleProgress, isLoading: isLoadingProgress } = useQuery({
+  const { data: moduleProgress, isLoading: isLoadingProgress, error: progressError } = useQuery({
     queryKey: ["module-progress", moduleProgressId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -21,18 +22,22 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
           *,
           module:test_modules (
             name,
-            time_limit
+            time_limit,
+            subject:subjects (
+              name
+            )
           )
         `)
         .eq("id", moduleProgressId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) throw new Error("Module progress not found");
       return data;
     },
   });
 
-  const { data: answers, isLoading: isLoadingAnswers } = useQuery({
+  const { data: answers, isLoading: isLoadingAnswers, error: answersError } = useQuery({
     queryKey: ["module-answers", moduleProgressId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -48,12 +53,16 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
             choice3,
             choice4,
             explanation,
-            image_url
+            image_url,
+            topic:topics (
+              name
+            )
           )
         `)
         .eq("module_progress_id", moduleProgressId);
 
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error("No answers found for this module");
       return data;
     },
   });
@@ -66,7 +75,25 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
     );
   }
 
-  if (!answers || !moduleProgress) return null;
+  if (progressError || answersError) {
+    return (
+      <Alert variant="destructive" className="my-4">
+        <AlertDescription>
+          {progressError?.message || answersError?.message || "Error loading review"}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!answers || !moduleProgress) {
+    return (
+      <Alert variant="destructive" className="my-4">
+        <AlertDescription>
+          No data found for this module review
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   const totalQuestions = answers.length;
   const correctAnswers = answers.filter(
@@ -132,7 +159,10 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
               )}
               <div className="space-y-4 flex-1">
                 <div className="space-y-4">
-                  <p className="font-medium">{answer.question.question_text}</p>
+                  <div className="flex justify-between items-start">
+                    <p className="font-medium">{answer.question.question_text}</p>
+                    <span className="text-xs text-gray-500">ID: {answer.question.id}</span>
+                  </div>
                   {answer.question.image_url && (
                     <img 
                       src={answer.question.image_url} 
