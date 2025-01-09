@@ -36,7 +36,8 @@ export default function Simulator() {
           )
         `)
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(4);
 
       if (error) throw error;
       return data;
@@ -76,6 +77,14 @@ export default function Simulator() {
         <div className="space-y-8">
           <div className="flex justify-between items-center">
             <h2 className="text-4xl font-bold">Previous tests</h2>
+            {testSessions && testSessions.length > 0 && (
+              <Button 
+                variant="outline"
+                onClick={() => navigate("/gat/simulator/all-tests")}
+              >
+                View All Tests
+              </Button>
+            )}
           </div>
 
           {!testSessions || testSessions.length === 0 ? (
