@@ -1,5 +1,4 @@
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type QuestionContentProps = {
@@ -69,38 +68,34 @@ export function QuestionContent({
             )}
           </div>
 
-          <RadioGroup
-            value={selectedAnswer?.toString()}
-            onValueChange={(value) => onAnswerSelect(parseInt(value))}
-            className="space-y-2"
-          >
+          <div className="space-y-2">
             {choices.map((choice, index) => {
               const isCorrect = showFeedback && question.correct_answer === index + 1;
               const isIncorrect =
                 showFeedback &&
                 selectedAnswer === index + 1 &&
                 selectedAnswer !== question.correct_answer;
+              const isSelected = selectedAnswer === index + 1;
 
               return (
-                <div
+                <Button
                   key={index}
+                  onClick={() => onAnswerSelect(index + 1)}
+                  disabled={showFeedback}
                   className={cn(
-                    "flex items-center space-x-2 rounded-lg border p-4 transition-colors",
-                    isCorrect && "bg-green-50 border-green-200",
-                    isIncorrect && "bg-red-50 border-red-200"
+                    "w-full justify-start text-left h-auto py-4 px-4",
+                    isSelected && !showFeedback && "bg-primary/20",
+                    isCorrect && "bg-green-50 border-green-200 hover:bg-green-50",
+                    isIncorrect && "bg-red-50 border-red-200 hover:bg-red-50",
+                    !isSelected && !showFeedback && "bg-white hover:bg-gray-50"
                   )}
+                  variant="outline"
                 >
-                  <RadioGroupItem value={(index + 1).toString()} id={`choice-${index + 1}`} />
-                  <Label
-                    htmlFor={`choice-${index + 1}`}
-                    className="flex-grow cursor-pointer"
-                  >
-                    {choice}
-                  </Label>
-                </div>
+                  {choice}
+                </Button>
               );
             })}
-          </RadioGroup>
+          </div>
 
           {showFeedback && question.explanation && (
             <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
