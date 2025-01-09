@@ -52,7 +52,7 @@ const AdminLayout = () => {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -71,14 +71,13 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Top Navigation Bar */}
       <header className="w-full border-b bg-white">
         <div className="container flex h-24 items-center">
           <Link to="/index" className="flex-shrink-0">
             <img
               src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
               alt="Achieve"
-              className="h-24"
+              className="h-[72px]" // Increased from h-24 to make it 3x bigger
             />
           </Link>
 
@@ -88,8 +87,8 @@ const AdminLayout = () => {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors",
-                  "text-muted-foreground hover:text-primary"
+                  "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors rounded-md",
+                  "text-muted-foreground hover:text-primary hover:bg-accent"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -100,7 +99,6 @@ const AdminLayout = () => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container py-8">
         <Outlet />
       </main>
