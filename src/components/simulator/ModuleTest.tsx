@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { ModuleReview } from "./ModuleReview";
 import { TestHeader } from "./test/TestHeader";
 import { QuestionCard } from "./test/QuestionCard";
 import { QuestionNavigation } from "./test/QuestionNavigation";
@@ -26,7 +25,6 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
   const [flagged, setFlagged] = useState<Record<string, boolean>>({});
   const [timeLeft, setTimeLeft] = useState(moduleProgress.module.time_limit * 60);
   const [isLoading, setIsLoading] = useState(true);
-  const [showReview, setShowReview] = useState(false);
 
   useEffect(() => {
     console.log("ModuleTest mounted, fetching questions");
@@ -244,7 +242,7 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
       }
 
       console.log("Module submitted successfully");
-      setShowReview(true);
+      onComplete(); // Move to next module or complete test
     } catch (error: any) {
       console.error("Error in handleSubmit:", error);
       toast({
@@ -268,15 +266,6 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
       <div className="flex items-center justify-center min-h-[60vh]">
         <p>No questions available for this module.</p>
       </div>
-    );
-  }
-
-  if (showReview) {
-    return (
-      <ModuleReview
-        moduleProgressId={moduleProgress.id}
-        onContinue={onComplete}
-      />
     );
   }
 
