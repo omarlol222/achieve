@@ -11,19 +11,20 @@ export const useAuthRedirect = () => {
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
+        if (!session?.user) {
+          navigate("/signin");
+          return;
+        }
 
-          if (profile?.role === "admin") {
-            navigate("/admin");
-            return;
-          } else {
-            setError("Access denied. Admin privileges required.");
-          }
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile?.role !== "admin") {
+          setError("Access denied. Admin privileges required.");
+          navigate("/");
         }
       } catch (err) {
         console.error("Session check error:", err);
@@ -44,16 +45,15 @@ export const useAuthRedirect = () => {
             .eq("id", session.user.id)
             .single();
 
-          if (profile?.role === "admin") {
-            navigate("/admin");
-            return;
-          } else {
+          if (profile?.role !== "admin") {
             setError("Access denied. Admin privileges required.");
+            navigate("/");
           }
         }
 
         if (event === "SIGNED_OUT") {
           setError(null);
+          navigate("/signin");
         }
       }
     );
