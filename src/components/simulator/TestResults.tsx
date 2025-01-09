@@ -35,7 +35,11 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
               selected_answer,
               question:questions (
                 id,
-                correct_answer
+                correct_answer,
+                topic:topics (
+                  id,
+                  name
+                )
               )
             )
           )
@@ -75,18 +79,35 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
     return Math.round((correctAnswers / moduleAnswers.length) * 100);
   };
 
-  // Calculate mistakes for a module
-  const calculateModuleMistakes = (moduleProgress: any) => {
-    if (!moduleProgress.module_answers) return 0;
-    
-    return moduleProgress.module_answers.filter(
-      (answer: any) => answer.selected_answer !== answer.question.correct_answer
-    ).length;
+  // Calculate topic-wise performance
+  const calculateTopicPerformance = () => {
+    if (!session.module_progress) return [];
+
+    const topicStats: { [key: string]: { name: string; correct: number; total: number } } = {};
+
+    session.module_progress.forEach(progress => {
+      progress.module_answers?.forEach(answer => {
+        const topicId = answer.question.topic.id;
+        const topicName = answer.question.topic.name;
+        
+        if (!topicStats[topicId]) {
+          topicStats[topicId] = { name: topicName, correct: 0, total: 0 };
+        }
+        
+        topicStats[topicId].total++;
+        if (answer.selected_answer === answer.question.correct_answer) {
+          topicStats[topicId].correct++;
+        }
+      });
+    });
+
+    return Object.values(topicStats);
   };
 
   const mathScore = calculateSectionScore('math');
   const verbalScore = calculateSectionScore('verbal');
   const totalScore = Math.round((mathScore + verbalScore) / 2);
+  const topicPerformance = calculateTopicPerformance();
 
   if (selectedModuleId) {
     return (
@@ -133,11 +154,30 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold mb-4">Details</h2>
+        <h2 className="text-2xl font-bold mb-4">Topic Performance</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {topicPerformance.map((topic) => (
+            <Card key={topic.name} className="p-4">
+              <h3 className="font-semibold mb-2">{topic.name}</h3>
+              <p>
+                Correct: {topic.correct} / {topic.total}
+                <span className="text-gray-500 ml-2">
+                  ({Math.round((topic.correct / topic.total) * 100)}%)
+                </span>
+              </p>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Module Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {session.module_progress?.map((progress: any) => {
             const totalQuestions = progress.module_answers?.length || 0;
-            const mistakes = calculateModuleMistakes(progress);
+            const correctAnswers = progress.module_answers?.filter(
+              (answer: any) => answer.selected_answer === answer.question.correct_answer
+            ).length || 0;
             
             return (
               <Card key={progress.id} className="p-6 space-y-4">
@@ -153,8 +193,8 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
                     {totalQuestions}
                   </p>
                   <p>
-                    <span className="font-medium">MISTAKES: </span>
-                    {mistakes}
+                    <span className="font-medium">CORRECT: </span>
+                    {correctAnswers}
                   </p>
                 </div>
                 <Button
