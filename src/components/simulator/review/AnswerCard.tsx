@@ -13,6 +13,7 @@ type AnswerCardProps = {
       choice4: string;
       correct_answer: number;
       explanation?: string;
+      explanation_image_url?: string;
       topic?: {
         id: string;
         name: string;
@@ -69,10 +70,23 @@ export const AnswerCard = ({ answer }: AnswerCardProps) => {
           ))}
         </div>
 
-        {answer.question.explanation && (
-          <div className="pt-4 border-t">
-            <p className="text-sm text-gray-500">Explanation:</p>
-            <p className="mt-1">{answer.question.explanation}</p>
+        {(answer.question.explanation || answer.question.explanation_image_url) && (
+          <div className="pt-4 border-t space-y-4">
+            {answer.question.explanation && (
+              <>
+                <p className="text-sm text-gray-500">Explanation:</p>
+                <p className="mt-1">{answer.question.explanation}</p>
+              </>
+            )}
+            {answer.question.explanation_image_url && (
+              <div className="rounded-lg border overflow-hidden">
+                <img
+                  src={answer.question.explanation_image_url}
+                  alt="Explanation"
+                  className="w-full h-auto object-contain"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

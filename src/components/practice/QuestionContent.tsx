@@ -12,6 +12,7 @@ type QuestionContentProps = {
     correct_answer?: number;
     image_url?: string;
     explanation?: string;
+    explanation_image_url?: string;
     passage_text?: string;
   };
   selectedAnswer: number | null;
@@ -97,9 +98,20 @@ export function QuestionContent({
             })}
           </div>
 
-          {showFeedback && question.explanation && (
-            <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
-              <p className="text-sm text-blue-800">{question.explanation}</p>
+          {showFeedback && (question.explanation || question.explanation_image_url) && (
+            <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200 space-y-4">
+              {question.explanation && (
+                <p className="text-sm text-blue-800">{question.explanation}</p>
+              )}
+              {question.explanation_image_url && (
+                <div className="rounded-lg border overflow-hidden">
+                  <img
+                    src={question.explanation_image_url}
+                    alt="Explanation"
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
