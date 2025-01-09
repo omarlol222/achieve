@@ -43,9 +43,6 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
       pointsAdjustment = 10 * increaseSteps;
     }
     
-    // Add base points for correct/incorrect answer
-    pointsAdjustment += isCorrect ? 50 : -30;
-    
     // Calculate new points value, ensuring it stays within 0-1000 range
     const newPoints = Math.max(0, Math.min(1000, existingProgress.points + pointsAdjustment));
 
@@ -62,9 +59,7 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
 
     if (updateError) throw updateError;
   } else {
-    // Create new progress entry with initial points
-    const initialPoints = isCorrect ? 50 : 0;
-    
+    // Create new progress entry with initial points of 0
     const { error: insertError } = await supabase
       .from("user_progress")
       .insert({
@@ -72,7 +67,7 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
         topic_id: topicId,
         questions_attempted: 1,
         questions_correct: isCorrect ? 1 : 0,
-        points: initialPoints,
+        points: 0,
         last_activity: now
       });
 
