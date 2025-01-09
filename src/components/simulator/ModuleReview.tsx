@@ -52,6 +52,7 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
             choice3,
             choice4,
             explanation,
+            explanation_image_url,
             image_url,
             topic:topics (
               id,

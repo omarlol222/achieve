@@ -12,7 +12,13 @@ export function usePracticeQuestions(
     queryFn: async () => {
       let query = supabase
         .from("questions")
-        .select("*")
+        .select(`
+          *,
+          topic:topics (
+            id,
+            name
+          )
+        `)
         .eq("topic_id", topicId);
 
       if (difficulty && difficulty !== "all") {
