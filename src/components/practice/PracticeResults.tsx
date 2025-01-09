@@ -40,7 +40,7 @@ export function PracticeResults({
               <p className="text-lg">
                 {totalCorrect} correct out of {totalQuestions} questions
               </p>
-              {pointsChange !== undefined && pointsChange !== 0 && (
+              {pointsChange !== 0 && (
                 <p className={`text-lg ${pointsChange > 0 ? 'text-green-600' : 'text-red-600'}`}>
                   Points {pointsChange > 0 ? 'increased' : 'decreased'} by{' '}
                   <span className="font-semibold">{Math.abs(pointsChange)}</span>

@@ -15,7 +15,7 @@ const PracticeTest = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: number }>({});
   const [showResults, setShowResults] = useState(false);
-  const [pointsChange, setPointsChange] = useState<number>(0);
+  const [pointsChange, setPointsChange] = useState(0);
 
   // Extract and validate state parameters
   const state = location.state as PracticeState | null;
