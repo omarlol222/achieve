@@ -67,16 +67,19 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
   const calculateSubjectScore = (subjectId: string) => {
     if (!session.module_progress) return 0;
     
+    // Get all answers for this subject
     const moduleAnswers = session.module_progress
       .filter(progress => progress.module.subject?.id === subjectId)
       .flatMap(progress => progress.module_answers || []);
 
     if (moduleAnswers.length === 0) return 0;
 
+    // Calculate total correct answers
     const correctAnswers = moduleAnswers.filter(
       answer => answer.selected_answer === answer.question.correct_answer
     ).length;
 
+    // Return percentage rounded to nearest whole number
     return Math.round((correctAnswers / moduleAnswers.length) * 100);
   };
 
@@ -87,7 +90,7 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
     session.module_progress.forEach(progress => {
       progress.module_answers?.forEach(answer => {
-        if (!answer.question.topic) return; // Skip if topic is null
+        if (!answer.question.topic) return;
         
         const topicId = answer.question.topic.id;
         const topicName = answer.question.topic.name;
