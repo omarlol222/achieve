@@ -43,6 +43,7 @@ export function TestModuleDialog({
       subject_id: "",
       test_type_id: "",
       topic_percentages: {},
+      topic_question_counts: {},
     },
   });
 
@@ -88,16 +89,17 @@ export function TestModuleDialog({
         initialData = moduleData;
       }
 
-      // Insert topic percentages
-      const topicPercentages = Object.entries(data.topic_percentages).map(([topicId, percentage]) => ({
+      // Insert topic percentages and question counts
+      const topicData = Object.entries(data.topic_percentages).map(([topicId, percentage]) => ({
         module_id: initialData.id,
         topic_id: topicId,
         percentage: percentage,
+        question_count: data.topic_question_counts[topicId] || 1,
       }));
 
       const { error: topicError } = await supabase
         .from("module_topics")
-        .insert(topicPercentages);
+        .insert(topicData);
 
       if (topicError) throw topicError;
 
@@ -129,6 +131,12 @@ export function TestModuleDialog({
           initialData.module_topics?.map((topic: any) => [
             topic.topic_id,
             topic.percentage,
+          ]) || []
+        ),
+        topic_question_counts: Object.fromEntries(
+          initialData.module_topics?.map((topic: any) => [
+            topic.topic_id,
+            topic.question_count,
           ]) || []
         ),
       });
