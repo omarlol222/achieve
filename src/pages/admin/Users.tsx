@@ -33,7 +33,6 @@ const Users = () => {
   const { data: profiles, isLoading } = useQuery({
     queryKey: ["admin-profiles"],
     queryFn: async () => {
-      // Fetch profiles with email addresses using a join
       const { data: profileData, error } = await supabase
         .from('profiles')
         .select(`
