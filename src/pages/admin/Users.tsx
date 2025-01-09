@@ -35,10 +35,13 @@ const Users = () => {
     queryFn: async () => {
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select()
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profiles:", error);
+        throw error;
+      }
       return profileData as Profile[];
     },
   });
