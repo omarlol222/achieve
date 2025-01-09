@@ -15,6 +15,8 @@ export const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isGatRoute = location.pathname === '/gat';
+  const isSimulatorRoute = location.pathname === '/simulator';
+  const hideNavLinks = isGatRoute || isSimulatorRoute;
 
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -83,7 +85,7 @@ export const Navigation = () => {
         )}
 
         <div className="flex-1 flex items-center justify-end gap-4">
-          {!isGatRoute && (
+          {!hideNavLinks && (
             <div className="hidden md:flex items-center gap-12 text-lg font-medium">
               <Link to="/about" className="hover:text-primary">About</Link>
               <Link to="/shop" className="hover:text-primary">Shop</Link>
@@ -109,7 +111,7 @@ export const Navigation = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {!isGatRoute && (
+                {!hideNavLinks && (
                   <>
                     <DropdownMenuItem onClick={() => navigate("/about")}>
                       About
