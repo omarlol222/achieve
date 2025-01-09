@@ -116,6 +116,23 @@ export default function Simulator() {
     mutationFn: async (moduleId: string) => {
       if (!activeSession) throw new Error("No active session");
 
+      // First check if a module progress already exists
+      const { data: existingProgress } = await supabase
+        .from("module_progress")
+        .select("*")
+        .eq("session_id", activeSession.id)
+        .eq("module_id", moduleId)
+        .maybeSingle();
+
+      if (existingProgress) {
+        toast({
+          variant: "destructive",
+          title: "Module already started",
+          description: "You have already started this module.",
+        });
+        throw new Error("Module already started");
+      }
+
       const { data, error } = await supabase
         .from("module_progress")
         .insert([{
@@ -132,14 +149,24 @@ export default function Simulator() {
             test_type_id
           )
         `)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating module progress:", error);
+        throw error;
+      }
+      if (!data) {
+        throw new Error("Failed to create module progress");
+      }
       return data as ModuleProgress;
     },
     onSuccess: (progress) => {
       setModuleProgress(progress);
       setShowModuleStart(false);
+      toast({
+        title: "Module started",
+        description: "Good luck!",
+      });
     },
     onError: (error) => {
       toast({
@@ -155,9 +182,15 @@ export default function Simulator() {
   };
 
   const handleStartModule = () => {
-    if (currentModule) {
-      createModuleProgress.mutate(currentModule.id);
+    if (!currentModule) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No module selected",
+      });
+      return;
     }
+    createModuleProgress.mutate(currentModule.id);
   };
 
   const handleModuleComplete = async () => {
