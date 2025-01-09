@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 type QuestionContentProps = {
   question: {
+    id?: string;
     question_text: string;
     choice1: string;
     choice2: string;
@@ -48,7 +49,14 @@ export function QuestionContent({
         <div className="flex-grow space-y-4">
           <div className="flex gap-6">
             <div className="flex-grow">
-              <p className="text-lg font-medium">{question.question_text}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-lg font-medium">{question.question_text}</p>
+                {question.id && (
+                  <span className="text-xs text-muted-foreground">
+                    ID: {question.id}
+                  </span>
+                )}
+              </div>
             </div>
             {question.image_url && (
               <div className="rounded-lg border overflow-hidden w-1/3 flex-shrink-0">
