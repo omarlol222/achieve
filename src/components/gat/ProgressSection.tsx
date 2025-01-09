@@ -9,16 +9,12 @@ export type ProgressSectionProps = {
       id: string;
       name: string;
       progress: {
-        questions_attempted: number;
-        questions_correct: number;
         points: number;
       };
     }[];
   }[];
   calculateTopicProgress: (topicId: string) => {
     percentage: number;
-    questionsCorrect: number;
-    questionsAttempted: number;
     points: number;
   };
 };

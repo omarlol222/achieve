@@ -8,16 +8,12 @@ type SubjectProgressProps = {
       id: string;
       name: string;
       progress: {
-        questions_attempted: number;
-        questions_correct: number;
         points: number;
       };
     }[];
   };
   calculateTopicProgress: (topicId: string) => {
     percentage: number;
-    questionsCorrect: number;
-    questionsAttempted: number;
     points: number;
   };
 };
@@ -33,8 +29,6 @@ export const SubjectProgress = ({ subject, calculateTopicProgress }: SubjectProg
             key={topic.id}
             name={topic.name}
             value={progress.points}
-            questionsCorrect={progress.questionsCorrect}
-            questionsAttempted={progress.questionsAttempted}
           />
         );
       })}
