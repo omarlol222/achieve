@@ -5,6 +5,7 @@ import { QuestionContent } from "@/components/practice/QuestionContent";
 import { Flag, Timer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { ModuleReview } from "./ModuleReview";
 
 type ModuleTestProps = {
   moduleProgress: {
@@ -26,6 +27,7 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
   const [flagged, setFlagged] = useState<Record<string, boolean>>({});
   const [timeLeft, setTimeLeft] = useState(moduleProgress.module.time_limit * 60);
   const [isLoading, setIsLoading] = useState(true);
+  const [showReview, setShowReview] = useState(false);
 
   useEffect(() => {
     fetchQuestions();
@@ -135,7 +137,6 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
 
   const handleSubmit = async () => {
     try {
-      // Update module progress as completed
       const { error: progressError } = await supabase
         .from("module_progress")
         .update({ completed_at: new Date().toISOString() })
@@ -143,7 +144,7 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
 
       if (progressError) throw progressError;
 
-      onComplete();
+      setShowReview(true);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -158,6 +159,15 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
       <div className="flex items-center justify-center min-h-[60vh]">
         <p>Loading questions...</p>
       </div>
+    );
+  }
+
+  if (showReview) {
+    return (
+      <ModuleReview
+        moduleProgressId={moduleProgress.id}
+        onContinue={onComplete}
+      />
     );
   }
 
