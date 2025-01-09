@@ -34,7 +34,7 @@ const SignIn = () => {
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
         <div className="text-center">
           <img
-            src="/lovable-uploads/32cc5c43-1fef-40b7-8bf7-328bc0d3fc97.png"
+            src="/lovable-uploads/9b9962d6-d485-4e43-88c7-9325eb10bd74.png"
             alt="Achieve"
             className="h-12 mx-auto mb-6"
           />

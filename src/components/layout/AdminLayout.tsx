@@ -75,9 +75,9 @@ const AdminLayout = () => {
         <div className="container flex h-24 items-center">
           <Link to="/index" className="flex-shrink-0">
             <img
-              src="/lovable-uploads/32cc5c43-1fef-40b7-8bf7-328bc0d3fc97.png"
+              src="/lovable-uploads/9b9962d6-d485-4e43-88c7-9325eb10bd74.png"
               alt="Achieve"
-              className="h-[72px]" // Increased from h-24 to make it 3x bigger
+              className="h-12"
             />
           </Link>
 
