@@ -9,6 +9,7 @@ type QuestionCardProps = {
   isFlagged: boolean;
   onAnswerSelect: (answer: number) => void;
   onToggleFlag: () => void;
+  showFeedback: boolean;
 };
 
 export function QuestionCard({
@@ -17,6 +18,7 @@ export function QuestionCard({
   isFlagged,
   onAnswerSelect,
   onToggleFlag,
+  showFeedback,
 }: QuestionCardProps) {
   return (
     <Card className="p-6">
@@ -35,7 +37,7 @@ export function QuestionCard({
       <QuestionContent
         question={question}
         selectedAnswer={selectedAnswer}
-        showFeedback={false}
+        showFeedback={showFeedback}
         onAnswerSelect={onAnswerSelect}
       />
     </Card>
