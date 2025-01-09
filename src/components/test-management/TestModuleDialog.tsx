@@ -104,33 +104,38 @@ export function TestModuleDialog({
         console.log("Created new module with ID:", moduleId);
       }
 
+      // Get all topics for the selected subject to ensure we store all percentages
+      const { data: topics, error: topicsError } = await supabase
+        .from("topics")
+        .select("id")
+        .eq("subject_id", data.subject_id);
+
+      if (topicsError) throw topicsError;
+
       // Calculate question count per topic based on percentages
       const totalQuestions = data.total_questions;
       console.log("Processing topic percentages. Total questions:", totalQuestions);
       
-      // Filter topics with non-zero percentages and prepare for insertion
-      const topicData = Object.entries(data.topic_percentages)
-        .filter(([_, percentage]) => percentage > 0)
-        .map(([topicId, percentage]) => ({
-          module_id: moduleId,
-          topic_id: topicId,
-          percentage: percentage,
-          question_count: Math.max(1, Math.round((percentage / 100) * totalQuestions))
-        }));
+      // Prepare topic data for all topics, defaulting to 0% if not specified
+      const topicData = topics.map(topic => ({
+        module_id: moduleId,
+        topic_id: topic.id,
+        percentage: data.topic_percentages[topic.id] || 0,
+        question_count: Math.max(1, Math.round(((data.topic_percentages[topic.id] || 0) / 100) * totalQuestions))
+      }));
 
       console.log("Prepared topic data for insertion:", topicData);
 
-      if (topicData.length > 0) {
-        const { error: topicError } = await supabase
-          .from("module_topics")
-          .insert(topicData);
+      // Insert all topic percentages
+      const { error: topicError } = await supabase
+        .from("module_topics")
+        .insert(topicData);
 
-        if (topicError) {
-          console.error("Error inserting topic data:", topicError);
-          throw topicError;
-        }
-        console.log("Successfully inserted topic data");
+      if (topicError) {
+        console.error("Error inserting topic data:", topicError);
+        throw topicError;
       }
+      console.log("Successfully inserted topic data");
 
       toast({
         title: `Test module ${initialData ? 'updated' : 'created'} successfully`,
