@@ -160,18 +160,22 @@ export function TestModuleDialog({
   useEffect(() => {
     if (initialData) {
       console.log("Setting form data from initialData:", initialData);
+      const topicPercentages = {};
+      
+      // Convert module_topics array to topic_percentages object
+      initialData.module_topics?.forEach((topic: any) => {
+        topicPercentages[topic.topic_id] = topic.percentage;
+      });
+
+      console.log("Converted topic percentages:", topicPercentages);
+
       form.reset({
         name: initialData.name,
         description: initialData.description,
         time_limit: initialData.time_limit,
         subject_id: initialData.subject_id,
         test_type_id: initialData.test_type_id,
-        topic_percentages: Object.fromEntries(
-          initialData.module_topics?.map((topic: any) => [
-            topic.topic_id,
-            topic.percentage,
-          ]) || []
-        ),
+        topic_percentages: topicPercentages,
         total_questions: initialData.module_topics?.reduce(
           (sum: number, topic: any) => sum + topic.question_count,
           0
