@@ -5,7 +5,7 @@ import { ModuleTest } from "./ModuleTest";
 import { TestResults } from "./TestResults";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 type TestModule = {
@@ -38,6 +38,21 @@ export function TestDialog({ open, onOpenChange }: TestDialogProps) {
   const [currentModule, setCurrentModule] = useState<TestModule | null>(null);
   const [showModuleStart, setShowModuleStart] = useState(false);
   const [moduleProgress, setModuleProgress] = useState<ModuleProgress | null>(null);
+
+  // Fetch test modules
+  const { data: modules } = useQuery({
+    queryKey: ["test-modules"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("test_modules")
+        .select("*")
+        .order("order_index", { ascending: true });
+
+      if (error) throw error;
+      return data as TestModule[];
+    },
+    enabled: open, // Only fetch when dialog is open
+  });
 
   const createSession = useMutation({
     mutationFn: async () => {
