@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import Landing from "./pages/Landing";
 import About from "./pages/About";
 import Shop from "./pages/Shop";
@@ -53,14 +52,7 @@ const App = () => (
           <Route path="/practice/setup" element={<PracticeSetup />} />
           <Route path="/practice/test" element={<PracticeTest />} />
           <Route path="/practice/results" element={<PracticeResults />} />
-          <Route
-            path="/admin"
-            element={
-              <SidebarProvider>
-                <AdminLayout />
-              </SidebarProvider>
-            }
-          >
+          <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="questions" element={<Questions />} />
             <Route path="tests" element={<Tests />} />

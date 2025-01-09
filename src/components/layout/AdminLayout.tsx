@@ -1,26 +1,18 @@
 import { useEffect } from "react";
-import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { 
   LayoutDashboard, 
   Users, 
   HelpCircle,
   CreditCard,
-  Menu,
   ClipboardList
 } from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["profile"],
@@ -77,29 +69,11 @@ const AdminLayout = () => {
     { path: "/admin/payments", icon: CreditCard, label: "Payments" },
   ];
 
-  const NavLink = ({ item }: { item: typeof menuItems[0] }) => {
-    const isActive = location.pathname === item.path;
-    return (
-      <Link
-        to={item.path}
-        className={cn(
-          "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors",
-          isActive
-            ? "text-primary bg-primary/10 rounded-md"
-            : "text-muted-foreground hover:text-primary"
-        )}
-      >
-        <item.icon className="h-4 w-4" />
-        <span>{item.label}</span>
-      </Link>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-background">
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-24 items-center justify-between">
+        <div className="container flex h-24 items-center">
           <Link to="/">
             <img
               src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
@@ -108,41 +82,21 @@ const AdminLayout = () => {
             />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8 text-lg font-medium">
+          <nav className="ml-auto flex items-center space-x-8">
             {menuItems.map((item) => (
-              <NavLink key={item.path} item={item} />
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors",
+                  "text-muted-foreground hover:text-primary"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </Link>
             ))}
           </nav>
-
-          {/* Mobile Menu */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                className="px-0 text-base hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
-              >
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="pr-0">
-              <div className="px-7">
-                <Link to="/" className="flex items-center mb-4">
-                  <img
-                    src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
-                    alt="Achieve"
-                    className="h-24"
-                  />
-                </Link>
-                <nav className="flex flex-col gap-2">
-                  {menuItems.map((item) => (
-                    <NavLink key={item.path} item={item} />
-                  ))}
-                </nav>
-              </div>
-            </SheetContent>
-          </Sheet>
         </div>
       </header>
 

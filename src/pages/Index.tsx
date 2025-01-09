@@ -3,18 +3,45 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { Suspense } from "react";
 
-const Index = () => {
+const AuthComponent = () => {
   const { error, isLoading } = useAuthRedirect();
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-      </div>
-    );
+    return null;
   }
 
+  return (
+    <>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <Auth
+        supabaseClient={supabase}
+        appearance={{
+          theme: ThemeSupa,
+          variables: {
+            default: {
+              colors: {
+                brand: '#0EA5E9',
+                brandAccent: '#0284C7',
+              },
+            },
+          },
+        }}
+        theme="light"
+        providers={[]}
+        redirectTo={window.location.origin}
+      />
+    </>
+  );
+};
+
+const Index = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
@@ -27,29 +54,15 @@ const Index = () => {
           </p>
         </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <Auth
-          supabaseClient={supabase}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: '#0EA5E9',
-                  brandAccent: '#0284C7',
-                },
-              },
-            },
-          }}
-          theme="light"
-          providers={[]}
-          redirectTo={window.location.origin}
-        />
+        <Suspense 
+          fallback={
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+            </div>
+          }
+        >
+          <AuthComponent />
+        </Suspense>
       </div>
     </div>
   );
