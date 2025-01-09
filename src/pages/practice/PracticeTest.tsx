@@ -52,6 +52,7 @@ const PracticeTest = () => {
   }
 
   const currentQuestion = questions[currentQuestionIndex];
+  const isLastQuestion = currentQuestionIndex === questions.length - 1;
 
   const handleAnswer = async (answer: number) => {
     const isCorrect = answer === currentQuestion.correct_answer;
@@ -62,16 +63,16 @@ const PracticeTest = () => {
       [currentQuestion.id]: answer,
     }));
 
-    // Move to next question or show results if it's the last question
-    if (currentQuestionIndex < questions.length - 1) {
+    // If it's not the last question, move to next after delay
+    if (!isLastQuestion) {
       setTimeout(() => {
         setCurrentQuestionIndex((prev) => prev + 1);
       }, 1000);
-    } else {
-      setTimeout(() => {
-        setShowResults(true);
-      }, 1000);
     }
+  };
+
+  const handleFinish = () => {
+    setShowResults(true);
   };
 
   const calculateResults = () => {
@@ -106,6 +107,17 @@ const PracticeTest = () => {
           showFeedback={answers[currentQuestion.id] !== undefined}
           onAnswerSelect={handleAnswer}
         />
+
+        {isLastQuestion && answers[currentQuestion.id] !== undefined && (
+          <div className="flex justify-center">
+            <Button 
+              onClick={handleFinish}
+              className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+            >
+              Finish Practice
+            </Button>
+          </div>
+        )}
 
         <PracticeResults
           open={showResults}
