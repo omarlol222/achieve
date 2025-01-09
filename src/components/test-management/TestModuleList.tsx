@@ -12,12 +12,16 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
 
 type TestModuleListProps = {
   modules: any[];
+  onEdit: (module: any) => void;
+  onDelete: (module: any) => void;
 };
 
-export function TestModuleList({ modules }: TestModuleListProps) {
+export function TestModuleList({ modules, onEdit, onDelete }: TestModuleListProps) {
   return (
     <Table>
       <TableHeader>
@@ -29,6 +33,7 @@ export function TestModuleList({ modules }: TestModuleListProps) {
           <TableHead>Test Type</TableHead>
           <TableHead>Time Limit (min)</TableHead>
           <TableHead>Created At</TableHead>
+          <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -60,6 +65,24 @@ export function TestModuleList({ modules }: TestModuleListProps) {
             <TableCell>{module.time_limit}</TableCell>
             <TableCell>
               {new Date(module.created_at).toLocaleDateString()}
+            </TableCell>
+            <TableCell>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onEdit(module)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onDelete(module)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

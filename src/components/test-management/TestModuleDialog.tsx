@@ -22,6 +22,7 @@ type TestModuleDialogProps = {
   testTemplates: any[];
   testTypes: any[];
   onSuccess: () => void;
+  initialData?: any;
 };
 
 export function TestModuleDialog({
@@ -30,6 +31,7 @@ export function TestModuleDialog({
   subjects,
   testTypes,
   onSuccess,
+  initialData,
 }: TestModuleDialogProps) {
   const { toast } = useToast();
   const form = useForm<TestModuleFormData>({
@@ -45,24 +47,49 @@ export function TestModuleDialog({
 
   const onSubmit = async (data: TestModuleFormData) => {
     try {
-      // Insert test module
-      const { data: moduleData, error: moduleError } = await supabase
-        .from("test_modules")
-        .insert([{
-          name: data.name,
-          description: data.description,
-          time_limit: data.time_limit,
-          subject_id: data.subject_id,
-          test_type_id: data.test_type_id,
-        }])
-        .select()
-        .single();
+      if (initialData) {
+        // Update test module
+        const { error: moduleError } = await supabase
+          .from("test_modules")
+          .update({
+            name: data.name,
+            description: data.description,
+            time_limit: data.time_limit,
+            subject_id: data.subject_id,
+            test_type_id: data.test_type_id,
+          })
+          .eq("id", initialData.id);
 
-      if (moduleError) throw moduleError;
+        if (moduleError) throw moduleError;
+
+        // Delete existing topic percentages
+        const { error: deleteError } = await supabase
+          .from("module_topics")
+          .delete()
+          .eq("module_id", initialData.id);
+
+        if (deleteError) throw deleteError;
+      } else {
+        // Insert new test module
+        const { data: moduleData, error: moduleError } = await supabase
+          .from("test_modules")
+          .insert([{
+            name: data.name,
+            description: data.description,
+            time_limit: data.time_limit,
+            subject_id: data.subject_id,
+            test_type_id: data.test_type_id,
+          }])
+          .select()
+          .single();
+
+        if (moduleError) throw moduleError;
+        initialData = moduleData;
+      }
 
       // Insert topic percentages
       const topicPercentages = Object.entries(data.topic_percentages).map(([topicId, percentage]) => ({
-        module_id: moduleData.id,
+        module_id: initialData.id,
         topic_id: topicId,
         percentage: percentage,
       }));
@@ -74,7 +101,7 @@ export function TestModuleDialog({
       if (topicError) throw topicError;
 
       toast({
-        title: "Test module created successfully",
+        title: `Test module ${initialData ? 'updated' : 'created'} successfully`,
       });
 
       form.reset();
@@ -83,11 +110,30 @@ export function TestModuleDialog({
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error creating test module",
+        title: `Error ${initialData ? 'updating' : 'creating'} test module`,
         description: error.message,
       });
     }
   };
+
+  // Set form values when editing
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        name: initialData.name,
+        description: initialData.description,
+        time_limit: initialData.time_limit,
+        subject_id: initialData.subject_id,
+        test_type_id: initialData.test_type_id,
+        topic_percentages: Object.fromEntries(
+          initialData.module_topics?.map((topic: any) => [
+            topic.topic_id,
+            topic.percentage,
+          ]) || []
+        ),
+      });
+    }
+  }, [initialData, form]);
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -100,7 +146,9 @@ export function TestModuleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create New Test Module</DialogTitle>
+          <DialogTitle>
+            {initialData ? 'Edit' : 'Create New'} Test Module
+          </DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -116,7 +164,7 @@ export function TestModuleDialog({
               subjectId={form.watch("subject_id")}
             />
             <Button type="submit" className="w-full">
-              Create Module
+              {initialData ? 'Update' : 'Create'} Module
             </Button>
           </form>
         </Form>

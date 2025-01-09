@@ -19,6 +19,9 @@ const Tests = () => {
   const [selectedTestType, setSelectedTestType] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [testTypeToDelete, setTestTypeToDelete] = useState<any>(null);
+  const [selectedModule, setSelectedModule] = useState<any>(null);
+  const [moduleToDelete, setModuleToDelete] = useState<any>(null);
+  const [moduleDeleteDialogOpen, setModuleDeleteDialogOpen] = useState(false);
 
   // Fetch test types
   const { data: testTypes } = useQuery({
@@ -81,6 +84,43 @@ const Tests = () => {
     },
   });
 
+  const handleDeleteModule = async () => {
+    if (!moduleToDelete) return;
+
+    try {
+      // Delete module topics first due to foreign key constraint
+      const { error: topicsError } = await supabase
+        .from("module_topics")
+        .delete()
+        .eq("module_id", moduleToDelete.id);
+
+      if (topicsError) throw topicsError;
+
+      // Then delete the module
+      const { error: moduleError } = await supabase
+        .from("test_modules")
+        .delete()
+        .eq("id", moduleToDelete.id);
+
+      if (moduleError) throw moduleError;
+
+      toast({
+        title: "Test module deleted successfully",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["test-modules"] });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error deleting test module",
+        description: error.message,
+      });
+    } finally {
+      setModuleDeleteDialogOpen(false);
+      setModuleToDelete(null);
+    }
+  };
+
   const handleDeleteTestType = async () => {
     if (!testTypeToDelete) return;
 
@@ -120,13 +160,26 @@ const Tests = () => {
         <TabsContent value="modules" className="mt-6">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl font-bold">Test Module Management</h2>
-            <Button onClick={() => setModuleDialogOpen(true)}>
+            <Button onClick={() => {
+              setSelectedModule(null);
+              setModuleDialogOpen(true);
+            }}>
               <Plus className="mr-2 h-4 w-4" />
               New Module
             </Button>
           </div>
 
-          <TestModuleList modules={modules || []} />
+          <TestModuleList 
+            modules={modules || []} 
+            onEdit={(module) => {
+              setSelectedModule(module);
+              setModuleDialogOpen(true);
+            }}
+            onDelete={(module) => {
+              setModuleToDelete(module);
+              setModuleDeleteDialogOpen(true);
+            }}
+          />
 
           <TestModuleDialog
             open={moduleDialogOpen}
@@ -134,9 +187,18 @@ const Tests = () => {
             subjects={subjects || []}
             testTemplates={testTemplates || []}
             testTypes={testTypes || []}
+            initialData={selectedModule}
             onSuccess={() => {
               queryClient.invalidateQueries({ queryKey: ["test-modules"] });
             }}
+          />
+
+          <DeleteDialog
+            open={moduleDeleteDialogOpen}
+            onOpenChange={setModuleDeleteDialogOpen}
+            onConfirm={handleDeleteModule}
+            title="Delete Test Module"
+            description="Are you sure you want to delete this test module? This action cannot be undone."
           />
         </TabsContent>
 
