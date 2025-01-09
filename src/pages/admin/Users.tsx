@@ -19,6 +19,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { AdminUserAttributes } from "@supabase/supabase-js";
+
+type Profile = {
+  id: string;
+  full_name: string | null;
+  role: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type ProfileWithEmail = Profile & {
+  email: string;
+};
 
 const Users = () => {
   const { data: profiles, isLoading } = useQuery({
@@ -37,15 +50,15 @@ const Users = () => {
       if (authError) throw authError;
 
       // Combine profile data with email addresses
-      const combinedData = profileData.map(profile => {
-        const authUser = authData.users.find(user => user.id === profile.id);
+      const combinedData = (profileData as Profile[]).map(profile => {
+        const authUser = (authData.users as AdminUserAttributes[]).find(user => user.id === profile.id);
         return {
           ...profile,
           email: authUser?.email || 'N/A'
         };
       });
 
-      return combinedData;
+      return combinedData as ProfileWithEmail[];
     },
   });
 
