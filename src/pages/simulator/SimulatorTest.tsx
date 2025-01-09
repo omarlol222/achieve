@@ -83,12 +83,89 @@ export default function SimulatorTest() {
     }
   };
 
-  const handleCompleteModule = () => {
+  const handleCompleteModule = async () => {
     if (modules && currentModuleIndex < modules.length - 1) {
       setCurrentModuleIndex(prev => prev + 1);
     } else {
-      // Test completed
-      navigate("/gat/simulator");
+      try {
+        // Update test session as completed
+        const { error: updateError } = await supabase
+          .from("test_sessions")
+          .update({
+            completed_at: new Date().toISOString()
+          })
+          .eq("id", sessionId);
+
+        if (updateError) throw updateError;
+
+        // Calculate scores from module progress
+        const { data: progressData, error: progressError } = await supabase
+          .from("module_progress")
+          .select(`
+            module:test_modules (
+              test_type:test_types (name)
+            ),
+            module_answers (
+              selected_answer,
+              question:questions (correct_answer)
+            )
+          `)
+          .eq("session_id", sessionId);
+
+        if (progressError) throw progressError;
+
+        // Calculate verbal and quantitative scores
+        const scores = progressData?.reduce((acc: any, progress: any) => {
+          const isVerbal = progress.module.test_type?.name.toLowerCase() === 'verbal';
+          const totalQuestions = progress.module_answers?.length || 0;
+          const correctAnswers = progress.module_answers?.filter(
+            (answer: any) => answer.selected_answer === answer.question.correct_answer
+          ).length || 0;
+          
+          const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+          
+          if (isVerbal) {
+            acc.verbal += score;
+            acc.verbalCount++;
+          } else {
+            acc.quantitative += score;
+            acc.quantitativeCount++;
+          }
+          
+          return acc;
+        }, { verbal: 0, verbalCount: 0, quantitative: 0, quantitativeCount: 0 });
+
+        const verbalScore = Math.round(scores?.verbal / (scores?.verbalCount || 1));
+        const quantitativeScore = Math.round(scores?.quantitative / (scores?.quantitativeCount || 1));
+        const totalScore = Math.round((verbalScore + quantitativeScore) / 2);
+
+        // Update session with scores
+        const { error: scoresError } = await supabase
+          .from("test_sessions")
+          .update({
+            verbal_score: verbalScore,
+            quantitative_score: quantitativeScore,
+            total_score: totalScore
+          })
+          .eq("id", sessionId);
+
+        if (scoresError) throw scoresError;
+
+        // Navigate back to simulator page
+        navigate("/gat/simulator");
+        
+        toast({
+          title: "Test completed",
+          description: "Your test has been submitted successfully.",
+        });
+      } catch (error: any) {
+        console.error("Error completing test:", error);
+        toast({
+          variant: "destructive",
+          title: "Error completing test",
+          description: error.message,
+        });
+      }
     }
   };
 
