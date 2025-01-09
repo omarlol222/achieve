@@ -69,7 +69,7 @@ export const Navigation = () => {
         <div className="flex-1">
           <Link to="/index" className="flex items-center">
             <img
-              src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
+              src="/lovable-uploads/32cc5c43-1fef-40b7-8bf7-328bc0d3fc97.png"
               alt="Achieve"
               className="h-24"
             />
