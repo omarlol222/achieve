@@ -5,13 +5,8 @@ import { useNavigate } from "react-router-dom";
 export const LearningSection = () => {
   const navigate = useNavigate();
 
-  const handlePracticeClick = () => {
-    navigate("/practice");
-  };
-
-  const handleSimulatorClick = () => {
-    navigate("/simulator");
-  };
+  const handlePracticeClick = () => navigate("/practice");
+  const handleSimulatorClick = () => navigate("/simulator");
 
   return (
     <section className="space-y-6">

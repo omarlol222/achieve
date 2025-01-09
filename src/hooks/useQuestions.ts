@@ -71,7 +71,6 @@ const fetchQuestions = async (
   }
 
   if (difficultyFilter && difficultyFilter !== "all") {
-    // Ensure difficultyFilter is one of the valid values
     const validDifficulty = ["Easy", "Moderate", "Hard"].includes(difficultyFilter) 
       ? (difficultyFilter as Difficulty) 
       : "Easy";
@@ -125,7 +124,16 @@ export function useQuestions(
   });
 
   const { data: questionsData, isLoading } = useQuery({
-    queryKey: ["questions", search, subjectFilter, topicFilter, difficultyFilter, typeFilter, testTypeFilter, currentPage],
+    queryKey: [
+      "questions", 
+      search, 
+      subjectFilter, 
+      topicFilter, 
+      difficultyFilter, 
+      typeFilter, 
+      testTypeFilter, 
+      currentPage
+    ],
     queryFn: () => fetchQuestions(
       search,
       subjectFilter,

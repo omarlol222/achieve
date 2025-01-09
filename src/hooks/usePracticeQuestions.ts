@@ -2,7 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { PracticeQuestion, Difficulty } from "@/types/practice";
 
-export function usePracticeQuestions(topicId: string, difficulty?: string, questionCount: number = 10) {
+export function usePracticeQuestions(
+  topicId: string, 
+  difficulty?: string, 
+  questionCount: number = 10
+) {
   return useQuery({
     queryKey: ["practice-questions", topicId, difficulty],
     queryFn: async () => {
@@ -12,7 +16,6 @@ export function usePracticeQuestions(topicId: string, difficulty?: string, quest
         .eq("topic_id", topicId);
 
       if (difficulty && difficulty !== "all") {
-        // Cast the difficulty to the correct type
         const validDifficulty = ["Easy", "Moderate", "Hard"].includes(difficulty) 
           ? (difficulty as Difficulty) 
           : undefined;

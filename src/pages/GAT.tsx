@@ -11,7 +11,6 @@ export default function GAT() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check authentication and purchase status
   useEffect(() => {
     const checkAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -26,7 +25,6 @@ export default function GAT() {
         return;
       }
 
-      // Check if user has purchased access
       const { data: purchases } = await supabase
         .from("purchases")
         .select("*")
@@ -41,7 +39,6 @@ export default function GAT() {
           variant: "destructive",
         });
         navigate("/shop");
-        return;
       }
     };
 

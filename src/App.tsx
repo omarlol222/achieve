@@ -18,7 +18,6 @@ import GAT from "./pages/GAT";
 import Practice from "./pages/practice/Practice";
 import PracticeTest from "./pages/practice/PracticeTest";
 import Simulator from "./pages/Simulator";
-import Index from "./pages/Index";
 
 const queryClient = new QueryClient({
   defaultOptions: {
