@@ -2,11 +2,10 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { QuestionContent } from "@/components/practice/QuestionContent";
-import { handleQuestionProgress } from "./utils/progressUtils";
+import { Card } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 type Question = {
   id: string;
@@ -16,7 +15,7 @@ type Question = {
   choice3: string;
   choice4: string;
   correct_answer: number;
-  topic_id: string;
+  explanation?: string;
   question_type: string;
   comparison_value1?: string;
   comparison_value2?: string;
@@ -26,9 +25,7 @@ type Question = {
 const PracticeTest = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [answers, setAnswers] = useState<{ [key: string]: number }>({});
   const [showFeedback, setShowFeedback] = useState(false);
 
@@ -56,85 +53,129 @@ const PracticeTest = () => {
     },
   });
 
-  const currentQuestion = questions?.[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / (questions?.length || 1)) * 100;
-
-  const handleAnswer = async (answer: number) => {
-    if (showFeedback) return;
-    
-    setSelectedAnswer(answer);
-    setShowFeedback(true);
-    
-    const isCorrect = answer === currentQuestion.correct_answer;
-    setAnswers(prev => ({
-      ...prev,
-      [currentQuestion.id]: answer
-    }));
-
-    try {
-      await handleQuestionProgress(currentQuestion.topic_id, isCorrect);
-    } catch (error: any) {
-      console.error("Error updating progress:", error);
-      toast({
-        variant: "destructive",
-        title: "Error updating progress",
-        description: error.message,
-      });
-    }
-  };
-
-  const handleNext = () => {
-    if (currentQuestionIndex === questions!.length - 1) {
-      const results = questions!.map(q => ({
-        questionId: q.id,
-        topicId: q.topic_id,
-        isCorrect: answers[q.id] === q.correct_answer
-      }));
-
-      navigate("/practice/results", {
-        state: {
-          results,
-          totalQuestions: questions!.length,
-        },
-      });
-    } else {
-      setCurrentQuestionIndex(prev => prev + 1);
-      setSelectedAnswer(null);
-      setShowFeedback(false);
-    }
-  };
-
   if (!questions) {
     return <div>Loading...</div>;
   }
 
+  const currentQuestion = questions[currentQuestionIndex];
+  if (!currentQuestion) {
+    return <div>No questions available.</div>;
+  }
+
+  const handleAnswer = (value: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [currentQuestion.id]: parseInt(value),
+    }));
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setShowFeedback(false);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex((prev) => prev - 1);
+      setShowFeedback(false);
+    }
+  };
+
+  const handleShowFeedback = () => {
+    setShowFeedback(true);
+  };
+
+  const isCorrect = answers[currentQuestion.id] === currentQuestion.correct_answer;
+
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-3xl mx-auto space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-[#1B2B2B]">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900">Practice Test</h1>
+          <div className="text-sm text-gray-500">
             Question {currentQuestionIndex + 1} of {questions.length}
-          </h1>
-          <Progress value={progress} className="w-64" />
+          </div>
         </div>
 
-        <QuestionContent
-          question={currentQuestion}
-          selectedAnswer={selectedAnswer}
-          showFeedback={showFeedback}
-          onAnswerSelect={handleAnswer}
-        />
+        <Card className="p-6 space-y-6">
+          <div className="space-y-4">
+            <div className="text-lg font-medium">{currentQuestion.question_text}</div>
+            {currentQuestion.image_url && (
+              <img
+                src={currentQuestion.image_url}
+                alt="Question"
+                className="max-w-full h-auto rounded-lg"
+              />
+            )}
+            <RadioGroup
+              value={answers[currentQuestion.id]?.toString()}
+              onValueChange={handleAnswer}
+              className="space-y-3"
+            >
+              {[1, 2, 3, 4].map((choiceNum) => (
+                <div key={choiceNum} className="flex items-center space-x-2">
+                  <RadioGroupItem value={choiceNum.toString()} id={`choice${choiceNum}`} />
+                  <Label htmlFor={`choice${choiceNum}`}>
+                    {currentQuestion[`choice${choiceNum}` as keyof Question]}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
 
-        {showFeedback && (
-          <Button
-            className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-            onClick={handleNext}
-          >
-            {currentQuestionIndex === questions.length - 1
-              ? "See Results"
-              : "Next Question"}
-          </Button>
-        )}
+          {showFeedback && (
+            <div
+              className={`p-4 rounded-lg ${
+                isCorrect ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              }`}
+            >
+              <p className="font-medium">
+                {isCorrect ? "Correct!" : "Incorrect."}
+              </p>
+              {currentQuestion.explanation && (
+                <p className="mt-2">{currentQuestion.explanation}</p>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-between pt-4">
+            <Button
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={currentQuestionIndex === 0}
+            >
+              Previous
+            </Button>
+            <div className="space-x-2">
+              {!showFeedback && (
+                <Button
+                  variant="secondary"
+                  onClick={handleShowFeedback}
+                  disabled={!answers[currentQuestion.id]}
+                >
+                  Check Answer
+                </Button>
+              )}
+              {currentQuestionIndex < questions.length - 1 ? (
+                <Button
+                  onClick={handleNext}
+                  disabled={!answers[currentQuestion.id]}
+                >
+                  Next
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => navigate("/practice")}
+                  disabled={!answers[currentQuestion.id]}
+                >
+                  Finish
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
       </div>
     </div>
   );
