@@ -38,7 +38,7 @@ export default function SimulatorTest() {
     enabled: !!sessionId,
   });
 
-  const { data: moduleProgress, isLoading: isLoadingProgress } = useQuery({
+  const { data: moduleProgress, isLoading: isLoadingProgress, refetch: refetchModuleProgress } = useQuery({
     queryKey: ["module-progress", sessionId, currentModuleIndex],
     queryFn: async () => {
       if (!modules) return null;
@@ -60,7 +60,7 @@ export default function SimulatorTest() {
     if (!modules) return;
     
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("module_progress")
         .insert({
           session_id: sessionId,
@@ -71,8 +71,8 @@ export default function SimulatorTest() {
 
       if (error) throw error;
       
-      // Refetch module progress
-      await moduleProgress.refetch();
+      // Refetch module progress using the refetch function from useQuery
+      await refetchModuleProgress();
     } catch (error: any) {
       console.error("Error starting module:", error);
       toast({
