@@ -71,7 +71,6 @@ export default function SimulatorTest() {
 
       if (error) throw error;
       
-      // Refetch module progress using the refetch function from useQuery
       await refetchModuleProgress();
     } catch (error: any) {
       console.error("Error starting module:", error);
@@ -151,8 +150,8 @@ export default function SimulatorTest() {
 
         if (scoresError) throw scoresError;
 
-        // Navigate back to simulator page
-        navigate("/gat/simulator");
+        // Navigate to results page instead of simulator page
+        navigate(`/gat/simulator/results/${sessionId}`);
         
         toast({
           title: "Test completed",
