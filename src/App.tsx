@@ -15,7 +15,7 @@ import Tests from "./pages/admin/Tests";
 import Users from "./pages/admin/Users";
 import Payments from "./pages/admin/Payments";
 import GAT from "./pages/GAT";
-import PracticeSetup from "./pages/practice/PracticeSetup";
+import Practice from "./pages/practice/Practice";
 import PracticeTest from "./pages/practice/PracticeTest";
 import PracticeResults from "./pages/practice/PracticeResults";
 import Index from "./pages/Index";
@@ -50,7 +50,7 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/gat" element={<GAT />} />
-          <Route path="/practice/setup" element={<PracticeSetup />} />
+          <Route path="/practice" element={<Practice />} />
           <Route path="/practice/test" element={<PracticeTest />} />
           <Route path="/practice/results" element={<PracticeResults />} />
           <Route path="/admin" element={<AdminLayout />}>
