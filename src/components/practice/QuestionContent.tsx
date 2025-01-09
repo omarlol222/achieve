@@ -58,6 +58,12 @@ export const QuestionContent = ({
     return <p className="text-lg">{question.question_text}</p>;
   };
 
+  const handleAnswerSelect = (choice: number) => {
+    if (!selectedAnswer) {
+      onAnswerSelect(choice);
+    }
+  };
+
   return (
     <Card className="p-6 space-y-6">
       <div className="flex gap-6">
@@ -70,7 +76,7 @@ export const QuestionContent = ({
                 key={choice}
                 variant={selectedAnswer === choice ? "default" : "outline"}
                 className={`w-full justify-start h-auto p-4 ${
-                  showFeedback
+                  selectedAnswer !== null
                     ? choice === question.correct_answer
                       ? "bg-green-100 hover:bg-green-100"
                       : choice === selectedAnswer
@@ -78,13 +84,14 @@ export const QuestionContent = ({
                       : ""
                     : ""
                 }`}
-                onClick={() => onAnswerSelect(choice)}
+                onClick={() => handleAnswerSelect(choice)}
+                disabled={selectedAnswer !== null}
               >
                 {question[`choice${choice}` as keyof Question]}
-                {showFeedback && choice === question.correct_answer && (
+                {selectedAnswer !== null && choice === question.correct_answer && (
                   <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
                 )}
-                {showFeedback &&
+                {selectedAnswer !== null &&
                   choice === selectedAnswer &&
                   choice !== question.correct_answer && (
                     <XCircle className="ml-2 h-4 w-4 text-red-500" />
