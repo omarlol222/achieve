@@ -19,6 +19,7 @@ import Practice from "./pages/practice/Practice";
 import PracticeTest from "./pages/practice/PracticeTest";
 import Simulator from "./pages/Simulator";
 import SimulatorTest from "./pages/simulator/SimulatorTest";
+import SimulatorResults from "./pages/simulator/SimulatorResults";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/gat/practice/test" element={<PracticeTest />} />
           <Route path="/gat/simulator" element={<Simulator />} />
           <Route path="/gat/simulator/test" element={<SimulatorTest />} />
+          <Route path="/gat/simulator/results/:sessionId" element={<SimulatorResults />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="questions" element={<Questions />} />
