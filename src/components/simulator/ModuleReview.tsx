@@ -98,7 +98,7 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
 
   const totalQuestions = answers.length;
   const correctAnswers = answers.filter(
-    (answer) => answer.selected_answer === answer.question.correct_answer
+    (answer) => answer.selected_answer === answer.question?.correct_answer
   ).length;
   const score = Math.round((correctAnswers / totalQuestions) * 100);
   
@@ -153,7 +153,7 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
         {answers.map((answer) => (
           <Card key={answer.id} className="p-6">
             <div className="flex items-start gap-4">
-              {answer.selected_answer === answer.question.correct_answer ? (
+              {answer.selected_answer === answer.question?.correct_answer ? (
                 <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
               ) : (
                 <XCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-1" />
@@ -161,10 +161,10 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
               <div className="space-y-4 flex-1">
                 <div className="space-y-4">
                   <div className="flex justify-between items-start">
-                    <p className="font-medium">{answer.question.question_text}</p>
-                    <span className="text-xs text-gray-500">ID: {answer.question.id}</span>
+                    <p className="font-medium">{answer.question?.question_text}</p>
+                    <span className="text-xs text-gray-500">ID: {answer.question?.id}</span>
                   </div>
-                  {answer.question.image_url && (
+                  {answer.question?.image_url && (
                     <img 
                       src={answer.question.image_url} 
                       alt="Question" 
@@ -175,7 +175,7 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
                 <div className="space-y-2">
                   {[1, 2, 3, 4].map((choice) => {
                     const isSelected = answer.selected_answer === choice;
-                    const isCorrect = answer.question.correct_answer === choice;
+                    const isCorrect = answer.question?.correct_answer === choice;
                     return (
                       <div
                         key={choice}
@@ -189,17 +189,17 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
                             : "bg-gray-50 border border-gray-200"
                         }`}
                       >
-                        {answer.question[`choice${choice}` as keyof typeof answer.question]}
+                        {answer.question?.[`choice${choice}` as keyof typeof answer.question]}
                       </div>
                     );
                   })}
                 </div>
-                {answer.question.explanation && (
+                {answer.question?.explanation && (
                   <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                     <p className="text-sm text-blue-800">{answer.question.explanation}</p>
                   </div>
                 )}
-                {answer.question.topic && (
+                {answer.question?.topic && (
                   <div className="mt-2">
                     <span className="text-xs text-gray-500">Topic: {answer.question.topic.name}</span>
                   </div>
