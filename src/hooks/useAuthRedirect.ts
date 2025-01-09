@@ -11,16 +11,23 @@ export const useAuthRedirect = () => {
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        
         if (!session?.user) {
           navigate("/signin");
           return;
         }
 
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", session.user.id)
           .single();
+
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          setError("Error fetching user profile");
+          return;
+        }
 
         if (profile?.role !== "admin") {
           setError("Access denied. Admin privileges required.");
