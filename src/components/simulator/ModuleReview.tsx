@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, XCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle, XCircle, Clock, Brain, Target } from "lucide-react";
+import { formatDistanceStrict } from "date-fns";
 
 type ModuleReviewProps = {
   moduleProgressId: string;
@@ -10,7 +12,27 @@ type ModuleReviewProps = {
 };
 
 export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps) {
-  const { data: answers, isLoading } = useQuery({
+  const { data: moduleProgress, isLoading: isLoadingProgress } = useQuery({
+    queryKey: ["module-progress", moduleProgressId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("module_progress")
+        .select(`
+          *,
+          module:test_modules (
+            name,
+            time_limit
+          )
+        `)
+        .eq("id", moduleProgressId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: answers, isLoading: isLoadingAnswers } = useQuery({
     queryKey: ["module-answers", moduleProgressId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -24,7 +46,9 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
             choice1,
             choice2,
             choice3,
-            choice4
+            choice4,
+            explanation,
+            image_url
           )
         `)
         .eq("module_progress_id", moduleProgressId);
@@ -34,7 +58,7 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
     },
   });
 
-  if (isLoading) {
+  if (isLoadingProgress || isLoadingAnswers) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <p>Loading review...</p>
@@ -42,32 +66,63 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
     );
   }
 
-  const totalQuestions = answers?.length || 0;
-  const correctAnswers = answers?.filter(
+  if (!answers || !moduleProgress) return null;
+
+  const totalQuestions = answers.length;
+  const correctAnswers = answers.filter(
     (answer) => answer.selected_answer === answer.question.correct_answer
-  ).length || 0;
+  ).length;
   const score = Math.round((correctAnswers / totalQuestions) * 100);
+  
+  const timeSpent = moduleProgress.completed_at && moduleProgress.started_at
+    ? formatDistanceStrict(
+        new Date(moduleProgress.completed_at),
+        new Date(moduleProgress.started_at)
+      )
+    : "N/A";
 
   return (
     <div className="space-y-8">
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-6">
         <h2 className="text-3xl font-bold">Module Complete!</h2>
-        <div className="flex items-center justify-center gap-8">
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Score</p>
-            <p className="text-4xl font-bold">{score}%</p>
+        <Card className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center">
+                <Target className="h-8 w-8 text-[#1B2B2B]" />
+              </div>
+              <p className="text-sm text-gray-600">Score</p>
+              <p className="text-3xl font-bold">{score}%</p>
+            </div>
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center">
+                <Brain className="h-8 w-8 text-[#1B2B2B]" />
+              </div>
+              <p className="text-sm text-gray-600">Correct Answers</p>
+              <p className="text-3xl font-bold">
+                {correctAnswers}/{totalQuestions}
+              </p>
+            </div>
+            <div className="text-center space-y-2">
+              <div className="flex items-center justify-center">
+                <Clock className="h-8 w-8 text-[#1B2B2B]" />
+              </div>
+              <p className="text-sm text-gray-600">Time Spent</p>
+              <p className="text-3xl font-bold">{timeSpent}</p>
+            </div>
+            <div className="text-center space-y-2">
+              <Progress value={score} className="h-2" />
+              <p className="text-sm text-gray-600">Performance</p>
+              <p className="text-lg">
+                {score >= 80 ? "Excellent!" : score >= 60 ? "Good" : "Needs Improvement"}
+              </p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Correct Answers</p>
-            <p className="text-4xl font-bold">
-              {correctAnswers}/{totalQuestions}
-            </p>
-          </div>
-        </div>
+        </Card>
       </div>
 
       <div className="space-y-4">
-        {answers?.map((answer) => (
+        {answers.map((answer) => (
           <Card key={answer.id} className="p-6">
             <div className="flex items-start gap-4">
               {answer.selected_answer === answer.question.correct_answer ? (
@@ -76,7 +131,16 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
                 <XCircle className="h-6 w-6 text-red-600 flex-shrink-0 mt-1" />
               )}
               <div className="space-y-4 flex-1">
-                <p className="font-medium">{answer.question.question_text}</p>
+                <div className="space-y-4">
+                  <p className="font-medium">{answer.question.question_text}</p>
+                  {answer.question.image_url && (
+                    <img 
+                      src={answer.question.image_url} 
+                      alt="Question" 
+                      className="max-w-full h-auto rounded-lg"
+                    />
+                  )}
+                </div>
                 <div className="space-y-2">
                   {[1, 2, 3, 4].map((choice) => {
                     const isSelected = answer.selected_answer === choice;
@@ -99,6 +163,11 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
                     );
                   })}
                 </div>
+                {answer.question.explanation && (
+                  <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">{answer.question.explanation}</p>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
