@@ -76,21 +76,21 @@ export const Navigation = () => {
           </Link>
         </div>
 
-        {session && hasPurchased && (
-          <div className="flex-1 flex justify-center">
-            <Link to="/gat" className="text-3xl font-bold hover:text-primary">
-              GAT
-            </Link>
-          </div>
-        )}
-
-        <div className="flex-1 flex items-center justify-end gap-4">
+        <div className="flex-1 flex justify-center">
           {!hideNavLinks && (
             <div className="hidden md:flex items-center gap-12 text-lg font-medium">
               <Link to="/about" className="hover:text-primary">About</Link>
               <Link to="/shop" className="hover:text-primary">Shop</Link>
               <Link to="/faq" className="hover:text-primary">FAQ</Link>
             </div>
+          )}
+        </div>
+
+        <div className="flex-1 flex items-center justify-end gap-4">
+          {session && hasPurchased && !hideNavLinks && (
+            <Link to="/gat">
+              <Button variant="outline">Dashboard</Button>
+            </Link>
           )}
           
           {isAdmin && (
