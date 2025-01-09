@@ -82,7 +82,11 @@ const AdminLayout = () => {
             />
           </Link>
 
-          <nav className="ml-auto flex items-center space-x-8">
+          <div className="mx-auto text-2xl font-semibold">
+            GAT
+          </div>
+
+          <nav className="flex items-center space-x-8">
             {menuItems.map((item) => (
               <Link
                 key={item.path}
