@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,8 @@ import { Menu } from "lucide-react";
 
 export const Navigation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isGatRoute = location.pathname === '/gat';
 
   const { data: session } = useQuery({
     queryKey: ["session"],
@@ -70,11 +72,13 @@ export const Navigation = () => {
           />
         </Link>
 
-        <div className="flex items-center gap-12 text-lg font-medium">
-          <Link to="/about" className="hover:text-primary">About</Link>
-          <Link to="/shop" className="hover:text-primary">Shop</Link>
-          <Link to="/faq" className="hover:text-primary">FAQ</Link>
-        </div>
+        {!isGatRoute && (
+          <div className="flex items-center gap-12 text-lg font-medium">
+            <Link to="/about" className="hover:text-primary">About</Link>
+            <Link to="/shop" className="hover:text-primary">Shop</Link>
+            <Link to="/faq" className="hover:text-primary">FAQ</Link>
+          </div>
+        )}
         
         <div className="flex items-center gap-4">
           {!session ? (
@@ -100,15 +104,19 @@ export const Navigation = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate("/about")}>
-                    About
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/shop")}>
-                    Shop
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/faq")}>
-                    FAQ
-                  </DropdownMenuItem>
+                  {!isGatRoute && (
+                    <>
+                      <DropdownMenuItem onClick={() => navigate("/about")}>
+                        About
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/shop")}>
+                        Shop
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/faq")}>
+                        FAQ
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   {session && hasPurchased && (
                     <DropdownMenuItem onClick={() => navigate("/gat")}>
                       Dashboard
