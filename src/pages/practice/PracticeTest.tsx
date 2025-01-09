@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { QuestionContent } from "@/components/practice/QuestionContent";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Brain, TrendingUp, TrendingDown } from "lucide-react";
+import { Brain } from "lucide-react";
 import { handleQuestionProgress } from "./utils/progressUtils";
+import { useToast } from "@/hooks/use-toast";
 
 type Question = {
   id: string;
@@ -28,13 +29,28 @@ type Question = {
 const PracticeTest = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: number }>({});
   const [showResults, setShowResults] = useState(false);
 
-  const { topicId, difficulty, questionCount } = location.state || {};
+  // Extract and validate state parameters
+  const state = location.state as { topicId?: string; difficulty?: string; questionCount?: number } | null;
 
-  const { data: questions } = useQuery({
+  // If state is missing or invalid, show error and redirect
+  if (!state?.topicId) {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Missing required practice parameters. Please try again.",
+    });
+    navigate("/practice");
+    return null;
+  }
+
+  const { topicId, difficulty, questionCount = 10 } = state;
+
+  const { data: questions, isLoading } = useQuery({
     queryKey: ["practice-questions", topicId, difficulty],
     queryFn: async () => {
       let query = supabase
@@ -42,7 +58,7 @@ const PracticeTest = () => {
         .select("*")
         .eq("topic_id", topicId);
 
-      if (difficulty !== "all") {
+      if (difficulty && difficulty !== "all") {
         query = query.eq("difficulty", difficulty);
       }
 
@@ -53,16 +69,35 @@ const PracticeTest = () => {
         .sort(() => Math.random() - 0.5)
         .slice(0, questionCount);
     },
+    retry: false,
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load questions. Please try again.",
+      });
+      navigate("/practice");
+    },
   });
 
-  if (!questions) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white p-8 flex items-center justify-center">
+        <p>Loading questions...</p>
+      </div>
+    );
+  }
+
+  if (!questions?.length) {
+    return (
+      <div className="min-h-screen bg-white p-8 flex flex-col items-center justify-center gap-4">
+        <p>No questions available for this topic.</p>
+        <Button onClick={() => navigate("/practice")}>Back to Practice</Button>
+      </div>
+    );
   }
 
   const currentQuestion = questions[currentQuestionIndex];
-  if (!currentQuestion) {
-    return <div>No questions available.</div>;
-  }
 
   const handleAnswer = async (answer: number) => {
     const isCorrect = answer === currentQuestion.correct_answer;
