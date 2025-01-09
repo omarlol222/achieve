@@ -1,30 +1,12 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { QuestionContent } from "@/components/practice/QuestionContent";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Brain } from "lucide-react";
+import { PracticeResults } from "@/components/practice/PracticeResults";
 import { handleQuestionProgress } from "./utils/progressUtils";
 import { useToast } from "@/hooks/use-toast";
-
-type Question = {
-  id: string;
-  question_text: string;
-  choice1: string;
-  choice2: string;
-  choice3: string;
-  choice4: string;
-  correct_answer: number;
-  explanation?: string;
-  question_type: string;
-  comparison_value1?: string;
-  comparison_value2?: string;
-  image_url?: string;
-  topic_id: string;
-};
+import { usePracticeQuestions } from "@/hooks/usePracticeQuestions";
+import type { PracticeState } from "@/types/practice";
 
 const PracticeTest = () => {
   const location = useLocation();
@@ -35,7 +17,7 @@ const PracticeTest = () => {
   const [showResults, setShowResults] = useState(false);
 
   // Extract and validate state parameters
-  const state = location.state as { topicId?: string; difficulty?: string; questionCount?: number } | null;
+  const state = location.state as PracticeState | null;
 
   // If state is missing or invalid, show error and redirect
   if (!state?.topicId) {
@@ -50,35 +32,7 @@ const PracticeTest = () => {
 
   const { topicId, difficulty, questionCount = 10 } = state;
 
-  const { data: questions, isLoading } = useQuery({
-    queryKey: ["practice-questions", topicId, difficulty],
-    queryFn: async () => {
-      let query = supabase
-        .from("questions")
-        .select("*")
-        .eq("topic_id", topicId);
-
-      if (difficulty && difficulty !== "all") {
-        query = query.eq("difficulty", difficulty);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-
-      return data
-        .sort(() => Math.random() - 0.5)
-        .slice(0, questionCount);
-    },
-    retry: false,
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load questions. Please try again.",
-      });
-      navigate("/practice");
-    },
-  });
+  const { data: questions, isLoading } = usePracticeQuestions(topicId, difficulty, questionCount);
 
   if (isLoading) {
     return (
@@ -131,12 +85,7 @@ const PracticeTest = () => {
     return {
       totalCorrect,
       totalQuestions: questions.length,
-      percentage: (totalCorrect / questions.length) * 100,
     };
-  };
-
-  const handleStartNew = () => {
-    navigate("/practice");
   };
 
   const results = calculateResults();
@@ -158,43 +107,12 @@ const PracticeTest = () => {
           onAnswerSelect={handleAnswer}
         />
 
-        <Dialog open={showResults} onOpenChange={setShowResults}>
-          <DialogContent className="sm:max-w-xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center justify-center gap-3 text-2xl">
-                <Brain className="h-8 w-8 text-[#1B2B2B]" />
-                Practice Results
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-6">
-              <Card className="p-6">
-                <div className="text-center space-y-4">
-                  <h2 className="text-2xl font-semibold">
-                    Overall Score: {results.percentage.toFixed(1)}%
-                  </h2>
-                  <p className="text-lg">
-                    {results.totalCorrect} correct out of {results.totalQuestions} questions
-                  </p>
-                </div>
-              </Card>
-
-              <div className="flex justify-center gap-4">
-                <Button 
-                  onClick={handleStartNew}
-                  className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-                >
-                  Start New Practice
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate("/gat")}
-                >
-                  Back to Dashboard
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <PracticeResults
+          open={showResults}
+          onOpenChange={setShowResults}
+          totalCorrect={results.totalCorrect}
+          totalQuestions={results.totalQuestions}
+        />
       </div>
     </div>
   );
