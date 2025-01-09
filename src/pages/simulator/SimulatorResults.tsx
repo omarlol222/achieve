@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { TestResults } from "@/components/simulator/TestResults";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { Navigation } from "@/components/ui/navigation";
 
 export default function SimulatorResults() {
   const { sessionId } = useParams();
@@ -13,6 +14,7 @@ export default function SimulatorResults() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Navigation />
       <div className="container py-8">
         <Button 
           variant="ghost" 
