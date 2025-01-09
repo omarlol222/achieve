@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { StartTest } from "@/components/simulator/StartTest";
 import { StartModule } from "@/components/simulator/StartModule";
+import { ModuleTest } from "@/components/simulator/ModuleTest";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,6 +30,11 @@ type TestModule = {
   time_limit: number;
 };
 
+type ModuleProgress = {
+  id: string;
+  module: TestModule;
+};
+
 export default function Simulator() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -36,6 +42,7 @@ export default function Simulator() {
   const [activeSession, setActiveSession] = useState<TestSession | null>(null);
   const [currentModule, setCurrentModule] = useState<TestModule | null>(null);
   const [showModuleStart, setShowModuleStart] = useState(false);
+  const [moduleProgress, setModuleProgress] = useState<ModuleProgress | null>(null);
   
   const { data: testResults } = useQuery({
     queryKey: ["test-results"],
@@ -98,18 +105,82 @@ export default function Simulator() {
     },
   });
 
+  const createModuleProgress = useMutation({
+    mutationFn: async (moduleId: string) => {
+      if (!activeSession) throw new Error("No active session");
+
+      const { data, error } = await supabase
+        .from("module_progress")
+        .insert([{
+          session_id: activeSession.id,
+          module_id: moduleId,
+          started_at: new Date().toISOString(),
+        }])
+        .select(`
+          id,
+          module:test_modules (
+            id,
+            name,
+            time_limit
+          )
+        `)
+        .single();
+
+      if (error) throw error;
+      return data as ModuleProgress;
+    },
+    onSuccess: (progress) => {
+      setModuleProgress(progress);
+      setShowModuleStart(false);
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error starting module",
+        description: error.message,
+      });
+    },
+  });
+
   const handleStartTest = () => {
     createSession.mutate();
   };
 
   const handleStartModule = () => {
-    // Will implement module start logic in the next step
-    console.log("Starting module:", currentModule?.name);
+    if (currentModule) {
+      createModuleProgress.mutate(currentModule.id);
+    }
+  };
+
+  const handleModuleComplete = () => {
+    // Move to the next module or finish test
+    if (modules) {
+      const currentIndex = modules.findIndex(m => m.id === currentModule?.id);
+      if (currentIndex < modules.length - 1) {
+        setCurrentModule(modules[currentIndex + 1]);
+        setShowModuleStart(true);
+        setModuleProgress(null);
+      } else {
+        // Test completed
+        setActiveSession(null);
+        setCurrentModule(null);
+        setShowModuleStart(false);
+        setModuleProgress(null);
+        queryClient.invalidateQueries({ queryKey: ["test-results"] });
+      }
+    }
   };
 
   const renderContent = () => {
     if (!activeSession) {
       return <StartTest onStart={handleStartTest} />;
+    }
+
+    if (moduleProgress) {
+      return <ModuleTest 
+        moduleProgress={moduleProgress}
+        onComplete={handleModuleComplete}
+      />;
     }
 
     if (showModuleStart && currentModule) {
