@@ -11,12 +11,23 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
+type TestQuestionResult = {
+  id: string;
+  question?: {
+    test_type?: {
+      name: string;
+    };
+  };
+  is_correct: boolean;
+};
+
 type TestResult = {
   id: string;
   created_at: string;
   total_score: number;
   verbal_score?: number;
   quantitative_score?: number;
+  test_question_results?: TestQuestionResult[];
 };
 
 type TestSession = {
