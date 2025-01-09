@@ -40,60 +40,71 @@ export default function Simulator() {
         </div>
 
         <div className="space-y-8">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">Previous tests</h2>
-            <Button variant="link" className="text-lg">
-              VIEW ALL
-            </Button>
-          </div>
+          <h2 className="text-2xl font-semibold">Previous tests</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {testResults?.map((result) => (
-              <div
-                key={result.id}
-                className="bg-gray-100 p-6 rounded-lg space-y-4"
+          {testResults?.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-4xl text-gray-500 font-light mb-16">
+                You don't have any previous tests... Take one!
+              </p>
+              <Button 
+                size="lg"
+                className="bg-[#1B2B2B] hover:bg-[#243636] text-white px-12 py-6 text-lg h-auto"
               >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm text-gray-600">DATE:</p>
-                    <p className="font-medium">
-                      {format(new Date(result.created_at), "MMM d, yyyy")}
-                    </p>
-                  </div>
-                  <Button variant="link" size="sm">
-                    VIEW DETAILS
-                  </Button>
-                </div>
+                START A TEST
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {testResults?.map((result) => (
+                  <div
+                    key={result.id}
+                    className="bg-gray-100 p-6 rounded-lg space-y-4"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm text-gray-600">DATE:</p>
+                        <p className="font-medium">
+                          {format(new Date(result.created_at), "MMM d, yyyy")}
+                        </p>
+                      </div>
+                      <Button variant="link" size="sm">
+                        VIEW DETAILS
+                      </Button>
+                    </div>
 
-                <div>
-                  <p className="text-sm text-gray-600">SCORE:</p>
-                  <div className="space-y-2">
-                    <p>
-                      <span className="font-medium">VERBAL: </span>
-                      {result.verbal_score || "N/A"}
-                    </p>
-                    <p>
-                      <span className="font-medium">QUANTITATIVE: </span>
-                      {result.quantitative_score || "N/A"}
-                    </p>
-                    <p>
-                      <span className="font-medium">TOTAL: </span>
-                      {result.total_score}
-                    </p>
+                    <div>
+                      <p className="text-sm text-gray-600">SCORE:</p>
+                      <div className="space-y-2">
+                        <p>
+                          <span className="font-medium">VERBAL: </span>
+                          {result.verbal_score || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">QUANTITATIVE: </span>
+                          {result.quantitative_score || "N/A"}
+                        </p>
+                        <p>
+                          <span className="font-medium">TOTAL: </span>
+                          {result.total_score}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          <div className="flex justify-center mt-12">
-            <Button 
-              size="lg"
-              className="bg-[#1B2B2B] hover:bg-[#243636] text-white px-12"
-            >
-              START A TEST
-            </Button>
-          </div>
+              <div className="flex justify-center mt-12">
+                <Button 
+                  size="lg"
+                  className="bg-[#1B2B2B] hover:bg-[#243636] text-white px-12"
+                >
+                  START A TEST
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
