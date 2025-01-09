@@ -10,12 +10,18 @@ type ScoreHeaderProps = {
 };
 
 export function ScoreHeader({ subjectScores, totalScore, createdAt }: ScoreHeaderProps) {
+  // Filter out duplicate subjects by name, keeping only the first occurrence
+  const uniqueSubjectScores = subjectScores.filter(
+    (subject, index, self) =>
+      index === self.findIndex((s) => s.name === subject.name)
+  );
+
   return (
     <div className="flex justify-between items-start">
       <div>
         <h1 className="text-4xl font-bold mb-2">Test score:</h1>
         <div className="space-y-2">
-          {subjectScores.map((subject) => (
+          {uniqueSubjectScores.map((subject) => (
             <p key={subject.name} className="text-xl">
               <span className="font-medium">{subject.name.toUpperCase()}: </span>
               {subject.score}
