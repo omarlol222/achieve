@@ -31,7 +31,12 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
               )
             ),
             module_answers:module_answers (
-              id
+              id,
+              selected_answer,
+              question:questions (
+                id,
+                correct_answer
+              )
             )
           )
         `)
@@ -52,6 +57,36 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
   }
 
   if (!session) return null;
+
+  // Calculate scores for math and verbal sections
+  const calculateSectionScore = (type: string) => {
+    if (!session.module_progress) return 0;
+    
+    const moduleAnswers = session.module_progress
+      .filter(progress => progress.module.test_type?.name.toLowerCase() === type.toLowerCase())
+      .flatMap(progress => progress.module_answers || []);
+
+    if (moduleAnswers.length === 0) return 0;
+
+    const correctAnswers = moduleAnswers.filter(
+      answer => answer.selected_answer === answer.question.correct_answer
+    ).length;
+
+    return Math.round((correctAnswers / moduleAnswers.length) * 100);
+  };
+
+  // Calculate mistakes for a module
+  const calculateModuleMistakes = (moduleProgress: any) => {
+    if (!moduleProgress.module_answers) return 0;
+    
+    return moduleProgress.module_answers.filter(
+      (answer: any) => answer.selected_answer !== answer.question.correct_answer
+    ).length;
+  };
+
+  const mathScore = calculateSectionScore('math');
+  const verbalScore = calculateSectionScore('verbal');
+  const totalScore = Math.round((mathScore + verbalScore) / 2);
 
   if (selectedModuleId) {
     return (
@@ -74,16 +109,16 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
           <h1 className="text-4xl font-bold mb-2">Test score:</h1>
           <div className="space-y-2">
             <p className="text-xl">
-              <span className="font-medium">QUANTITATIVE: </span>
-              {session.quantitative_score || "N/A"}
+              <span className="font-medium">MATH: </span>
+              {mathScore}
             </p>
             <p className="text-xl">
               <span className="font-medium">VERBAL: </span>
-              {session.verbal_score || "N/A"}
+              {verbalScore}
             </p>
             <p className="text-xl">
               <span className="font-medium">TOTAL: </span>
-              {session.total_score || "N/A"}
+              {totalScore}
             </p>
           </div>
         </div>
@@ -102,6 +137,7 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {session.module_progress?.map((progress: any) => {
             const totalQuestions = progress.module_answers?.length || 0;
+            const mistakes = calculateModuleMistakes(progress);
             
             return (
               <Card key={progress.id} className="p-6 space-y-4">
@@ -118,8 +154,7 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
                   </p>
                   <p>
                     <span className="font-medium">MISTAKES: </span>
-                    {/* Calculate mistakes when we have the data */}
-                    N/A
+                    {mistakes}
                   </p>
                 </div>
                 <Button
