@@ -9,6 +9,7 @@ import { ModuleTest } from "@/components/simulator/ModuleTest";
 import { TestResults } from "@/components/simulator/TestResults";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 type TestResult = {
   id: string;
@@ -21,6 +22,7 @@ type TestResult = {
 type TestSession = {
   id: string;
   started_at: string;
+  completed_at?: string | null;
 };
 
 type TestModule = {
