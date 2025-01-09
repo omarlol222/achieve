@@ -204,20 +204,33 @@ export default function Simulator() {
         setShowModuleStart(true);
         setModuleProgress(null);
       } else {
-        // Test completed
+        // Test completed - update session
         if (activeSession?.id) {
+          console.log("Completing test session:", activeSession.id);
           const { error } = await supabase
             .from("test_sessions")
-            .update({ completed_at: new Date().toISOString() })
+            .update({ 
+              completed_at: new Date().toISOString(),
+              // You might want to calculate and update scores here
+            })
             .eq("id", activeSession.id);
 
           if (error) {
+            console.error("Error completing test session:", error);
             toast({
               variant: "destructive",
               title: "Error completing test",
               description: error.message,
             });
+            return;
           }
+
+          console.log("Test session completed successfully");
+          // Update local state to trigger results view
+          setActiveSession(prev => prev ? {
+            ...prev,
+            completed_at: new Date().toISOString()
+          } : null);
         }
       }
     }
