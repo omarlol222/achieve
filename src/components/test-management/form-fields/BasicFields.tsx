@@ -63,7 +63,7 @@ export function BasicFields({ form }: BasicFieldsProps) {
           name="order_index"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Order Index</FormLabel>
+              <FormLabel>Order</FormLabel>
               <FormControl>
                 <Input
                   type="number"
