@@ -88,16 +88,16 @@ export const Navigation = () => {
               <Link to="/about" className="hover:text-primary">About</Link>
               <Link to="/shop" className="hover:text-primary">Shop</Link>
               <Link to="/faq" className="hover:text-primary">FAQ</Link>
-              {isAdmin && (
-                <Link to="/admin" className="hover:text-primary">
-                  Admin
-                </Link>
-              )}
             </div>
           )}
         </div>
 
         <div className="flex-1 flex items-center justify-end gap-4">
+          {isAdmin && !hideNavLinks && (
+            <Link to="/admin">
+              <Button variant="outline">Admin</Button>
+            </Link>
+          )}
           {session && hasPurchased && !hideNavLinks && (
             <Link to="/gat">
               <Button variant="outline">Dashboard</Button>
