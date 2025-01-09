@@ -35,7 +35,12 @@ export const Navigation = () => {
         .select("*")
         .eq("id", session.user.id)
         .single();
-      if (error) throw error;
+      
+      console.log("Profile data:", data); // Debug log
+      if (error) {
+        console.error("Profile fetch error:", error);
+        throw error;
+      }
       return data;
     },
     enabled: !!session?.user?.id,
@@ -62,7 +67,7 @@ export const Navigation = () => {
   };
 
   const isAdmin = profile?.role === "admin";
-  console.log("Current user profile:", profile); // Debug log
+  console.log("Is admin:", isAdmin, "Profile:", profile); // Debug log
 
   return (
     <nav className="border-b">
