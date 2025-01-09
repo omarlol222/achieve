@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BasicFields } from "./form-fields/BasicFields";
@@ -116,7 +117,6 @@ export function TestModuleDialog({
     }
   };
 
-  // Set form values when editing
   useEffect(() => {
     if (initialData) {
       form.reset({
@@ -144,30 +144,32 @@ export function TestModuleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>
             {initialData ? 'Edit' : 'Create New'} Test Module
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <BasicFields form={form} />
-            <SelectFields 
-              form={form} 
-              subjects={subjects} 
-              testTypes={testTypes} 
-            />
-            <TopicPercentageFields 
-              form={form}
-              subjectId={form.watch("subject_id")}
-            />
-            <Button type="submit" className="w-full">
-              {initialData ? 'Update' : 'Create'} Module
-            </Button>
-          </form>
-        </Form>
+        <ScrollArea className="max-h-[calc(85vh-120px)] overflow-y-auto pr-4">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <BasicFields form={form} />
+              <SelectFields 
+                form={form} 
+                subjects={subjects} 
+                testTypes={testTypes} 
+              />
+              <TopicPercentageFields 
+                form={form}
+                subjectId={form.watch("subject_id")}
+              />
+              <Button type="submit" className="w-full">
+                {initialData ? 'Update' : 'Create'} Module
+              </Button>
+            </form>
+          </Form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
