@@ -264,8 +264,10 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          difficulty_levels: string[] | null
           id: string
           name: string
+          order_index: number | null
           subject_id: string | null
           test_template_id: string | null
           test_type_id: string | null
@@ -275,8 +277,10 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          difficulty_levels?: string[] | null
           id?: string
           name: string
+          order_index?: number | null
           subject_id?: string | null
           test_template_id?: string | null
           test_type_id?: string | null
@@ -286,8 +290,10 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          difficulty_levels?: string[] | null
           id?: string
           name?: string
+          order_index?: number | null
           subject_id?: string | null
           test_template_id?: string | null
           test_type_id?: string | null

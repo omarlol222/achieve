@@ -8,4 +8,6 @@ export type TestModuleFormData = {
     [key: string]: number;
   };
   total_questions: number;
+  difficulty_levels: string[];
+  order_index: number;
 };

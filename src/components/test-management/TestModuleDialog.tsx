@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BasicFields } from "./form-fields/BasicFields";
 import { SelectFields } from "./form-fields/SelectFields";
 import { TopicPercentageFields } from "./TopicPercentageFields";
+import { DifficultyLevelsField } from "./form-fields/DifficultyLevelsField";
 import { TestModuleFormData } from "./types";
 
 type TestModuleDialogProps = {
@@ -44,6 +45,8 @@ export function TestModuleDialog({
       test_type_id: "",
       topic_percentages: {},
       total_questions: 1,
+      difficulty_levels: ["Easy", "Moderate", "Hard"],
+      order_index: 0,
     },
   });
 
@@ -59,6 +62,8 @@ export function TestModuleDialog({
             time_limit: data.time_limit,
             subject_id: data.subject_id,
             test_type_id: data.test_type_id,
+            difficulty_levels: data.difficulty_levels,
+            order_index: data.order_index,
           })
           .eq("id", initialData.id);
 
@@ -81,6 +86,8 @@ export function TestModuleDialog({
             time_limit: data.time_limit,
             subject_id: data.subject_id,
             test_type_id: data.test_type_id,
+            difficulty_levels: data.difficulty_levels,
+            order_index: data.order_index,
           }])
           .select()
           .single();
@@ -125,12 +132,6 @@ export function TestModuleDialog({
 
   useEffect(() => {
     if (initialData) {
-      // Calculate total questions from existing topic question counts
-      const totalQuestions = initialData.module_topics?.reduce(
-        (sum: number, topic: any) => sum + topic.question_count,
-        0
-      ) || 1;
-
       form.reset({
         name: initialData.name,
         description: initialData.description,
@@ -143,7 +144,12 @@ export function TestModuleDialog({
             topic.percentage,
           ]) || []
         ),
-        total_questions: totalQuestions,
+        total_questions: initialData.module_topics?.reduce(
+          (sum: number, topic: any) => sum + topic.question_count,
+          0
+        ) || 1,
+        difficulty_levels: initialData.difficulty_levels || ["Easy", "Moderate", "Hard"],
+        order_index: initialData.order_index || 0,
       });
     }
   }, [initialData, form]);
@@ -173,6 +179,7 @@ export function TestModuleDialog({
                     subjects={subjects} 
                     testTypes={testTypes} 
                   />
+                  <DifficultyLevelsField form={form} />
                   <TopicPercentageFields 
                     form={form}
                     subjectId={form.watch("subject_id")}

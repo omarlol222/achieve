@@ -39,23 +39,44 @@ export function BasicFields({ form }: BasicFieldsProps) {
         )}
       />
 
-      <FormField
-        control={form.control}
-        name="time_limit"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Time Limit (minutes)</FormLabel>
-            <FormControl>
-              <Input
-                type="number"
-                {...field}
-                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="time_limit"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Time Limit (minutes)</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  {...field}
+                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="order_index"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Order Index</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="0"
+                  {...field}
+                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
 
       <FormField
         control={form.control}

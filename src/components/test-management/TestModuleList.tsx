@@ -13,6 +13,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 
 type TestModuleListProps = {
@@ -22,23 +23,27 @@ type TestModuleListProps = {
 };
 
 export function TestModuleList({ modules, onEdit, onDelete }: TestModuleListProps) {
+  const sortedModules = [...modules].sort((a, b) => a.order_index - b.order_index);
+
   return (
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead>Order</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Description</TableHead>
           <TableHead>Subject</TableHead>
-          <TableHead>Template</TableHead>
           <TableHead>Test Type</TableHead>
           <TableHead>Time Limit (min)</TableHead>
+          <TableHead>Difficulty Levels</TableHead>
           <TableHead>Created At</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {modules?.map((module) => (
+        {sortedModules?.map((module) => (
           <TableRow key={module.id}>
+            <TableCell>{module.order_index}</TableCell>
             <TableCell>
               <Accordion type="single" collapsible>
                 <AccordionItem value={module.id}>
@@ -60,9 +65,17 @@ export function TestModuleList({ modules, onEdit, onDelete }: TestModuleListProp
             </TableCell>
             <TableCell>{module.description}</TableCell>
             <TableCell>{module.subjects?.name}</TableCell>
-            <TableCell>{module.test_templates?.name}</TableCell>
             <TableCell>{module.test_types?.name}</TableCell>
             <TableCell>{module.time_limit}</TableCell>
+            <TableCell>
+              <div className="flex flex-wrap gap-1">
+                {module.difficulty_levels?.map((level: string) => (
+                  <Badge key={level} variant="secondary">
+                    {level}
+                  </Badge>
+                ))}
+              </div>
+            </TableCell>
             <TableCell>
               {new Date(module.created_at).toLocaleDateString()}
             </TableCell>
