@@ -52,9 +52,11 @@ export function TestModuleDialog({
 
   const onSubmit = async (data: TestModuleFormData) => {
     try {
+      console.log("Submitting form data:", data);
       let moduleId;
       
       if (initialData) {
+        console.log("Updating existing module:", initialData.id);
         // Update test module
         const { error: moduleError } = await supabase
           .from("test_modules")
@@ -72,6 +74,7 @@ export function TestModuleDialog({
         if (moduleError) throw moduleError;
         moduleId = initialData.id;
 
+        console.log("Deleting existing topic percentages for module:", moduleId);
         // Delete existing topic percentages
         const { error: deleteError } = await supabase
           .from("module_topics")
@@ -80,6 +83,7 @@ export function TestModuleDialog({
 
         if (deleteError) throw deleteError;
       } else {
+        console.log("Creating new module");
         // Insert new test module
         const { data: moduleData, error: moduleError } = await supabase
           .from("test_modules")
@@ -97,14 +101,19 @@ export function TestModuleDialog({
 
         if (moduleError) throw moduleError;
         moduleId = moduleData.id;
+        console.log("Created new module with ID:", moduleId);
       }
 
       // Calculate question count per topic based on percentages and insert topic percentages
       const totalQuestions = data.total_questions;
+      console.log("Processing topic percentages. Total questions:", totalQuestions);
+      console.log("Topic percentages data:", data.topic_percentages);
+      
       const topicData = Object.entries(data.topic_percentages)
         .filter(([_, percentage]) => percentage > 0) // Only include topics with percentage > 0
         .map(([topicId, percentage]) => {
           const questionCount = Math.round((percentage / 100) * totalQuestions);
+          console.log(`Topic ${topicId}: ${percentage}% = ${questionCount} questions`);
           return {
             module_id: moduleId,
             topic_id: topicId,
@@ -113,12 +122,18 @@ export function TestModuleDialog({
           };
         });
 
+      console.log("Prepared topic data for insertion:", topicData);
+
       if (topicData.length > 0) {
         const { error: topicError } = await supabase
           .from("module_topics")
           .insert(topicData);
 
-        if (topicError) throw topicError;
+        if (topicError) {
+          console.error("Error inserting topic data:", topicError);
+          throw topicError;
+        }
+        console.log("Successfully inserted topic data");
       }
 
       toast({
@@ -129,6 +144,7 @@ export function TestModuleDialog({
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
+      console.error("Error in form submission:", error);
       toast({
         variant: "destructive",
         title: `Error ${initialData ? 'updating' : 'creating'} test module`,
@@ -139,6 +155,7 @@ export function TestModuleDialog({
 
   useEffect(() => {
     if (initialData) {
+      console.log("Setting form data from initialData:", initialData);
       form.reset({
         name: initialData.name,
         description: initialData.description,
