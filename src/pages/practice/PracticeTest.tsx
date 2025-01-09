@@ -60,9 +60,9 @@ const PracticeTest = () => {
     const isCorrect = answer === currentQuestion.correct_answer;
     
     try {
-      const { data: progressData } = await handleQuestionProgress(currentQuestion.topic_id, isCorrect);
-      if (progressData?.pointsChange) {
-        setPointsChange(prev => prev + progressData.pointsChange);
+      const result = await handleQuestionProgress(currentQuestion.topic_id, isCorrect);
+      if (result.pointsChange !== undefined) {
+        setPointsChange(prev => prev + result.pointsChange);
       }
     } catch (error) {
       console.error('Error updating progress:', error);
