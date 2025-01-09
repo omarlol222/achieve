@@ -87,6 +87,8 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
     session.module_progress.forEach(progress => {
       progress.module_answers?.forEach(answer => {
+        if (!answer.question.topic) return; // Skip if topic is null
+        
         const topicId = answer.question.topic.id;
         const topicName = answer.question.topic.name;
         
