@@ -198,6 +198,11 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
                     <p className="text-sm text-blue-800">{answer.question.explanation}</p>
                   </div>
                 )}
+                {answer.question.topic && (
+                  <div className="mt-2">
+                    <span className="text-xs text-gray-500">Topic: {answer.question.topic.name}</span>
+                  </div>
+                )}
               </div>
             </div>
           </Card>
