@@ -1,9 +1,9 @@
-type GATHeaderProps = {
-  title: string;
-};
+import { Link } from "react-router-dom";
 
-export const GATHeader = ({ title }: GATHeaderProps) => (
-  <div className="flex items-center justify-between">
-    <h1 className="text-3xl font-bold">{title}</h1>
+export const GATHeader = () => (
+  <div className="flex items-center justify-center mb-8">
+    <Link to="/gat" className="text-3xl font-bold hover:text-gray-700 transition-colors">
+      GAT
+    </Link>
   </div>
 );

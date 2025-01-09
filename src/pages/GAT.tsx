@@ -122,7 +122,7 @@ export default function GAT() {
     <div className="min-h-screen bg-white">
       <Navigation />
       <div className="container py-8 space-y-8">
-        <GATHeader title="GAT Practice" />
+        <GATHeader />
         <ProgressSection
           subjects={userProgress}
           calculateTopicProgress={calculateTopicProgress}
