@@ -49,9 +49,9 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/gat" element={<GAT />} />
-          <Route path="/practice" element={<Practice />} />
-          <Route path="/practice/test" element={<PracticeTest />} />
-          <Route path="/simulator" element={<Simulator />} />
+          <Route path="/gat/practice" element={<Practice />} />
+          <Route path="/gat/practice/test" element={<PracticeTest />} />
+          <Route path="/gat/simulator" element={<Simulator />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="questions" element={<Questions />} />

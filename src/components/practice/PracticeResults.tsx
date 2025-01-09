@@ -51,7 +51,7 @@ export function PracticeResults({
 
           <div className="flex justify-center gap-4">
             <Button 
-              onClick={() => navigate("/practice")}
+              onClick={() => navigate("/gat/practice")}
               className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
             >
               Start New Practice
