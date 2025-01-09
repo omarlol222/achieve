@@ -35,6 +35,10 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
 
   if (!topics?.length) return null;
 
+  // Get the current form values for debugging
+  const currentValues = form.getValues();
+  console.log("Current form values:", currentValues);
+
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-lg">Topic Configuration</h3>
@@ -44,29 +48,37 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
             key={topic.id}
             control={form.control}
             name={`topic_percentages.${topic.id}`}
-            render={({ field }) => (
-              <div className="space-y-4 border p-4 rounded-lg">
-                <h4 className="font-medium">{topic.name}</h4>
-                <FormItem>
-                  <FormLabel>Percentage (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      {...field}
-                      value={field.value || ""}
-                      onChange={(e) => {
-                        const value = e.target.value === "" ? 0 : parseInt(e.target.value);
-                        field.onChange(value);
-                        console.log(`Setting ${topic.id} to ${value}%`);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              </div>
-            )}
+            render={({ field }) => {
+              // Log the current field value for debugging
+              console.log(`Topic ${topic.name} (${topic.id}) current value:`, field.value);
+              
+              return (
+                <div className="space-y-4 border p-4 rounded-lg">
+                  <h4 className="font-medium">{topic.name}</h4>
+                  <FormItem>
+                    <FormLabel>Percentage (%)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value === "" ? 0 : parseInt(e.target.value);
+                          field.onChange(value);
+                          // Log the value change
+                          console.log(`Setting ${topic.name} (${topic.id}) to ${value}%`);
+                          // Log the current form state after change
+                          console.log("Form state after change:", form.getValues());
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                </div>
+              );
+            }}
           />
         ))}
       </div>
