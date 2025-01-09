@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -7,76 +7,56 @@ import { format } from "date-fns";
 import { TestDialog } from "@/components/simulator/TestDialog";
 import { useState } from "react";
 
-type TestQuestionResult = {
-  id: string;
-  question?: {
-    test_type?: {
-      name: string;
-    };
-  };
-  is_correct: boolean;
-  user_answer: number | null;
-  time_spent: number;
-};
-
-type TestResult = {
-  id: string;
-  created_at: string;
-  total_score: number;
-  total_questions: number;
-  time_spent: number;
-  mode: string | null;
-  user_id: string | null;
-  test_question_results?: TestQuestionResult[];
-};
-
 export default function Simulator() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data: testResults } = useQuery({
-    queryKey: ["test-results"],
+  const { data: testSessions } = useQuery({
+    queryKey: ["test-sessions"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
       const { data, error } = await supabase
-        .from("test_results")
+        .from("test_sessions")
         .select(`
           *,
-          test_question_results (
-            id,
-            is_correct,
-            user_answer,
-            time_spent,
-            question:questions (
+          module_progress:module_progress (
+            module:test_modules (
               test_type:test_types (
                 name
+              )
+            ),
+            module_answers:module_answers (
+              selected_answer,
+              question:questions (
+                correct_answer
               )
             )
           )
         `)
         .eq("user_id", user.id)
-        .eq("mode", "simulator")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as TestResult[];
+      return data;
     },
   });
 
-  const calculateSectionScore = (result: TestResult, type: string) => {
-    if (!result.test_question_results) return 0;
+  const calculateSectionScore = (session: any, type: string) => {
+    if (!session.module_progress) return 0;
     
-    const sectionQuestions = result.test_question_results.filter(
-      qr => qr.question?.test_type?.name.toLowerCase() === type.toLowerCase()
-    );
+    const moduleAnswers = session.module_progress
+      .filter((progress: any) => progress.module.test_type?.name.toLowerCase() === type.toLowerCase())
+      .flatMap((progress: any) => progress.module_answers || []);
 
-    if (sectionQuestions.length === 0) return 0;
+    if (moduleAnswers.length === 0) return 0;
 
-    const correctAnswers = sectionQuestions.filter(qr => qr.is_correct).length;
-    return Math.round((correctAnswers / sectionQuestions.length) * 100);
+    const correctAnswers = moduleAnswers.filter(
+      (answer: any) => answer.selected_answer === answer.question.correct_answer
+    ).length;
+
+    return Math.round((correctAnswers / moduleAnswers.length) * 100);
   };
 
   return (
@@ -96,16 +76,9 @@ export default function Simulator() {
         <div className="space-y-8">
           <div className="flex justify-between items-center">
             <h2 className="text-4xl font-bold">Previous tests</h2>
-            <Button 
-              variant="link" 
-              className="text-lg"
-              onClick={() => navigate("/gat/simulator/history")}
-            >
-              VIEW ALL
-            </Button>
           </div>
 
-          {testResults?.length === 0 ? (
+          {!testSessions || testSessions.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-4xl text-gray-500 font-light mb-16">
                 You don't have any previous tests... Take one!
@@ -113,27 +86,27 @@ export default function Simulator() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {testResults?.map((result) => {
-                const mathScore = calculateSectionScore(result, 'math');
-                const verbalScore = calculateSectionScore(result, 'verbal');
+              {testSessions.map((session) => {
+                const mathScore = calculateSectionScore(session, 'math');
+                const verbalScore = calculateSectionScore(session, 'verbal');
                 const totalScore = Math.round((mathScore + verbalScore) / 2);
 
                 return (
                   <div
-                    key={result.id}
+                    key={session.id}
                     className="bg-gray-100 p-6 rounded-lg space-y-4"
                   >
                     <div className="flex justify-between items-start">
                       <div>
                         <p className="text-sm text-gray-600">DATE:</p>
                         <p className="font-medium">
-                          {format(new Date(result.created_at), "MMM d, yyyy")}
+                          {format(new Date(session.created_at), "MMM d, yyyy")}
                         </p>
                       </div>
                       <Button 
                         variant="link" 
                         size="sm"
-                        onClick={() => navigate(`/gat/simulator/results/${result.id}`)}
+                        onClick={() => navigate(`/gat/simulator/results/${session.id}`)}
                       >
                         VIEW DETAILS
                       </Button>

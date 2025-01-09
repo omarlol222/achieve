@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ModuleReview } from "./ModuleReview";
 import { useState } from "react";
-import { format } from "date-fns";
+import { ScoreHeader } from "./results/ScoreHeader";
+import { TopicPerformance } from "./results/TopicPerformance";
+import { ModuleDetails } from "./results/ModuleDetails";
 
 type TestResultsProps = {
   sessionId: string;
@@ -62,7 +63,6 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
   if (!session) return null;
 
-  // Calculate scores for math and verbal sections
   const calculateSectionScore = (type: string) => {
     if (!session.module_progress) return 0;
     
@@ -79,7 +79,6 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
     return Math.round((correctAnswers / moduleAnswers.length) * 100);
   };
 
-  // Calculate topic-wise performance
   const calculateTopicPerformance = () => {
     if (!session.module_progress) return [];
 
@@ -125,89 +124,19 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">Test score:</h1>
-          <div className="space-y-2">
-            <p className="text-xl">
-              <span className="font-medium">MATH: </span>
-              {mathScore}
-            </p>
-            <p className="text-xl">
-              <span className="font-medium">VERBAL: </span>
-              {verbalScore}
-            </p>
-            <p className="text-xl">
-              <span className="font-medium">TOTAL: </span>
-              {totalScore}
-            </p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-gray-600">
-            DATE: {format(new Date(session.created_at), "dd/MM/yyyy")}
-          </p>
-          <p className="text-gray-600">
-            TIME: {format(new Date(session.created_at), "HH:mm")}
-          </p>
-        </div>
-      </div>
+      <ScoreHeader
+        mathScore={mathScore}
+        verbalScore={verbalScore}
+        totalScore={totalScore}
+        createdAt={session.created_at}
+      />
 
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Topic Performance</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {topicPerformance.map((topic) => (
-            <Card key={topic.name} className="p-4">
-              <h3 className="font-semibold mb-2">{topic.name}</h3>
-              <p>
-                Correct: {topic.correct} / {topic.total}
-                <span className="text-gray-500 ml-2">
-                  ({Math.round((topic.correct / topic.total) * 100)}%)
-                </span>
-              </p>
-            </Card>
-          ))}
-        </div>
-      </div>
+      <TopicPerformance topics={topicPerformance} />
 
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Module Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {session.module_progress?.map((progress: any) => {
-            const totalQuestions = progress.module_answers?.length || 0;
-            const correctAnswers = progress.module_answers?.filter(
-              (answer: any) => answer.selected_answer === answer.question.correct_answer
-            ).length || 0;
-            
-            return (
-              <Card key={progress.id} className="p-6 space-y-4">
-                <h3 className="text-lg font-semibold">
-                  {progress.module.name}
-                  <span className="text-sm text-gray-500 block">
-                    {progress.module.test_type?.name}
-                  </span>
-                </h3>
-                <div className="space-y-2">
-                  <p>
-                    <span className="font-medium">TOTAL QUESTIONS: </span>
-                    {totalQuestions}
-                  </p>
-                  <p>
-                    <span className="font-medium">CORRECT: </span>
-                    {correctAnswers}
-                  </p>
-                </div>
-                <Button
-                  className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-                  onClick={() => setSelectedModuleId(progress.id)}
-                >
-                  See questions
-                </Button>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+      <ModuleDetails
+        modules={session.module_progress}
+        onModuleSelect={setSelectedModuleId}
+      />
 
       <div className="flex justify-center">
         <Button 
