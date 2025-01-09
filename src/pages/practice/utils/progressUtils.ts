@@ -18,29 +18,38 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
 
   if (existingProgress) {
     // Calculate new values for questions attempted and correct
-    const totalQuestions = existingProgress.questions_attempted + 1;
-    const correctQuestions = existingProgress.questions_correct + (isCorrect ? 1 : 0);
+    const newQuestionsAttempted = (existingProgress.questions_attempted || 0) + 1;
+    const newQuestionsCorrect = (existingProgress.questions_correct || 0) + (isCorrect ? 1 : 0);
     
     // Calculate percentage change in performance
     const oldPercentage = existingProgress.questions_attempted > 0
       ? (existingProgress.questions_correct / existingProgress.questions_attempted) * 100
       : 0;
     
-    const newPercentage = (correctQuestions / totalQuestions) * 100;
+    const newPercentage = (newQuestionsCorrect / newQuestionsAttempted) * 100;
     const percentageChange = newPercentage - oldPercentage;
     
     // Calculate points adjustment based on percentage change
     let pointsAdjustment = 0;
     
-    // Handle percentage decrease
-    if (percentageChange < 0) {
-      const decreaseSteps = Math.floor(Math.abs(percentageChange) / 10);
-      pointsAdjustment = -5 * decreaseSteps;
-    }
-    // Handle percentage increase
-    else if (percentageChange > 0) {
-      const increaseSteps = Math.floor(percentageChange / 10);
-      pointsAdjustment = 10 * increaseSteps;
+    if (isCorrect) {
+      // For correct answers, award points based on current performance trend
+      if (percentageChange >= 0) {
+        // Improving or maintaining performance
+        pointsAdjustment = 20; // Base points for correct answer
+        if (percentageChange > 5) {
+          pointsAdjustment += 10; // Bonus for significant improvement
+        }
+      } else {
+        // Still correct but overall performance dropping
+        pointsAdjustment = 15;
+      }
+    } else {
+      // For incorrect answers, deduct points based on performance impact
+      pointsAdjustment = -10; // Base deduction for wrong answer
+      if (percentageChange < -5) {
+        pointsAdjustment -= 5; // Additional deduction for significant drop
+      }
     }
     
     // Calculate new points value, ensuring it stays within 0-1000 range
@@ -50,8 +59,8 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
     const { error: updateError } = await supabase
       .from("user_progress")
       .update({
-        questions_attempted: totalQuestions,
-        questions_correct: correctQuestions,
+        questions_attempted: newQuestionsAttempted,
+        questions_correct: newQuestionsCorrect,
         points: newPoints,
         last_activity: now
       })
@@ -64,7 +73,9 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
       pointsChange: pointsAdjustment 
     };
   } else {
-    // Create new progress entry with initial points of 0
+    // Create new progress entry
+    const initialPoints = isCorrect ? 20 : 0; // Award 20 points for first correct answer
+    
     const { error: insertError } = await supabase
       .from("user_progress")
       .insert({
@@ -72,7 +83,7 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
         topic_id: topicId,
         questions_attempted: 1,
         questions_correct: isCorrect ? 1 : 0,
-        points: 0,
+        points: initialPoints,
         last_activity: now
       });
 
@@ -80,7 +91,7 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
 
     return { 
       success: true, 
-      pointsChange: 0 
+      pointsChange: initialPoints 
     };
   }
 };
