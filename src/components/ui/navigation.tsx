@@ -62,7 +62,7 @@ export const Navigation = () => {
   return (
     <nav className="border-b">
       <div className="container mx-auto px-4 h-24 flex items-center justify-between">
-        <Link to="/" className="flex items-center">
+        <Link to="/index" className="flex items-center">
           <img
             src="/lovable-uploads/518f5302-9a07-4e4c-9c5e-b2c8e166a630.png"
             alt="Achieve"
