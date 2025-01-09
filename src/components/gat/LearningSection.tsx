@@ -6,7 +6,11 @@ export const LearningSection = () => {
   const navigate = useNavigate();
 
   const handlePracticeClick = () => {
-    navigate("/practice");  // Changed from "/practice/setup" to "/practice"
+    navigate("/practice");
+  };
+
+  const handleSimulatorClick = () => {
+    navigate("/simulator");
   };
 
   return (
@@ -19,7 +23,11 @@ export const LearningSection = () => {
           icon={PenTool} 
           onClick={handlePracticeClick}
         />
-        <LearningCard title="GAT Simulator" icon={MonitorPlay} />
+        <LearningCard 
+          title="GAT Simulator" 
+          icon={MonitorPlay} 
+          onClick={handleSimulatorClick}
+        />
       </div>
     </section>
   );
