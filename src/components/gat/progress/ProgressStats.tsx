@@ -4,6 +4,6 @@ type ProgressStatsProps = {
 
 export const ProgressStats = ({ points }: ProgressStatsProps) => (
   <div className="text-sm text-muted-foreground">
-    {points} points
+    {points}/1000 points
   </div>
 );
