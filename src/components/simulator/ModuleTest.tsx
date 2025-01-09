@@ -45,6 +45,38 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
     return () => clearInterval(timer);
   }, [timeLeft]);
 
+  const handleSubmit = async () => {
+    try {
+      console.log("Submitting module progress:", moduleProgress.id);
+      
+      // First update the module progress completion
+      const { error: progressError } = await supabase
+        .from("module_progress")
+        .update({ 
+          completed_at: new Date().toISOString(),
+          // Calculate and update score if needed
+        })
+        .eq("id", moduleProgress.id);
+
+      if (progressError) {
+        console.error("Error updating module progress:", progressError);
+        throw progressError;
+      }
+
+      console.log("Module submitted successfully");
+      
+      // Call the onComplete callback to move to next module or complete test
+      onComplete();
+    } catch (error: any) {
+      console.error("Error in handleSubmit:", error);
+      toast({
+        variant: "destructive",
+        title: "Error submitting module",
+        description: error.message,
+      });
+    }
+  };
+
   const fetchQuestions = async () => {
     try {
       console.log("Checking existing module questions");
@@ -226,31 +258,6 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
       ...prev,
       [currentQuestion.id]: !prev[currentQuestion.id],
     }));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      console.log("Submitting module progress:", moduleProgress.id);
-      const { error: progressError } = await supabase
-        .from("module_progress")
-        .update({ completed_at: new Date().toISOString() })
-        .eq("id", moduleProgress.id);
-
-      if (progressError) {
-        console.error("Error updating module progress:", progressError);
-        throw progressError;
-      }
-
-      console.log("Module submitted successfully");
-      onComplete(); // Move to next module or complete test
-    } catch (error: any) {
-      console.error("Error in handleSubmit:", error);
-      toast({
-        variant: "destructive",
-        title: "Error submitting module",
-        description: error.message,
-      });
-    }
   };
 
   if (isLoading) {
