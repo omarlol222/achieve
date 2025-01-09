@@ -6,7 +6,7 @@ export const LearningSection = () => {
   const navigate = useNavigate();
 
   const handlePracticeClick = () => {
-    navigate("/practice/setup");
+    navigate("/practice");  // Changed from "/practice/setup" to "/practice"
   };
 
   return (
