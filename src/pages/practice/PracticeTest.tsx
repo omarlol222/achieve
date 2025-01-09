@@ -53,6 +53,7 @@ const PracticeTest = () => {
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const hasAnsweredCurrent = answers[currentQuestion.id] !== undefined;
 
   const handleAnswer = async (answer: number) => {
     const isCorrect = answer === currentQuestion.correct_answer;
@@ -62,12 +63,11 @@ const PracticeTest = () => {
       ...prev,
       [currentQuestion.id]: answer,
     }));
+  };
 
-    // If it's not the last question, move to next after delay
+  const handleNext = () => {
     if (!isLastQuestion) {
-      setTimeout(() => {
-        setCurrentQuestionIndex((prev) => prev + 1);
-      }, 1000);
+      setCurrentQuestionIndex((prev) => prev + 1);
     }
   };
 
@@ -108,16 +108,24 @@ const PracticeTest = () => {
           onAnswerSelect={handleAnswer}
         />
 
-        {isLastQuestion && answers[currentQuestion.id] !== undefined && (
-          <div className="flex justify-center">
+        <div className="flex justify-center gap-4">
+          {hasAnsweredCurrent && !isLastQuestion && (
+            <Button 
+              onClick={handleNext}
+              className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+            >
+              Next Question
+            </Button>
+          )}
+          {isLastQuestion && hasAnsweredCurrent && (
             <Button 
               onClick={handleFinish}
               className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
             >
               Finish Practice
             </Button>
-          </div>
-        )}
+          )}
+        </div>
 
         <PracticeResults
           open={showResults}

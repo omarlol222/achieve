@@ -17,12 +17,34 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
   const now = new Date().toISOString();
 
   if (existingProgress) {
-    // Calculate new values
+    // Calculate new values for questions attempted and correct
     const totalQuestions = existingProgress.questions_attempted + 1;
     const correctQuestions = existingProgress.questions_correct + (isCorrect ? 1 : 0);
     
-    // Calculate points adjustment - decrease for incorrect, increase for correct
-    const pointsAdjustment = isCorrect ? 50 : -30;
+    // Calculate percentage change in performance
+    const oldPercentage = existingProgress.questions_attempted > 0
+      ? (existingProgress.questions_correct / existingProgress.questions_attempted) * 100
+      : 0;
+    
+    const newPercentage = (correctQuestions / totalQuestions) * 100;
+    const percentageChange = newPercentage - oldPercentage;
+    
+    // Calculate points adjustment based on percentage change
+    let pointsAdjustment = 0;
+    
+    // Handle percentage decrease
+    if (percentageChange < 0) {
+      const decreaseSteps = Math.floor(Math.abs(percentageChange) / 10);
+      pointsAdjustment = -5 * decreaseSteps;
+    }
+    // Handle percentage increase
+    else if (percentageChange > 0) {
+      const increaseSteps = Math.floor(percentageChange / 10);
+      pointsAdjustment = 10 * increaseSteps;
+    }
+    
+    // Add base points for correct/incorrect answer
+    pointsAdjustment += isCorrect ? 50 : -30;
     
     // Calculate new points value, ensuring it stays within 0-1000 range
     const newPoints = Math.max(0, Math.min(1000, existingProgress.points + pointsAdjustment));
