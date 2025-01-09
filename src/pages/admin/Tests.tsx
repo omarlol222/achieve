@@ -88,7 +88,35 @@ const Tests = () => {
     if (!moduleToDelete) return;
 
     try {
-      // Delete module topics first due to foreign key constraint
+      // First, delete module_answers related to this module's progress
+      const { data: moduleProgress, error: progressError } = await supabase
+        .from("module_progress")
+        .select("id")
+        .eq("module_id", moduleToDelete.id);
+
+      if (progressError) throw progressError;
+
+      if (moduleProgress && moduleProgress.length > 0) {
+        const progressIds = moduleProgress.map(p => p.id);
+        
+        // Delete related module answers
+        const { error: answersError } = await supabase
+          .from("module_answers")
+          .delete()
+          .in("module_progress_id", progressIds);
+
+        if (answersError) throw answersError;
+
+        // Delete module progress records
+        const { error: deleteProgressError } = await supabase
+          .from("module_progress")
+          .delete()
+          .eq("module_id", moduleToDelete.id);
+
+        if (deleteProgressError) throw deleteProgressError;
+      }
+
+      // Delete module topics
       const { error: topicsError } = await supabase
         .from("module_topics")
         .delete()
@@ -96,7 +124,15 @@ const Tests = () => {
 
       if (topicsError) throw topicsError;
 
-      // Then delete the module
+      // Delete module questions
+      const { error: questionsError } = await supabase
+        .from("module_questions")
+        .delete()
+        .eq("module_id", moduleToDelete.id);
+
+      if (questionsError) throw questionsError;
+
+      // Finally delete the module
       const { error: moduleError } = await supabase
         .from("test_modules")
         .delete()
@@ -110,6 +146,7 @@ const Tests = () => {
 
       queryClient.invalidateQueries({ queryKey: ["test-modules"] });
     } catch (error: any) {
+      console.error("Error deleting test module:", error);
       toast({
         variant: "destructive",
         title: "Error deleting test module",
