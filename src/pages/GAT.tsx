@@ -6,8 +6,6 @@ import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
 import { Navigation } from "@/components/ui/navigation";
 import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
 
 export default function GAT() {
   const navigate = useNavigate();
@@ -123,15 +121,6 @@ export default function GAT() {
     <div className="min-h-screen bg-white">
       <Navigation />
       <div className="container py-8 space-y-8">
-        <div className="flex justify-end">
-          <Button
-            onClick={() => navigate("/gat/answer")}
-            className="flex items-center gap-2"
-          >
-            <Search className="w-4 h-4" />
-            Look up Question
-          </Button>
-        </div>
         <ProgressSection
           subjects={userProgress}
           calculateTopicProgress={calculateTopicProgress}
