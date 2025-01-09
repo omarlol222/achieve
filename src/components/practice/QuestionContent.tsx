@@ -43,17 +43,20 @@ export function QuestionContent({
       )}
 
       <div className="space-y-4">
-        <p className="text-lg font-medium">{question.question_text}</p>
-
-        {question.image_url && (
-          <div className="rounded-lg border overflow-hidden">
-            <img
-              src={question.image_url}
-              alt="Question"
-              className="w-full h-auto object-contain"
-            />
+        <div className="flex gap-6">
+          {question.image_url && (
+            <div className="rounded-lg border overflow-hidden w-1/3 flex-shrink-0">
+              <img
+                src={question.image_url}
+                alt="Question"
+                className="w-full h-auto object-contain"
+              />
+            </div>
+          )}
+          <div className="flex-grow">
+            <p className="text-lg font-medium">{question.question_text}</p>
           </div>
-        )}
+        </div>
 
         <RadioGroup
           value={selectedAnswer?.toString()}
