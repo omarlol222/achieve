@@ -117,6 +117,14 @@ const PracticeTest = () => {
                 Next Question
               </Button>
             )}
+            {isLastQuestion && hasAnsweredCurrent && (
+              <Button 
+                onClick={handleFinish}
+                className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+              >
+                Finish Practice
+              </Button>
+            )}
           </div>
         </div>
 
@@ -126,17 +134,6 @@ const PracticeTest = () => {
           showFeedback={answers[currentQuestion.id] !== undefined}
           onAnswerSelect={handleAnswer}
         />
-
-        <div className="flex justify-center">
-          {isLastQuestion && hasAnsweredCurrent && (
-            <Button 
-              onClick={handleFinish}
-              className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-            >
-              Finish Practice
-            </Button>
-          )}
-        </div>
 
         <PracticeResults
           open={showResults}
