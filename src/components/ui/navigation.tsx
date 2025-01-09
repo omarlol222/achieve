@@ -82,6 +82,11 @@ export const Navigation = () => {
               <Link to="/about" className="hover:text-primary">About</Link>
               <Link to="/shop" className="hover:text-primary">Shop</Link>
               <Link to="/faq" className="hover:text-primary">FAQ</Link>
+              {isAdmin && (
+                <Link to="/admin" className="hover:text-primary">
+                  Admin
+                </Link>
+              )}
             </div>
           )}
         </div>
@@ -90,12 +95,6 @@ export const Navigation = () => {
           {session && hasPurchased && !hideNavLinks && (
             <Link to="/gat">
               <Button variant="outline">Dashboard</Button>
-            </Link>
-          )}
-          
-          {isAdmin && (
-            <Link to="/admin" className="hover:text-primary">
-              Admin
             </Link>
           )}
           
