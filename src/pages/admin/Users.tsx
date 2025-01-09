@@ -22,7 +22,6 @@ import { toast } from "sonner";
 
 type Profile = {
   id: string;
-  email: string;
   full_name: string | null;
   role: string;
   created_at: string;
@@ -35,10 +34,7 @@ const Users = () => {
     queryFn: async () => {
       const { data: profileData, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          email:auth_users!inner(email)
-        `)
+        .select()
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -97,7 +93,7 @@ const Users = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Email</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead>Last Updated</TableHead>
@@ -108,7 +104,7 @@ const Users = () => {
               {profiles.map((profile) => (
                 <TableRow key={profile.id}>
                   <TableCell className="font-medium">
-                    {profile.email}
+                    {profile.full_name || 'Unnamed User'}
                   </TableCell>
                   <TableCell>
                     <span
