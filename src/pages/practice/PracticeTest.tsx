@@ -105,8 +105,18 @@ const PracticeTest = () => {
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Practice Test</h1>
-          <div className="text-sm text-gray-500">
-            Question {currentQuestionIndex + 1} of {questions.length}
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-500">
+              Question {currentQuestionIndex + 1} of {questions.length}
+            </div>
+            {hasAnsweredCurrent && !isLastQuestion && (
+              <Button 
+                onClick={handleNext}
+                className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+              >
+                Next Question
+              </Button>
+            )}
           </div>
         </div>
 
@@ -117,15 +127,7 @@ const PracticeTest = () => {
           onAnswerSelect={handleAnswer}
         />
 
-        <div className="flex justify-center gap-4">
-          {hasAnsweredCurrent && !isLastQuestion && (
-            <Button 
-              onClick={handleNext}
-              className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-            >
-              Next Question
-            </Button>
-          )}
+        <div className="flex justify-center">
           {isLastQuestion && hasAnsweredCurrent && (
             <Button 
               onClick={handleFinish}
