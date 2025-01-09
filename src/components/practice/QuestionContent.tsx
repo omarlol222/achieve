@@ -44,6 +44,9 @@ export function QuestionContent({
 
       <div className="space-y-4">
         <div className="flex gap-6">
+          <div className="flex-grow">
+            <p className="text-lg font-medium">{question.question_text}</p>
+          </div>
           {question.image_url && (
             <div className="rounded-lg border overflow-hidden w-1/3 flex-shrink-0">
               <img
@@ -53,9 +56,6 @@ export function QuestionContent({
               />
             </div>
           )}
-          <div className="flex-grow">
-            <p className="text-lg font-medium">{question.question_text}</p>
-          </div>
         </div>
 
         <RadioGroup
