@@ -19,14 +19,18 @@ type TestQuestionResult = {
     };
   };
   is_correct: boolean;
+  user_answer: number | null;
+  time_spent: number;
 };
 
 type TestResult = {
   id: string;
   created_at: string;
   total_score: number;
-  verbal_score?: number;
-  quantitative_score?: number;
+  total_questions: number;
+  time_spent: number;
+  mode: string | null;
+  user_id: string | null;
   test_question_results?: TestQuestionResult[];
 };
 
@@ -70,6 +74,9 @@ export default function Simulator() {
           *,
           test_question_results (
             id,
+            is_correct,
+            user_answer,
+            time_spent,
             question:questions (
               test_type:test_types (
                 name
