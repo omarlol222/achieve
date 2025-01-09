@@ -135,7 +135,6 @@ export function TestModuleDialog({
     }
   }, [initialData, form]);
 
-  // Reset form when dialog closes
   useEffect(() => {
     if (!open) {
       form.reset();
@@ -144,32 +143,35 @@ export function TestModuleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh]">
+      <DialogContent className="sm:max-w-[600px] h-[85vh]">
         <DialogHeader>
           <DialogTitle>
             {initialData ? 'Edit' : 'Create New'} Test Module
           </DialogTitle>
         </DialogHeader>
-
-        <ScrollArea className="max-h-[calc(85vh-120px)] overflow-y-auto pr-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <BasicFields form={form} />
-              <SelectFields 
-                form={form} 
-                subjects={subjects} 
-                testTypes={testTypes} 
-              />
-              <TopicPercentageFields 
-                form={form}
-                subjectId={form.watch("subject_id")}
-              />
-              <Button type="submit" className="w-full">
-                {initialData ? 'Update' : 'Create'} Module
-              </Button>
-            </form>
-          </Form>
-        </ScrollArea>
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-[calc(85vh-120px)]">
+            <div className="pr-4">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <BasicFields form={form} />
+                  <SelectFields 
+                    form={form} 
+                    subjects={subjects} 
+                    testTypes={testTypes} 
+                  />
+                  <TopicPercentageFields 
+                    form={form}
+                    subjectId={form.watch("subject_id")}
+                  />
+                  <Button type="submit" className="w-full">
+                    {initialData ? 'Update' : 'Create'} Module
+                  </Button>
+                </form>
+              </Form>
+            </div>
+          </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
