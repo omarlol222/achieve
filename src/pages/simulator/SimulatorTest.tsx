@@ -144,13 +144,14 @@ export default function SimulatorTest() {
           .update({
             verbal_score: verbalScore,
             quantitative_score: quantitativeScore,
-            total_score: totalScore
+            total_score: totalScore,
+            completed_at: new Date().toISOString()
           })
           .eq("id", sessionId);
 
         if (scoresError) throw scoresError;
 
-        // Navigate to results page instead of simulator page
+        // Navigate to results page
         navigate(`/gat/simulator/results/${sessionId}`);
         
         toast({
