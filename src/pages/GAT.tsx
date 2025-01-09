@@ -94,8 +94,6 @@ export default function GAT() {
         id: topic.id,
         name: topic.name,
         progress: progress?.find(p => p.topic_id === topic.id) || {
-          questions_attempted: 0,
-          questions_correct: 0,
           points: 0
         }
       })) || []
@@ -109,17 +107,13 @@ export default function GAT() {
     if (!topic) {
       return {
         percentage: 0,
-        questionsCorrect: 0,
-        questionsAttempted: 0,
         points: 0
       };
     }
 
-    const { questions_attempted, questions_correct, points } = topic.progress;
+    const { points } = topic.progress;
     return {
-      percentage: questions_attempted === 0 ? 0 : Math.round((questions_correct / questions_attempted) * 100),
-      questionsCorrect: questions_correct || 0,
-      questionsAttempted: questions_attempted || 0,
+      percentage: (points / 1000) * 100,
       points: points || 0
     };
   };
