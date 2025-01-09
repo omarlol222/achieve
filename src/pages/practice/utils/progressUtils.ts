@@ -58,6 +58,11 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
       .eq("id", existingProgress.id);
 
     if (updateError) throw updateError;
+
+    return { 
+      success: true, 
+      pointsChange: pointsAdjustment 
+    };
   } else {
     // Create new progress entry with initial points of 0
     const { error: insertError } = await supabase
@@ -72,5 +77,10 @@ export const handleQuestionProgress = async (topicId: string, isCorrect: boolean
       });
 
     if (insertError) throw insertError;
+
+    return { 
+      success: true, 
+      pointsChange: 0 
+    };
   }
 };

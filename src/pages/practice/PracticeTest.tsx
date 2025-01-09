@@ -15,6 +15,7 @@ const PracticeTest = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: number }>({});
   const [showResults, setShowResults] = useState(false);
+  const [pointsChange, setPointsChange] = useState<number>(0);
 
   // Extract and validate state parameters
   const state = location.state as PracticeState | null;
@@ -57,7 +58,15 @@ const PracticeTest = () => {
 
   const handleAnswer = async (answer: number) => {
     const isCorrect = answer === currentQuestion.correct_answer;
-    await handleQuestionProgress(currentQuestion.topic_id, isCorrect);
+    
+    try {
+      const { data: progressData } = await handleQuestionProgress(currentQuestion.topic_id, isCorrect);
+      if (progressData?.pointsChange) {
+        setPointsChange(prev => prev + progressData.pointsChange);
+      }
+    } catch (error) {
+      console.error('Error updating progress:', error);
+    }
     
     setAnswers((prev) => ({
       ...prev,
@@ -132,6 +141,7 @@ const PracticeTest = () => {
           onOpenChange={setShowResults}
           totalCorrect={results.totalCorrect}
           totalQuestions={results.totalQuestions}
+          pointsChange={pointsChange}
         />
       </div>
     </div>

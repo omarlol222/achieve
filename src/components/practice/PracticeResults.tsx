@@ -9,9 +9,16 @@ type PracticeResultsProps = {
   onOpenChange: (open: boolean) => void;
   totalCorrect: number;
   totalQuestions: number;
+  pointsChange?: number;
 };
 
-export function PracticeResults({ open, onOpenChange, totalCorrect, totalQuestions }: PracticeResultsProps) {
+export function PracticeResults({ 
+  open, 
+  onOpenChange, 
+  totalCorrect, 
+  totalQuestions,
+  pointsChange 
+}: PracticeResultsProps) {
   const navigate = useNavigate();
   const percentage = (totalCorrect / totalQuestions) * 100;
 
@@ -33,6 +40,12 @@ export function PracticeResults({ open, onOpenChange, totalCorrect, totalQuestio
               <p className="text-lg">
                 {totalCorrect} correct out of {totalQuestions} questions
               </p>
+              {pointsChange !== undefined && (
+                <p className={`text-lg ${pointsChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  Points {pointsChange >= 0 ? 'increased' : 'decreased'} by{' '}
+                  <span className="font-semibold">{Math.abs(pointsChange)}</span>
+                </p>
+              )}
             </div>
           </Card>
 
