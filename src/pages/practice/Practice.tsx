@@ -18,31 +18,16 @@ import { useToast } from "@/hooks/use-toast";
 const Practice = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [difficulty, setDifficulty] = useState<string>("all");
   const [questionCount, setQuestionCount] = useState<number>(10);
 
-  const { data: subjects } = useQuery({
-    queryKey: ["subjects"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const { data: topics } = useQuery({
-    queryKey: ["topics", selectedSubject],
-    enabled: !!selectedSubject,
+    queryKey: ["topics"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("topics")
         .select("*")
-        .eq("subject_id", selectedSubject)
         .order("name");
       if (error) throw error;
       return data;
@@ -60,7 +45,6 @@ const Practice = () => {
 
     navigate("/practice/test", {
       state: {
-        subjectId: selectedSubject,
         topicId: selectedTopic,
         difficulty,
         questionCount,
@@ -78,34 +62,8 @@ const Practice = () => {
         <Card className="p-6 space-y-6 bg-gray-100">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Subject</Label>
-              <Select
-                value={selectedSubject}
-                onValueChange={(value) => {
-                  setSelectedSubject(value);
-                  setSelectedTopic("");
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects?.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
               <Label>Topic</Label>
-              <Select
-                value={selectedTopic}
-                onValueChange={setSelectedTopic}
-                disabled={!selectedSubject}
-              >
+              <Select value={selectedTopic} onValueChange={setSelectedTopic}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a topic" />
                 </SelectTrigger>
@@ -151,7 +109,7 @@ const Practice = () => {
             size="lg"
             onClick={handleStartPractice}
           >
-            Start
+            Start Practice
           </Button>
         </Card>
       </div>
