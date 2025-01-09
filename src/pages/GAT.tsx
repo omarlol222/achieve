@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,41 +10,49 @@ import { useToast } from "@/components/ui/use-toast";
 export default function GAT() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [userId, setUserId] = useState<string | null>(null);
 
+  // Check session and set user ID
   useEffect(() => {
-    const checkAccess = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
       
-      if (!session) {
+      if (error) {
+        console.error("Session error:", error);
         toast({
-          title: "Authentication Required",
-          description: "Please sign in to access GAT practice.",
+          title: "Authentication Error",
+          description: "Please sign in again.",
           variant: "destructive",
         });
         navigate("/signin");
         return;
       }
 
-      const { data: purchases } = await supabase
-        .from("purchases")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .eq("status", "completed")
-        .limit(1);
-
-      if (!purchases || purchases.length === 0) {
-        toast({
-          title: "Purchase Required",
-          description: "Please purchase access to use GAT practice.",
-          variant: "destructive",
-        });
-        navigate("/shop");
+      if (!session) {
+        navigate("/signin");
+        return;
       }
+
+      setUserId(session.user.id);
     };
 
-    checkAccess();
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate("/signin");
+      } else if (session) {
+        setUserId(session.user.id);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate, toast]);
 
+  // Only fetch data if we have a user ID
   const { data: subjects } = useQuery({
     queryKey: ["subjects"],
     queryFn: async () => {
@@ -52,9 +60,13 @@ export default function GAT() {
         .from("subjects")
         .select("*")
         .order("name");
-      if (error) throw error;
+      if (error) {
+        console.error("Subjects fetch error:", error);
+        throw error;
+      }
       return data;
     },
+    enabled: !!userId,
   });
 
   const { data: topics } = useQuery({
@@ -64,24 +76,30 @@ export default function GAT() {
         .from("topics")
         .select("*, subject:subjects(name)")
         .order("name");
-      if (error) throw error;
+      if (error) {
+        console.error("Topics fetch error:", error);
+        throw error;
+      }
       return data;
     },
+    enabled: !!userId,
   });
 
   const { data: progress } = useQuery({
-    queryKey: ["user-progress"],
+    queryKey: ["user-progress", userId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
+      if (!userId) throw new Error("No user ID");
       const { data, error } = await supabase
         .from("user_progress")
         .select("*")
-        .eq("user_id", user.id);
-      if (error) throw error;
+        .eq("user_id", userId);
+      if (error) {
+        console.error("Progress fetch error:", error);
+        throw error;
+      }
       return data;
     },
+    enabled: !!userId,
   });
 
   const userProgress = subjects?.map(subject => ({
@@ -116,6 +134,10 @@ export default function GAT() {
       points: points || 0
     };
   };
+
+  if (!userId) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="min-h-screen bg-white">
