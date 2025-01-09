@@ -49,18 +49,55 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
 
   const fetchQuestions = async () => {
     try {
-      console.log("Fetching module topics for module:", moduleProgress.module.id);
+      console.log("Checking existing module questions");
       
-      // First, fetch module topics to get percentages and question counts
+      // First, check if questions already exist for this module
+      const { data: existingQuestions, error: existingError } = await supabase
+        .from("module_questions")
+        .select("question_id")
+        .eq("module_id", moduleProgress.module.id);
+
+      if (existingError) throw existingError;
+
+      if (existingQuestions && existingQuestions.length > 0) {
+        console.log("Found existing questions, fetching details");
+        const questionIds = existingQuestions.map(q => q.question_id);
+        
+        const { data: questions, error: questionsError } = await supabase
+          .from("questions")
+          .select(`
+            id,
+            question_text,
+            choice1,
+            choice2,
+            choice3,
+            choice4,
+            correct_answer,
+            question_type,
+            comparison_value1,
+            comparison_value2,
+            image_url,
+            explanation,
+            passage_text
+          `)
+          .in('id', questionIds);
+
+        if (questionsError) throw questionsError;
+        
+        setQuestions(questions || []);
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("No existing questions found, selecting new ones");
+      
+      // Fetch module topics to get percentages and question counts
       const { data: moduleTopics, error: topicsError } = await supabase
         .from("module_topics")
         .select("topic_id, percentage, question_count")
         .eq("module_id", moduleProgress.module.id);
 
-      if (topicsError) {
-        console.error("Error fetching module topics:", topicsError);
-        throw topicsError;
-      }
+      if (topicsError) throw topicsError;
 
       if (!moduleTopics || moduleTopics.length === 0) {
         console.log("No topics found for module");
@@ -72,8 +109,10 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
         return;
       }
 
-      // Fetch questions for each topic
+      // Fetch and select questions for each topic
       const selectedQuestions = [];
+      const questionRecords = [];
+
       for (const topic of moduleTopics) {
         const { data: topicQuestions, error: questionsError } = await supabase
           .from("questions")
@@ -94,16 +133,20 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
           `)
           .eq("topic_id", topic.topic_id);
 
-        if (questionsError) {
-          console.error("Error fetching questions for topic:", questionsError);
-          throw questionsError;
-        }
+        if (questionsError) throw questionsError;
 
         if (topicQuestions && topicQuestions.length > 0) {
-          // Randomly select questions based on the topic's question count
           const shuffled = topicQuestions.sort(() => 0.5 - Math.random());
           const selected = shuffled.slice(0, topic.question_count);
           selectedQuestions.push(...selected);
+          
+          // Prepare records for module_questions table
+          selected.forEach(q => {
+            questionRecords.push({
+              module_id: moduleProgress.module.id,
+              question_id: q.id
+            });
+          });
         }
       }
 
@@ -117,22 +160,12 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
         return;
       }
 
-      console.log("Questions fetched successfully:", selectedQuestions.length);
-
       // Record selected questions in module_questions table
-      const questionRecords = selectedQuestions.map(q => ({
-        module_id: moduleProgress.module.id,
-        question_id: q.id
-      }));
-
       const { error: recordError } = await supabase
         .from("module_questions")
         .insert(questionRecords);
 
-      if (recordError) {
-        console.error("Error recording module questions:", recordError);
-        throw recordError;
-      }
+      if (recordError) throw recordError;
 
       // Shuffle final question set
       const shuffledQuestions = selectedQuestions.sort(() => 0.5 - Math.random());
@@ -265,6 +298,7 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
         isFlagged={flagged[currentQuestion.id] || false}
         onAnswerSelect={handleAnswer}
         onToggleFlag={toggleFlag}
+        showFeedback={false}
       />
 
       <QuestionNavigation
