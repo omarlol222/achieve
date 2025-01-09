@@ -26,6 +26,7 @@ type Profile = {
   role: string;
   created_at: string;
   updated_at: string;
+  email: string;
 };
 
 const Users = () => {
@@ -93,7 +94,7 @@ const Users = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead>Last Updated</TableHead>
@@ -104,7 +105,7 @@ const Users = () => {
               {profiles.map((profile) => (
                 <TableRow key={profile.id}>
                   <TableCell className="font-medium">
-                    {profile.full_name || 'Unnamed User'}
+                    {profile.email || 'No email'}
                   </TableCell>
                   <TableCell>
                     <span
