@@ -1,4 +1,5 @@
 import { Progress } from "@/components/ui/progress";
+import { ProgressStats } from "./progress/ProgressStats";
 
 type TopicProgressProps = {
   name: string;
@@ -16,9 +17,11 @@ export const TopicProgress = ({
   <div className="space-y-2">
     <div className="flex justify-between items-center">
       <div className="text-sm font-medium">{name}</div>
-      <div className="text-sm text-muted-foreground">
-        {value}/1000 points
-      </div>
+      <ProgressStats 
+        questionsCorrect={questionsCorrect}
+        questionsAttempted={questionsAttempted}
+        points={value}
+      />
     </div>
     <Progress value={(value / 1000) * 100} className="h-2" />
   </div>
