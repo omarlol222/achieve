@@ -29,9 +29,17 @@ export const UserProgressCard = ({ userProgress, isLoading }: UserProgressCardPr
           <div key={i} className="h-16 bg-gray-100 rounded" />
         ))}
       </div>
+    ) : !userProgress?.length ? (
+      <div className="text-center py-6 text-gray-500">
+        No progress data available
+      </div>
     ) : (
       <div className="space-y-6">
-        {userProgress?.map((progress, idx) => {
+        {userProgress.map((progress, idx) => {
+          if (!progress?.user || !progress?.topic) {
+            return null; // Skip rendering if user or topic data is missing
+          }
+
           // Only calculate percentage if there are attempted questions
           const percentage = progress.questions_attempted > 0
             ? Math.round((progress.questions_correct / progress.questions_attempted) * 100)
@@ -41,7 +49,9 @@ export const UserProgressCard = ({ userProgress, isLoading }: UserProgressCardPr
             <div key={idx} className="space-y-2">
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="font-medium text-gray-900">{progress.user.full_name}</p>
+                  <p className="font-medium text-gray-900">
+                    {progress.user.full_name || 'Unknown User'}
+                  </p>
                   <p className="text-sm text-gray-600">
                     {progress.topic.subject.name} - {progress.topic.name}
                   </p>
