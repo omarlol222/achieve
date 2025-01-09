@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Info, X } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -81,13 +82,15 @@ export const QuestionContent = ({
         <div className="flex gap-6">
           <div className="flex-1 bg-gray-50 p-6 rounded-lg">
             <h3 className="font-semibold mb-4">Passage</h3>
-            <div className="prose max-w-none">
-              {question.passage_text?.split("\n").map((paragraph, index) => (
-                <p key={index} className="mb-4">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+            <ScrollArea className="h-[400px]">
+              <div className="prose max-w-none text-sm">
+                {question.passage_text?.split("\n").map((paragraph, index) => (
+                  <p key={index} className="mb-4">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </ScrollArea>
           </div>
           <div className="flex-1">
             {renderQuestionText()}
