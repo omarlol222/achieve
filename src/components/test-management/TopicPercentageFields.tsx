@@ -38,6 +38,7 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
   // Get the current form values for debugging
   const currentValues = form.getValues();
   console.log("Current form values:", currentValues);
+  console.log("Current topic_percentages:", currentValues.topic_percentages);
 
   return (
     <div className="space-y-4">
@@ -49,8 +50,8 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
             control={form.control}
             name={`topic_percentages.${topic.id}`}
             render={({ field }) => {
-              // Log the current field value for debugging
-              console.log(`Topic ${topic.name} (${topic.id}) current value:`, field.value);
+              const currentValue = field.value || 0;
+              console.log(`Topic ${topic.name} (${topic.id}) current value:`, currentValue);
               
               return (
                 <div className="space-y-4 border p-4 rounded-lg">
@@ -63,13 +64,11 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
                         min="0"
                         max="100"
                         {...field}
-                        value={field.value ?? ""}
+                        value={currentValue}
                         onChange={(e) => {
                           const value = e.target.value === "" ? 0 : parseInt(e.target.value);
                           field.onChange(value);
-                          // Log the value change
                           console.log(`Setting ${topic.name} (${topic.id}) to ${value}%`);
-                          // Log the current form state after change
                           console.log("Form state after change:", form.getValues());
                         }}
                       />
