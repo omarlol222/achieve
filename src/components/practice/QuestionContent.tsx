@@ -1,6 +1,14 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, XCircle, Info } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Question = {
   id: string;
@@ -14,6 +22,7 @@ type Question = {
   comparison_value1?: string;
   comparison_value2?: string;
   image_url?: string;
+  explanation?: string;
 };
 
 interface QuestionContentProps {
@@ -72,31 +81,56 @@ export const QuestionContent = ({
 
           <div className="space-y-4 mt-6">
             {[1, 2, 3, 4].map((choice) => (
-              <Button
-                key={choice}
-                variant={selectedAnswer === choice ? "default" : "outline"}
-                className={`w-full justify-start h-auto p-4 ${
-                  selectedAnswer !== null
-                    ? choice === question.correct_answer
-                      ? "bg-green-100 hover:bg-green-100"
-                      : choice === selectedAnswer
-                      ? "bg-red-100 hover:bg-red-100"
+              <div key={choice} className="flex items-center gap-2">
+                <Button
+                  variant={selectedAnswer === choice ? "default" : "outline"}
+                  className={`w-full justify-start h-auto p-4 ${
+                    selectedAnswer !== null
+                      ? choice === question.correct_answer
+                        ? "bg-[#F2FCE2] hover:bg-[#F2FCE2] text-gray-900"
+                        : choice === selectedAnswer
+                        ? "bg-[#FFF1F2] hover:bg-[#FFF1F2] text-gray-900"
+                        : ""
                       : ""
-                    : ""
-                }`}
-                onClick={() => handleAnswerSelect(choice)}
-                disabled={selectedAnswer !== null}
-              >
-                {question[`choice${choice}` as keyof Question]}
-                {selectedAnswer !== null && choice === question.correct_answer && (
-                  <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
-                )}
-                {selectedAnswer !== null &&
-                  choice === selectedAnswer &&
-                  choice !== question.correct_answer && (
-                    <XCircle className="ml-2 h-4 w-4 text-red-500" />
+                  }`}
+                  onClick={() => handleAnswerSelect(choice)}
+                  disabled={selectedAnswer !== null}
+                >
+                  {question[`choice${choice}` as keyof Question]}
+                  {selectedAnswer !== null && choice === question.correct_answer && (
+                    <CheckCircle className="ml-2 h-4 w-4 text-green-600" />
                   )}
-              </Button>
+                  {selectedAnswer !== null &&
+                    choice === selectedAnswer &&
+                    choice !== question.correct_answer && (
+                      <XCircle className="ml-2 h-4 w-4 text-red-600" />
+                    )}
+                </Button>
+                {selectedAnswer === choice &&
+                  choice !== question.correct_answer &&
+                  question.explanation && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center gap-1 text-muted-foreground hover:text-primary"
+                        >
+                          <Info className="h-4 w-4" />
+                          See why
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Explanation</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {question.explanation}
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+              </div>
             ))}
           </div>
         </div>
