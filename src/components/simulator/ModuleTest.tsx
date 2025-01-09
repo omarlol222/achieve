@@ -49,12 +49,35 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
 
   const fetchQuestions = async () => {
     try {
-      console.log("Fetching questions for module:", moduleProgress.module.id);
-      const { data, error } = await supabase
-        .from("module_questions")
-        .select(`
-          question_id,
-          questions (
+      console.log("Fetching module topics for module:", moduleProgress.module.id);
+      
+      // First, fetch module topics to get percentages and question counts
+      const { data: moduleTopics, error: topicsError } = await supabase
+        .from("module_topics")
+        .select("topic_id, percentage, question_count")
+        .eq("module_id", moduleProgress.module.id);
+
+      if (topicsError) {
+        console.error("Error fetching module topics:", topicsError);
+        throw topicsError;
+      }
+
+      if (!moduleTopics || moduleTopics.length === 0) {
+        console.log("No topics found for module");
+        toast({
+          variant: "destructive",
+          title: "No topics found",
+          description: "This module has no topics assigned.",
+        });
+        return;
+      }
+
+      // Fetch questions for each topic
+      const selectedQuestions = [];
+      for (const topic of moduleTopics) {
+        const { data: topicQuestions, error: questionsError } = await supabase
+          .from("questions")
+          .select(`
             id,
             question_text,
             choice1,
@@ -68,31 +91,52 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
             image_url,
             explanation,
             passage_text
-          )
-        `)
-        .eq("module_id", moduleProgress.module.id);
+          `)
+          .eq("topic_id", topic.topic_id);
 
-      if (error) {
-        console.error("Error fetching questions:", error);
-        throw error;
+        if (questionsError) {
+          console.error("Error fetching questions for topic:", questionsError);
+          throw questionsError;
+        }
+
+        if (topicQuestions && topicQuestions.length > 0) {
+          // Randomly select questions based on the topic's question count
+          const shuffled = topicQuestions.sort(() => 0.5 - Math.random());
+          const selected = shuffled.slice(0, topic.question_count);
+          selectedQuestions.push(...selected);
+        }
       }
 
-      if (!data || data.length === 0) {
-        console.log("No questions found for module");
+      if (selectedQuestions.length === 0) {
+        console.log("No questions found for any topic");
         toast({
           variant: "destructive",
           title: "No questions found",
-          description: "This module has no questions assigned.",
+          description: "No questions available for the selected topics.",
         });
         return;
       }
 
-      console.log("Questions fetched successfully:", data.length);
-      const formattedQuestions = data.map((item) => ({
-        ...item.questions,
+      console.log("Questions fetched successfully:", selectedQuestions.length);
+
+      // Record selected questions in module_questions table
+      const questionRecords = selectedQuestions.map(q => ({
+        module_id: moduleProgress.module.id,
+        question_id: q.id
       }));
 
-      setQuestions(formattedQuestions);
+      const { error: recordError } = await supabase
+        .from("module_questions")
+        .insert(questionRecords);
+
+      if (recordError) {
+        console.error("Error recording module questions:", recordError);
+        throw recordError;
+      }
+
+      // Shuffle final question set
+      const shuffledQuestions = selectedQuestions.sort(() => 0.5 - Math.random());
+      setQuestions(shuffledQuestions);
       setIsLoading(false);
     } catch (error: any) {
       console.error("Error in fetchQuestions:", error);
