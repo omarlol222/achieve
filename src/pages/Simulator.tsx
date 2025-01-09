@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 type TestResult = {
   id: string;
@@ -13,6 +14,8 @@ type TestResult = {
 };
 
 export default function Simulator() {
+  const navigate = useNavigate();
+  
   const { data: testResults } = useQuery({
     queryKey: ["test-results"],
     queryFn: async () => {
@@ -33,8 +36,16 @@ export default function Simulator() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navigation />
       <div className="container py-8">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate("/gat")}
+          className="mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
+
         <div className="space-y-8">
           <h2 className="text-2xl font-semibold">Previous tests</h2>
           {testResults?.length === 0 ? (

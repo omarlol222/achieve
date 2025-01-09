@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -51,7 +52,7 @@ const Practice = () => {
       if (error) throw error;
       return data;
     },
-    enabled: true, // Always fetch topics, but filter them based on selected subject
+    enabled: true,
   });
 
   const handleStartPractice = () => {
@@ -63,7 +64,7 @@ const Practice = () => {
       return;
     }
 
-    navigate("/practice/test", {
+    navigate("/gat/practice/test", {
       state: {
         topicId: selectedTopic,
         difficulty,
@@ -75,13 +76,22 @@ const Practice = () => {
   return (
     <div className="min-h-screen bg-white p-8">
       <div className="max-w-2xl mx-auto space-y-8">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate("/gat")}
+          className="mb-6"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Dashboard
+        </Button>
+
         <Card className="p-6 space-y-6 bg-gray-100">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Subject</Label>
               <Select value={selectedSubject} onValueChange={(value) => {
                 setSelectedSubject(value);
-                setSelectedTopic(""); // Reset topic when subject changes
+                setSelectedTopic("");
               }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a subject" />
