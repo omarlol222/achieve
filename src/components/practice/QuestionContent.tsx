@@ -94,9 +94,7 @@ export const QuestionContent = ({
           </div>
           <div className="flex-1">
             {renderQuestionText()}
-            <div className="space-y-4 mt-6">
-              {renderChoices()}
-            </div>
+            <div className="space-y-4 mt-6">{renderChoices()}</div>
           </div>
         </div>
       );
@@ -106,9 +104,7 @@ export const QuestionContent = ({
       <div className="flex gap-6">
         <div className="flex-1">
           {renderQuestionText()}
-          <div className="space-y-4 mt-6">
-            {renderChoices()}
-          </div>
+          <div className="space-y-4 mt-6">{renderChoices()}</div>
         </div>
         {question.image_url && (
           <div className="flex-1">
@@ -130,7 +126,7 @@ export const QuestionContent = ({
           <Button
             variant={selectedAnswer === choice ? "default" : "outline"}
             className={`w-full justify-start h-auto p-4 ${
-              selectedAnswer !== null
+              showFeedback && selectedAnswer !== null
                 ? choice === question.correct_answer
                   ? "bg-[#F2FCE2] hover:bg-[#F2FCE2] text-gray-900 font-medium"
                   : choice === selectedAnswer
@@ -142,16 +138,16 @@ export const QuestionContent = ({
             disabled={selectedAnswer !== null}
           >
             {question[`choice${choice}` as keyof Question]}
-            {selectedAnswer !== null && choice === question.correct_answer && (
+            {showFeedback && selectedAnswer !== null && choice === question.correct_answer && (
               <CheckCircle className="ml-2 h-4 w-4 text-green-600" />
             )}
-            {selectedAnswer !== null &&
+            {showFeedback && selectedAnswer !== null &&
               choice === selectedAnswer &&
               choice !== question.correct_answer && (
                 <XCircle className="ml-2 h-4 w-4 text-red-600" />
               )}
           </Button>
-          {selectedAnswer === choice &&
+          {showFeedback && selectedAnswer === choice &&
             choice !== question.correct_answer &&
             question.explanation && (
               <AlertDialog>
@@ -185,9 +181,5 @@ export const QuestionContent = ({
     </>
   );
 
-  return (
-    <Card className="p-6">
-      {renderContent()}
-    </Card>
-  );
+  return <Card className="p-6">{renderContent()}</Card>;
 };
