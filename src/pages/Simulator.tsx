@@ -2,11 +2,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { StartTest } from "@/components/simulator/StartTest";
 import { StartModule } from "@/components/simulator/StartModule";
 import { ModuleTest } from "@/components/simulator/ModuleTest";
+import { TestResults } from "@/components/simulator/TestResults";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -217,21 +217,29 @@ export default function Simulator() {
             });
           }
         }
-        setActiveSession(null);
-        setCurrentModule(null);
-        setShowModuleStart(false);
-        setModuleProgress(null);
-        queryClient.invalidateQueries({ queryKey: ["test-results"] });
-        
-        toast({
-          title: "Test completed",
-          description: "Your test has been submitted successfully.",
-        });
       }
     }
   };
 
+  const handleStartNewTest = () => {
+    setActiveSession(null);
+    setCurrentModule(null);
+    setShowModuleStart(false);
+    setModuleProgress(null);
+    queryClient.invalidateQueries({ queryKey: ["test-results"] });
+  };
+
   const renderContent = () => {
+    // Show test results if session is completed
+    if (activeSession?.completed_at) {
+      return (
+        <TestResults
+          sessionId={activeSession.id}
+          onRestart={handleStartNewTest}
+        />
+      );
+    }
+
     if (!activeSession) {
       return <StartTest onStart={handleStartTest} />;
     }
