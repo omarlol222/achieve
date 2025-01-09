@@ -74,8 +74,8 @@ const Practice = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white p-8">
-      <div className="max-w-2xl mx-auto space-y-8">
+    <div className="min-h-screen bg-white">
+      <div className="container px-8 py-8">
         <Button 
           variant="ghost" 
           onClick={() => navigate("/gat")}
@@ -85,78 +85,80 @@ const Practice = () => {
           Back to Dashboard
         </Button>
 
-        <Card className="p-6 space-y-6 bg-gray-100">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Subject</Label>
-              <Select value={selectedSubject} onValueChange={(value) => {
-                setSelectedSubject(value);
-                setSelectedTopic("");
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects?.map((subject) => (
-                    <SelectItem key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="max-w-2xl mx-auto space-y-8">
+          <Card className="p-6 space-y-6 bg-gray-100">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Subject</Label>
+                <Select value={selectedSubject} onValueChange={(value) => {
+                  setSelectedSubject(value);
+                  setSelectedTopic("");
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects?.map((subject) => (
+                      <SelectItem key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Topic</Label>
+                <Select value={selectedTopic} onValueChange={setSelectedTopic}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a topic" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {topics?.map((topic) => (
+                      <SelectItem key={topic.id} value={topic.id}>
+                        {topic.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Difficulty</Label>
+                <Select value={difficulty} onValueChange={setDifficulty}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Levels</SelectItem>
+                    <SelectItem value="Easy">Easy</SelectItem>
+                    <SelectItem value="Moderate">Moderate</SelectItem>
+                    <SelectItem value="Hard">Hard</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Number of Questions</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={questionCount}
+                  onChange={(e) => setQuestionCount(Number(e.target.value))}
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Topic</Label>
-              <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a topic" />
-                </SelectTrigger>
-                <SelectContent>
-                  {topics?.map((topic) => (
-                    <SelectItem key={topic.id} value={topic.id}>
-                      {topic.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Difficulty</Label>
-              <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="Easy">Easy</SelectItem>
-                  <SelectItem value="Moderate">Moderate</SelectItem>
-                  <SelectItem value="Hard">Hard</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Number of Questions</Label>
-              <Input
-                type="number"
-                min="1"
-                max="50"
-                value={questionCount}
-                onChange={(e) => setQuestionCount(Number(e.target.value))}
-              />
-            </div>
-          </div>
-
-          <Button
-            className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-            size="lg"
-            onClick={handleStartPractice}
-          >
-            Start Practice
-          </Button>
-        </Card>
+            <Button
+              className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+              size="lg"
+              onClick={handleStartPractice}
+            >
+              Start Practice
+            </Button>
+          </Card>
+        </div>
       </div>
     </div>
   );
