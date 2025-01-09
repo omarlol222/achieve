@@ -17,7 +17,6 @@ import Payments from "./pages/admin/Payments";
 import GAT from "./pages/GAT";
 import Practice from "./pages/practice/Practice";
 import PracticeTest from "./pages/practice/PracticeTest";
-import PracticeResults from "./pages/practice/PracticeResults";
 import Index from "./pages/Index";
 
 const queryClient = new QueryClient({
@@ -52,7 +51,6 @@ const App = () => (
           <Route path="/gat" element={<GAT />} />
           <Route path="/practice" element={<Practice />} />
           <Route path="/practice/test" element={<PracticeTest />} />
-          <Route path="/practice/results" element={<PracticeResults />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="questions" element={<Questions />} />

@@ -5,6 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { QuestionContent } from "@/components/practice/QuestionContent";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Brain, TrendingUp, TrendingDown } from "lucide-react";
+import { handleQuestionProgress } from "./utils/progressUtils";
 
 type Question = {
   id: string;
@@ -19,6 +22,7 @@ type Question = {
   comparison_value1?: string;
   comparison_value2?: string;
   image_url?: string;
+  topic_id: string;
 };
 
 const PracticeTest = () => {
@@ -26,6 +30,7 @@ const PracticeTest = () => {
   const navigate = useNavigate();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [key: string]: number }>({});
+  const [showResults, setShowResults] = useState(false);
 
   const { topicId, difficulty, questionCount } = location.state || {};
 
@@ -59,24 +64,47 @@ const PracticeTest = () => {
     return <div>No questions available.</div>;
   }
 
-  const handleAnswer = (answer: number) => {
+  const handleAnswer = async (answer: number) => {
+    const isCorrect = answer === currentQuestion.correct_answer;
+    await handleQuestionProgress(currentQuestion.topic_id, isCorrect);
+    
     setAnswers((prev) => ({
       ...prev,
       [currentQuestion.id]: answer,
     }));
-  };
 
-  const handleNext = () => {
+    // Move to next question or show results if it's the last question
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
+      setTimeout(() => {
+        setCurrentQuestionIndex((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        setShowResults(true);
+      }, 1000);
     }
   };
 
-  const handlePrevious = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prev) => prev - 1);
-    }
+  const calculateResults = () => {
+    const totalCorrect = Object.entries(answers).filter(
+      ([questionId, answer]) => {
+        const question = questions.find((q) => q.id === questionId);
+        return question?.correct_answer === answer;
+      }
+    ).length;
+
+    return {
+      totalCorrect,
+      totalQuestions: questions.length,
+      percentage: (totalCorrect / questions.length) * 100,
+    };
   };
+
+  const handleStartNew = () => {
+    navigate("/practice");
+  };
+
+  const results = calculateResults();
 
   return (
     <div className="min-h-screen bg-white p-8">
@@ -95,32 +123,43 @@ const PracticeTest = () => {
           onAnswerSelect={handleAnswer}
         />
 
-        <div className="flex justify-between pt-4">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentQuestionIndex === 0}
-          >
-            Previous
-          </Button>
-          <div className="space-x-2">
-            {currentQuestionIndex < questions.length - 1 ? (
-              <Button
-                onClick={handleNext}
-                disabled={!answers[currentQuestion.id]}
-              >
-                Next
-              </Button>
-            ) : (
-              <Button
-                onClick={() => navigate("/practice")}
-                disabled={!answers[currentQuestion.id]}
-              >
-                Finish
-              </Button>
-            )}
-          </div>
-        </div>
+        <Dialog open={showResults} onOpenChange={setShowResults}>
+          <DialogContent className="sm:max-w-xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-center gap-3 text-2xl">
+                <Brain className="h-8 w-8 text-[#1B2B2B]" />
+                Practice Results
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <Card className="p-6">
+                <div className="text-center space-y-4">
+                  <h2 className="text-2xl font-semibold">
+                    Overall Score: {results.percentage.toFixed(1)}%
+                  </h2>
+                  <p className="text-lg">
+                    {results.totalCorrect} correct out of {results.totalQuestions} questions
+                  </p>
+                </div>
+              </Card>
+
+              <div className="flex justify-center gap-4">
+                <Button 
+                  onClick={handleStartNew}
+                  className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+                >
+                  Start New Practice
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate("/gat")}
+                >
+                  Back to Dashboard
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Info } from "lucide-react";
+import { CheckCircle, XCircle, Info, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
+  AlertDialogClose,
 } from "@/components/ui/alert-dialog";
 
 type Question = {
@@ -87,10 +88,10 @@ export const QuestionContent = ({
                   className={`w-full justify-start h-auto p-4 ${
                     selectedAnswer !== null
                       ? choice === question.correct_answer
-                        ? "bg-[#F2FCE2] hover:bg-[#F2FCE2] text-gray-900"
+                        ? "bg-[#F2FCE2] hover:bg-[#F2FCE2] text-gray-900 font-medium"
                         : choice === selectedAnswer
-                        ? "bg-[#FFF1F2] hover:bg-[#FFF1F2] text-gray-900"
-                        : ""
+                        ? "bg-[#FFF1F2] hover:bg-[#FFF1F2] text-gray-900 font-medium"
+                        : "text-gray-900 font-medium"
                       : ""
                   }`}
                   onClick={() => handleAnswerSelect(choice)}
@@ -121,11 +122,20 @@ export const QuestionContent = ({
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
-                        <AlertDialogHeader>
+                        <AlertDialogHeader className="relative">
                           <AlertDialogTitle>Explanation</AlertDialogTitle>
                           <AlertDialogDescription>
                             {question.explanation}
                           </AlertDialogDescription>
+                          <AlertDialogClose className="absolute right-0 top-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogClose>
                         </AlertDialogHeader>
                       </AlertDialogContent>
                     </AlertDialog>
