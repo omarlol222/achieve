@@ -1,185 +1,99 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Info, X } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-  AlertDialogClose,
-} from "@/components/ui/alert-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
-type Question = {
-  id: string;
-  question_text: string;
-  choice1: string;
-  choice2: string;
-  choice3: string;
-  choice4: string;
-  correct_answer: number;
-  question_type: string;
-  comparison_value1?: string;
-  comparison_value2?: string;
-  image_url?: string;
-  explanation?: string;
-  passage_text?: string;
+type QuestionContentProps = {
+  question: {
+    question_text: string;
+    choice1: string;
+    choice2: string;
+    choice3: string;
+    choice4: string;
+    correct_answer?: number;
+    image_url?: string;
+    explanation?: string;
+    passage_text?: string;
+  };
+  selectedAnswer: number | null;
+  showFeedback?: boolean;
+  onAnswerSelect: (answer: number) => void;
 };
 
-interface QuestionContentProps {
-  question: Question;
-  selectedAnswer: number | null;
-  showFeedback: boolean;
-  onAnswerSelect: (answer: number) => void;
-}
-
-export const QuestionContent = ({
+export function QuestionContent({
   question,
   selectedAnswer,
-  showFeedback,
+  showFeedback = false,
   onAnswerSelect,
-}: QuestionContentProps) => {
-  const renderQuestionText = () => {
-    if (question.question_type === "comparison") {
-      return (
-        <div className="space-y-4">
-          <p className="text-lg">{question.question_text}</p>
-          <div className="border rounded-lg overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="border-b p-2 text-center w-1/2 bg-gray-50">A</th>
-                  <th className="border-b p-2 text-center w-1/2 bg-gray-50">B</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border-r p-4 text-center">
-                    {question.comparison_value1}
-                  </td>
-                  <td className="p-4 text-center">{question.comparison_value2}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      );
-    }
-    return <p className="text-lg">{question.question_text}</p>;
-  };
+}: QuestionContentProps) {
+  const choices = [
+    question.choice1,
+    question.choice2,
+    question.choice3,
+    question.choice4,
+  ];
 
-  const handleAnswerSelect = (choice: number) => {
-    if (!selectedAnswer) {
-      onAnswerSelect(choice);
-    }
-  };
-
-  const renderContent = () => {
-    if (question.question_type === "passage") {
-      return (
-        <div className="flex gap-6">
-          <div className="flex-1 bg-gray-50 p-6 rounded-lg">
-            <h3 className="font-semibold mb-4">Passage</h3>
-            <ScrollArea className="h-[400px]">
-              <div className="prose max-w-none text-sm">
-                {question.passage_text?.split("\n").map((paragraph, index) => (
-                  <p key={index} className="mb-4">
-                    {paragraph}
-                  </p>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-          <div className="flex-1">
-            {renderQuestionText()}
-            <div className="space-y-4 mt-6">{renderChoices()}</div>
-          </div>
+  return (
+    <div className="space-y-6">
+      {question.passage_text && (
+        <div className="rounded-lg border p-4 bg-muted/20">
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+            {question.passage_text}
+          </p>
         </div>
-      );
-    }
+      )}
 
-    return (
-      <div className="flex gap-6">
-        <div className="flex-1">
-          {renderQuestionText()}
-          <div className="space-y-4 mt-6">{renderChoices()}</div>
-        </div>
+      <div className="space-y-4">
+        <p className="text-lg font-medium">{question.question_text}</p>
+
         {question.image_url && (
-          <div className="flex-1">
+          <div className="rounded-lg border overflow-hidden">
             <img
               src={question.image_url}
-              alt="Question illustration"
-              className="rounded-lg w-full h-auto object-contain"
+              alt="Question"
+              className="w-full h-auto object-contain"
             />
           </div>
         )}
+
+        <RadioGroup
+          value={selectedAnswer?.toString()}
+          onValueChange={(value) => onAnswerSelect(parseInt(value))}
+          className="space-y-2"
+        >
+          {choices.map((choice, index) => {
+            const isCorrect = showFeedback && question.correct_answer === index + 1;
+            const isIncorrect =
+              showFeedback &&
+              selectedAnswer === index + 1 &&
+              selectedAnswer !== question.correct_answer;
+
+            return (
+              <div
+                key={index}
+                className={cn(
+                  "flex items-center space-x-2 rounded-lg border p-4 transition-colors",
+                  isCorrect && "bg-green-50 border-green-200",
+                  isIncorrect && "bg-red-50 border-red-200"
+                )}
+              >
+                <RadioGroupItem value={(index + 1).toString()} id={`choice-${index + 1}`} />
+                <Label
+                  htmlFor={`choice-${index + 1}`}
+                  className="flex-grow cursor-pointer"
+                >
+                  {choice}
+                </Label>
+              </div>
+            );
+          })}
+        </RadioGroup>
+
+        {showFeedback && question.explanation && (
+          <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
+            <p className="text-sm text-blue-800">{question.explanation}</p>
+          </div>
+        )}
       </div>
-    );
-  };
-
-  const renderChoices = () => (
-    <>
-      {[1, 2, 3, 4].map((choice) => (
-        <div key={choice} className="flex items-center gap-2">
-          <Button
-            variant={selectedAnswer === choice ? "default" : "outline"}
-            className={`w-full justify-start h-auto p-4 ${
-              showFeedback && selectedAnswer !== null
-                ? choice === question.correct_answer
-                  ? "bg-[#F2FCE2] hover:bg-[#F2FCE2] text-gray-900 font-medium"
-                  : choice === selectedAnswer
-                  ? "bg-[#FFF1F2] hover:bg-[#FFF1F2] text-gray-900 font-medium"
-                  : "text-gray-900 font-medium"
-                : ""
-            }`}
-            onClick={() => handleAnswerSelect(choice)}
-            disabled={selectedAnswer !== null}
-          >
-            {question[`choice${choice}` as keyof Question]}
-            {showFeedback && selectedAnswer !== null && choice === question.correct_answer && (
-              <CheckCircle className="ml-2 h-4 w-4 text-green-600" />
-            )}
-            {showFeedback && selectedAnswer !== null &&
-              choice === selectedAnswer &&
-              choice !== question.correct_answer && (
-                <XCircle className="ml-2 h-4 w-4 text-red-600" />
-              )}
-          </Button>
-          {showFeedback && selectedAnswer === choice &&
-            choice !== question.correct_answer &&
-            question.explanation && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-1 text-muted-foreground hover:text-primary"
-                  >
-                    <Info className="h-4 w-4" />
-                    See why
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader className="relative">
-                    <AlertDialogTitle>Explanation</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {question.explanation}
-                    </AlertDialogDescription>
-                    <AlertDialogClose className="absolute right-0 top-0">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogClose>
-                  </AlertDialogHeader>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-        </div>
-      ))}
-    </>
+    </div>
   );
-
-  return <Card className="p-6">{renderContent()}</Card>;
-};
+}

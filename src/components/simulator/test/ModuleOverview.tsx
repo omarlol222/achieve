@@ -6,7 +6,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Eye, Flag } from "lucide-react";
+import { Eye } from "lucide-react";
 
 type ModuleOverviewProps = {
   moduleName: string;
@@ -73,15 +73,14 @@ export function ModuleOverview({
                     key={index}
                     variant={isCurrent ? "default" : "outline"}
                     size="sm"
-                    className={`relative h-10 w-10 p-0 font-medium ${
-                      isAnswered ? "bg-green-100" : ""
-                    } ${isCurrent ? "ring-2 ring-primary" : ""}`}
+                    className={`relative h-10 w-10 p-0 font-medium 
+                      ${isAnswered ? "bg-green-100" : ""} 
+                      ${isCurrent ? "ring-2 ring-primary" : ""}
+                      ${isFlagged ? "border-2 border-yellow-500" : ""}
+                    `}
                     onClick={() => onQuestionSelect(index)}
                   >
                     {index + 1}
-                    {isFlagged && (
-                      <Flag className="absolute -top-1 -right-1 h-3 w-3 text-yellow-600" />
-                    )}
                   </Button>
                 );
               })}
