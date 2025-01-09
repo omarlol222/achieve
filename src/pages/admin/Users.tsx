@@ -19,52 +19,40 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { AdminUserAttributes } from "@supabase/supabase-js";
 
 type Profile = {
   id: string;
+  email: string;
   full_name: string | null;
   role: string;
   created_at: string;
   updated_at: string;
 };
 
-type ProfileWithEmail = Profile & {
-  email: string;
-};
-
 const Users = () => {
   const { data: profiles, isLoading } = useQuery({
     queryKey: ["admin-profiles"],
     queryFn: async () => {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Fetch profiles with email addresses using a join
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          email:auth_users!inner(email)
+        `)
+        .order('created_at', { ascending: false });
 
-      if (profileError) throw profileError;
-
-      // Fetch user emails from auth.users
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) throw authError;
-
-      // Combine profile data with email addresses
-      const combinedData = (profileData as Profile[]).map(profile => {
-        const authUser = (authData.users as AdminUserAttributes[]).find(user => user.id === profile.id);
-        return {
-          ...profile,
-          email: authUser?.email || 'N/A'
-        };
-      });
-
-      return combinedData as ProfileWithEmail[];
+      if (error) throw error;
+      return profileData as Profile[];
     },
   });
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      const { error } = await supabase.rpc('delete_user', {
+        user_id: userId
+      });
+      
       if (error) throw error;
       toast.success("User deleted successfully");
     } catch (error) {
