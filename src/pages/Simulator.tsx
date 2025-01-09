@@ -1,9 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { StartTest } from "@/components/simulator/StartTest";
+import { StartModule } from "@/components/simulator/StartModule";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 type TestResult = {
   id: string;
@@ -13,8 +17,25 @@ type TestResult = {
   quantitative_score?: number;
 };
 
+type TestSession = {
+  id: string;
+  started_at: string;
+};
+
+type TestModule = {
+  id: string;
+  name: string;
+  description?: string;
+  time_limit: number;
+};
+
 export default function Simulator() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [activeSession, setActiveSession] = useState<TestSession | null>(null);
+  const [currentModule, setCurrentModule] = useState<TestModule | null>(null);
+  const [showModuleStart, setShowModuleStart] = useState(false);
   
   const { data: testResults } = useQuery({
     queryKey: ["test-results"],
@@ -34,6 +55,139 @@ export default function Simulator() {
     },
   });
 
+  const { data: modules } = useQuery({
+    queryKey: ["test-modules"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("test_modules")
+        .select("*")
+        .order("order_index", { ascending: true });
+
+      if (error) throw error;
+      return data as TestModule[];
+    },
+  });
+
+  const createSession = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from("test_sessions")
+        .insert([{ user_id: user.id }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as TestSession;
+    },
+    onSuccess: (session) => {
+      setActiveSession(session);
+      if (modules && modules.length > 0) {
+        setCurrentModule(modules[0]);
+        setShowModuleStart(true);
+      }
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error starting test",
+        description: error.message,
+      });
+    },
+  });
+
+  const handleStartTest = () => {
+    createSession.mutate();
+  };
+
+  const handleStartModule = () => {
+    // Will implement module start logic in the next step
+    console.log("Starting module:", currentModule?.name);
+  };
+
+  const renderContent = () => {
+    if (!activeSession) {
+      return <StartTest onStart={handleStartTest} />;
+    }
+
+    if (showModuleStart && currentModule) {
+      return <StartModule module={currentModule} onStart={handleStartModule} />;
+    }
+
+    return (
+      <div className="space-y-8">
+        <h2 className="text-2xl font-semibold">Previous tests</h2>
+        {testResults?.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-4xl text-gray-500 font-light mb-16">
+              You don't have any previous tests... Take one!
+            </p>
+            <Button 
+              size="lg"
+              onClick={() => setActiveSession(null)}
+              className="bg-[#1B2B2B] hover:bg-[#2C3C3C] text-white px-12 py-6 text-lg h-auto"
+            >
+              START A TEST
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {testResults?.map((result) => (
+                <div
+                  key={result.id}
+                  className="bg-gray-100 p-6 rounded-lg space-y-4"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm text-gray-600">DATE:</p>
+                      <p className="font-medium">
+                        {format(new Date(result.created_at), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <Button variant="link" size="sm">
+                      VIEW DETAILS
+                    </Button>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-600">SCORE:</p>
+                    <div className="space-y-2">
+                      <p>
+                        <span className="font-medium">VERBAL: </span>
+                        {result.verbal_score || "N/A"}
+                      </p>
+                      <p>
+                        <span className="font-medium">QUANTITATIVE: </span>
+                        {result.quantitative_score || "N/A"}
+                      </p>
+                      <p>
+                        <span className="font-medium">TOTAL: </span>
+                        {result.total_score}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center mt-12">
+              <Button 
+                size="lg"
+                onClick={() => setActiveSession(null)}
+                className="bg-[#1B2B2B] hover:bg-[#2C3C3C] text-white px-12"
+              >
+                START A TEST
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container py-8">
@@ -46,72 +200,7 @@ export default function Simulator() {
           Back to Dashboard
         </Button>
 
-        <div className="space-y-8">
-          <h2 className="text-2xl font-semibold">Previous tests</h2>
-          {testResults?.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-4xl text-gray-500 font-light mb-16">
-                You don't have any previous tests... Take one!
-              </p>
-              <Button 
-                size="lg"
-                className="bg-[#1B2B2B] hover:bg-[#243636] text-white px-12 py-6 text-lg h-auto"
-              >
-                START A TEST
-              </Button>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {testResults?.map((result) => (
-                  <div
-                    key={result.id}
-                    className="bg-gray-100 p-6 rounded-lg space-y-4"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-sm text-gray-600">DATE:</p>
-                        <p className="font-medium">
-                          {format(new Date(result.created_at), "MMM d, yyyy")}
-                        </p>
-                      </div>
-                      <Button variant="link" size="sm">
-                        VIEW DETAILS
-                      </Button>
-                    </div>
-
-                    <div>
-                      <p className="text-sm text-gray-600">SCORE:</p>
-                      <div className="space-y-2">
-                        <p>
-                          <span className="font-medium">VERBAL: </span>
-                          {result.verbal_score || "N/A"}
-                        </p>
-                        <p>
-                          <span className="font-medium">QUANTITATIVE: </span>
-                          {result.quantitative_score || "N/A"}
-                        </p>
-                        <p>
-                          <span className="font-medium">TOTAL: </span>
-                          {result.total_score}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-center mt-12">
-                <Button 
-                  size="lg"
-                  className="bg-[#1B2B2B] hover:bg-[#243636] text-white px-12"
-                >
-                  START A TEST
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
+        {renderContent()}
       </div>
     </div>
   );
