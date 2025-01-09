@@ -52,13 +52,13 @@ export default function GAT() {
     };
   }, [navigate, toast]);
 
-  // Only fetch data if we have a user ID
+  // Fetch subjects with error handling
   const { data: subjects } = useQuery({
     queryKey: ["subjects"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("subjects")
-        .select("*")
+        .select("*, topics(id, name)")
         .order("name");
       if (error) {
         console.error("Subjects fetch error:", error);
@@ -69,22 +69,7 @@ export default function GAT() {
     enabled: !!userId,
   });
 
-  const { data: topics } = useQuery({
-    queryKey: ["topics"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("topics")
-        .select("*, subject:subjects(name)")
-        .order("name");
-      if (error) {
-        console.error("Topics fetch error:", error);
-        throw error;
-      }
-      return data;
-    },
-    enabled: !!userId,
-  });
-
+  // Fetch user progress with error handling
   const { data: progress } = useQuery({
     queryKey: ["user-progress", userId],
     queryFn: async () => {
@@ -105,38 +90,26 @@ export default function GAT() {
   const userProgress = subjects?.map(subject => ({
     id: subject.id,
     name: subject.name,
-    topics: topics
-      ?.filter(topic => topic.subject_id === subject.id)
-      .map(topic => ({
-        id: topic.id,
-        name: topic.name,
-        progress: progress?.find(p => p.topic_id === topic.id) || {
-          points: 0
-        }
-      })) || []
+    topics: subject.topics?.map(topic => ({
+      id: topic.id,
+      name: topic.name,
+      progress: progress?.find(p => p.topic_id === topic.id) || {
+        points: 0
+      }
+    })) || []
   })) || [];
 
   const calculateTopicProgress = (topicId: string) => {
-    const topic = userProgress
-      .flatMap(subject => subject.topics)
-      .find(topic => topic.id === topicId);
-
-    if (!topic) {
-      return {
-        percentage: 0,
-        points: 0
-      };
-    }
-
-    const { points } = topic.progress;
+    const topicProgress = progress?.find(p => p.topic_id === topicId);
+    const points = topicProgress?.points || 0;
     return {
       percentage: (points / 1000) * 100,
-      points: points || 0
+      points
     };
   };
 
   if (!userId) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return (
