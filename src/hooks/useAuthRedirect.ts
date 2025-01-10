@@ -21,7 +21,7 @@ export const useAuthRedirect = () => {
           .from("profiles")
           .select("role")
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) {
           console.error("Profile fetch error:", profileError);
@@ -29,7 +29,13 @@ export const useAuthRedirect = () => {
           return;
         }
 
-        if (profile?.role !== "admin") {
+        if (!profile) {
+          setError("Profile not found. Please sign out and sign in again.");
+          navigate("/signin");
+          return;
+        }
+
+        if (profile.role !== "admin") {
           setError("Access denied. Admin privileges required.");
           navigate("/");
         }
@@ -50,9 +56,15 @@ export const useAuthRedirect = () => {
             .from("profiles")
             .select("role")
             .eq("id", session.user.id)
-            .single();
+            .maybeSingle();
 
-          if (profile?.role !== "admin") {
+          if (!profile) {
+            setError("Profile not found. Please sign out and sign in again.");
+            navigate("/signin");
+            return;
+          }
+
+          if (profile.role !== "admin") {
             setError("Access denied. Admin privileges required.");
             navigate("/");
           }
