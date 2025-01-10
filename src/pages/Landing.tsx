@@ -9,7 +9,7 @@ const Landing = () => {
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-32">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-8xl font-bold mb-8 text-[#1B2E35]">Creative<br />Learning</h1>
+          <h1 className="text-8xl font-bold mb-8 text-[#1B2E35]">GAT<br />Platform</h1>
           <p className="text-xl mb-8 text-gray-600">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean mattis congue metus.
           </p>
