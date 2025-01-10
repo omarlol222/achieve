@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { TestDialog } from "@/components/simulator/TestDialog";
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
 
 export default function Simulator() {
   const navigate = useNavigate();
@@ -97,23 +98,11 @@ export default function Simulator() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {testSessions.map((session) => {
-                // Get unique subjects from module progress
-                const subjects = [...new Set(
-                  session.module_progress
-                    ?.filter((progress: any) => progress.module.subject)
-                    .map((progress: any) => progress.module.subject)
-                )];
-
-                // Calculate scores for each subject
-                const subjectScores = subjects.map(subject => ({
-                  name: subject.name,
-                  score: calculateSubjectScore(session, subject.id)
-                }));
-
-                // Calculate total score as average of all subject scores
-                const totalScore = Math.round(
-                  subjectScores.reduce((acc, subject) => acc + subject.score, 0) / subjectScores.length
-                );
+                const scores = [
+                  { name: "Verbal", score: session.verbal_score || 0 },
+                  { name: "Quantitative", score: session.quantitative_score || 0 },
+                  { name: "Total", score: session.total_score || 0 }
+                ];
 
                 return (
                   <div
@@ -139,16 +128,12 @@ export default function Simulator() {
                     <div>
                       <p className="text-sm text-gray-600">SCORE:</p>
                       <div className="space-y-2">
-                        {subjectScores.map(subject => (
-                          <p key={subject.name}>
-                            <span className="font-medium">{subject.name.toUpperCase()}: </span>
-                            {subject.score}
+                        {scores.map(score => (
+                          <p key={score.name}>
+                            <span className="font-medium">{score.name.toUpperCase()}: </span>
+                            {score.score}
                           </p>
                         ))}
-                        <p>
-                          <span className="font-medium">TOTAL: </span>
-                          {totalScore}
-                        </p>
                       </div>
                     </div>
                   </div>
