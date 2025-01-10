@@ -8,10 +8,11 @@ type ScoreHeaderProps = {
 };
 
 export function ScoreHeader({ subjectScores, totalScore, createdAt }: ScoreHeaderProps) {
-  // Map "Math" to "Quantitative" in the display
+  // Map both "Math" to "Quantitative" and "English" to "Verbal" in the display
   const displayScores = subjectScores.map(score => ({
     ...score,
-    name: score.name.toLowerCase() === 'math' ? 'Quantitative' : score.name
+    name: score.name.toLowerCase() === 'math' ? 'Quantitative' : 
+          score.name.toLowerCase() === 'english' ? 'Verbal' : score.name
   }));
 
   return (
