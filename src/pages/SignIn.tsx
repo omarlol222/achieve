@@ -45,8 +45,8 @@ const SignIn = () => {
     e.preventDefault();
     try {
       setError(null);
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${siteUrl}/password-reset`,
+      const { error } = await supabase.auth.signInWithOtp({
+        email: resetEmail,
       });
       
       if (error) throw error;
@@ -65,21 +65,21 @@ const SignIn = () => {
     e.preventDefault();
     try {
       setError(null);
-      const { error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabase.auth.verifyOtp({
         email: resetEmail,
         token: otp,
-        type: 'recovery'
+        type: 'email'
       });
       
       if (error) throw error;
 
-      navigate('/password-reset', { 
-        state: { 
-          recovery: true,
-          email: resetEmail
-        },
-        replace: true
-      });
+      if (data.session) {
+        navigate('/gat');
+        toast({
+          title: "Success",
+          description: "You have been signed in successfully.",
+        });
+      }
     } catch (err: any) {
       setError(err.message);
     }
@@ -140,78 +140,76 @@ const SignIn = () => {
     );
   }
 
-  if (!isResetFlow) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
-          <div className="text-center">
-            <img
-              src="/lovable-uploads/9b9962d6-d485-4e43-88c7-9325eb10bd74.png"
-              alt="Achieve"
-              className="h-12 mx-auto mb-6"
-            />
-            <h2 className="mt-6 text-3xl font-bold text-gray-900">
-              Welcome Back
-            </h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Please sign in to your account
-            </p>
-          </div>
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
+        <div className="text-center">
+          <img
+            src="/lovable-uploads/9b9962d6-d485-4e43-88c7-9325eb10bd74.png"
+            alt="Achieve"
+            className="h-12 mx-auto mb-6"
+          />
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+            Welcome Back
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Please sign in to your account
+          </p>
+        </div>
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-          <Auth
-            supabaseClient={supabase}
-            view="sign_in"
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#000000',
-                    brandAccent: '#333333',
-                  },
+        <Auth
+          supabaseClient={supabase}
+          view="sign_in"
+          appearance={{
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#000000',
+                  brandAccent: '#333333',
                 },
               },
-            }}
-            theme="light"
-            providers={[]}
-            redirectTo={siteUrl}
-          />
+            },
+          }}
+          theme="light"
+          providers={[]}
+          redirectTo={siteUrl}
+        />
 
-          <div className="mt-4 text-center space-y-4">
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div>
-                <Label htmlFor="reset-email">Email for password reset</Label>
-                <Input
-                  id="reset-email"
-                  type="email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                />
-              </div>
-              <Button type="submit" variant="outline" className="w-full">
-                Reset Password
-              </Button>
-            </form>
+        <div className="mt-4 text-center space-y-4">
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div>
+              <Label htmlFor="reset-email">Email for password reset</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
+            <Button type="submit" variant="outline" className="w-full">
+              Send Reset Code
+            </Button>
+          </form>
 
-            <p className="text-sm text-gray-600">
-              Don't have an account?{" "}
-              <Link to="/signup" className="font-medium text-black hover:text-gray-800">
-                Sign up
-              </Link>
-            </p>
-          </div>
+          <p className="text-sm text-gray-600">
+            Don't have an account?{" "}
+            <Link to="/signup" className="font-medium text-black hover:text-gray-800">
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 };
 
 export default SignIn;
