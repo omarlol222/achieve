@@ -16,15 +16,15 @@ const SignIn = () => {
     const handlePasswordReset = () => {
       const type = searchParams.get('type');
       const token = searchParams.get('token');
-      const hashParams = new URLSearchParams(location.hash.substring(1));
-      const hashType = hashParams.get('type');
-      const accessToken = hashParams.get('access_token');
+      const redirectTo = searchParams.get('redirect_to');
       
-      if ((type === 'recovery' && token) || (hashType === 'recovery' && accessToken)) {
+      // If this is a recovery attempt, redirect to password reset
+      if (type === 'recovery' && token) {
         navigate('/password-reset', { 
           state: { 
-            token: token || accessToken,
-            type: type || hashType
+            token,
+            type,
+            redirectTo
           }
         });
         return true;
@@ -40,7 +40,7 @@ const SignIn = () => {
       const checkSession = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
-          navigate("/");
+          navigate("/gat");
         }
       };
       checkSession();
@@ -49,7 +49,7 @@ const SignIn = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN") {
-        navigate("/");
+        navigate("/gat");
       }
       if (event === "PASSWORD_RECOVERY") {
         navigate("/password-reset");

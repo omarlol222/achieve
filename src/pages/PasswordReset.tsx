@@ -17,21 +17,23 @@ const PasswordReset = () => {
       // Check URL parameters
       const type = searchParams.get('type');
       const token = searchParams.get('token');
+      const redirectTo = searchParams.get('redirect_to');
       
-      // Check hash parameters
-      const hashParams = new URLSearchParams(location.hash.substring(1));
-      const hashType = hashParams.get('type');
-      const accessToken = hashParams.get('access_token');
-
-      // If no recovery token is present, redirect to signin
-      if (!((type === 'recovery' && token) || (hashType === 'recovery' && accessToken))) {
+      // Check location state (from SignIn component)
+      const state = location.state as { token?: string; type?: string; redirectTo?: string } | null;
+      
+      // If no recovery token is present in either URL or state, redirect to signin
+      if (!((type === 'recovery' && token) || (state?.type === 'recovery' && state?.token))) {
         navigate('/signin');
         return;
       }
 
-      // Clean up URL if it's a hash-based token
-      if (hashType === 'recovery') {
-        window.history.replaceState(null, '', window.location.pathname);
+      // If we have a token, set it in the session
+      if (token || state?.token) {
+        supabase.auth.setSession({
+          access_token: token || state?.token || '',
+          refresh_token: '',
+        });
       }
     };
 
