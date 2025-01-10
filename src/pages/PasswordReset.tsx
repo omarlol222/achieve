@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/use-toast";
 
 const PasswordReset = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const siteUrl = "https://achieve.lovable.app";
 
   useEffect(() => {
-    const state = location.state as { recovery?: boolean } | null;
+    const state = location.state as { recovery?: boolean; email?: string } | null;
     
     if (!state?.recovery) {
       navigate('/signin');
@@ -20,9 +22,7 @@ const PasswordReset = () => {
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        // Stay on the page
-      } else if (event === "SIGNED_IN") {
+      if (event === "SIGNED_IN") {
         navigate("/gat");
       }
     });
@@ -30,20 +30,35 @@ const PasswordReset = () => {
     return () => subscription.unsubscribe();
   }, [navigate, location]);
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been successfully reset.",
+      });
+      
+      navigate("/signin");
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
         <div className="text-center">
-          <img
-            src="/lovable-uploads/9b9962d6-d485-4e43-88c7-9325eb10bd74.png"
-            alt="Achieve"
-            className="h-12 mx-auto mb-6"
-          />
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Reset Password
+            Reset Your Password
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Please enter your new password
+            Enter your new password below
           </p>
         </div>
 
@@ -53,24 +68,24 @@ const PasswordReset = () => {
           </Alert>
         )}
 
-        <Auth
-          supabaseClient={supabase}
-          view="update_password"
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: '#000000',
-                  brandAccent: '#333333',
-                },
-              },
-            },
-          }}
-          theme="light"
-          providers={[]}
-          redirectTo={siteUrl}
-        />
+        <form onSubmit={handlePasswordReset} className="mt-8 space-y-6">
+          <div>
+            <Label htmlFor="password">New Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your new password"
+              required
+              className="mt-1"
+            />
+          </div>
+
+          <Button type="submit" className="w-full">
+            Reset Password
+          </Button>
+        </form>
       </div>
     </div>
   );
