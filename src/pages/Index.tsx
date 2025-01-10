@@ -42,34 +42,31 @@ const AuthComponent = () => {
         theme="light"
         providers={[]}
         redirectTo={window.location.origin}
-        view="sign_up"
-        showLinks={true}
-        additionalData={{
-          username: {
-            label: 'Username',
-            type: 'text',
-            placeholder: 'Choose a username',
-            required: true,
-          },
-          full_name: {
-            label: 'Full Name',
-            type: 'text',
-            placeholder: 'John Doe',
-            required: true,
-          },
-          phone: {
-            label: 'Phone Number',
-            type: 'tel',
-            placeholder: '+1234567890',
-            required: false,
-          },
-          password_confirm: {
-            label: 'Confirm Password',
-            type: 'password',
-            placeholder: 'Confirm your password',
-            required: true,
+        options={{
+          emailRedirectTo: window.location.origin,
+          metadata: {
+            username: undefined,
+            full_name: undefined,
+            phone: undefined,
           },
         }}
+        localization={{
+          variables: {
+            sign_up: {
+              email_label: "Email address",
+              password_label: "Create a Password",
+              email_input_placeholder: "Your email address",
+              password_input_placeholder: "Your password",
+              button_label: "Sign up",
+              loading_button_label: "Signing up ...",
+              social_provider_text: "Sign in with {{provider}}",
+              link_text: "Don't have an account? Sign up",
+              confirmation_text: "Check your email for the confirmation link",
+            },
+          },
+        }}
+        view="sign_up"
+        showLinks={true}
       />
     </>
   );
