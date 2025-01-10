@@ -40,7 +40,11 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
                 correct_answer,
                 topic:topics (
                   id,
-                  name
+                  name,
+                  subject:subjects (
+                    id,
+                    name
+                  )
                 )
               )
             )
@@ -67,26 +71,29 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
   const calculateSubjectScore = (subjectId: string) => {
     if (!session.module_progress) return 0;
     
-    // Get all answers for this subject
     const moduleAnswers = session.module_progress
       .filter(progress => progress.module.subject?.id === subjectId)
       .flatMap(progress => progress.module_answers || []);
 
     if (moduleAnswers.length === 0) return 0;
 
-    // Calculate total correct answers
     const correctAnswers = moduleAnswers.filter(
       answer => answer.selected_answer === answer.question.correct_answer
     ).length;
 
-    // Return percentage rounded to nearest whole number
     return Math.round((correctAnswers / moduleAnswers.length) * 100);
   };
 
   const calculateTopicPerformance = () => {
     if (!session.module_progress) return [];
 
-    const topicStats: { [key: string]: { name: string; correct: number; total: number } } = {};
+    const topicStats: { [key: string]: { 
+      name: string; 
+      correct: number; 
+      total: number;
+      subjectId: string;
+      subjectName: string;
+    } } = {};
 
     session.module_progress.forEach(progress => {
       progress.module_answers?.forEach(answer => {
@@ -94,9 +101,17 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
         
         const topicId = answer.question.topic.id;
         const topicName = answer.question.topic.name;
+        const subjectId = answer.question.topic.subject?.id || '';
+        const subjectName = answer.question.topic.subject?.name || 'Uncategorized';
         
         if (!topicStats[topicId]) {
-          topicStats[topicId] = { name: topicName, correct: 0, total: 0 };
+          topicStats[topicId] = { 
+            name: topicName, 
+            correct: 0, 
+            total: 0,
+            subjectId,
+            subjectName
+          };
         }
         
         topicStats[topicId].total++;
@@ -109,25 +124,21 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
     return Object.values(topicStats);
   };
 
-  // Get unique subjects from module progress
   const subjects = [...new Set(
     session.module_progress
       ?.filter(progress => progress.module.subject)
       .map(progress => progress.module.subject)
   )];
 
-  // Remove duplicate subjects by ID
   const uniqueSubjects = subjects.filter((subject, index, self) =>
     index === self.findIndex((s) => s.id === subject.id)
   );
 
-  // Calculate scores for each unique subject
   const subjectScores = uniqueSubjects.map(subject => ({
     name: subject.name,
     score: calculateSubjectScore(subject.id)
   }));
 
-  // Calculate total score as average of all subject scores
   const totalScore = Math.round(
     subjectScores.reduce((acc, subject) => acc + subject.score, 0) / subjectScores.length
   );
