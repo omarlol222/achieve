@@ -25,6 +25,12 @@ const SignIn = () => {
       if (event === "SIGNED_IN") {
         navigate("/");
       }
+      if (event === "PASSWORD_RECOVERY") {
+        setError(null); // Clear any existing errors
+      }
+      if (event === "USER_UPDATED") {
+        navigate("/"); // Redirect after password update
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -69,6 +75,9 @@ const SignIn = () => {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
+          onError={(error) => {
+            setError(error.message);
+          }}
         />
 
         <div className="mt-4 text-center">
