@@ -116,8 +116,13 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
       .map(progress => progress.module.subject)
   )];
 
-  // Calculate scores for each subject
-  const subjectScores = subjects.map(subject => ({
+  // Remove duplicate subjects by ID
+  const uniqueSubjects = subjects.filter((subject, index, self) =>
+    index === self.findIndex((s) => s.id === subject.id)
+  );
+
+  // Calculate scores for each unique subject
+  const subjectScores = uniqueSubjects.map(subject => ({
     name: subject.name,
     score: calculateSubjectScore(subject.id)
   }));
