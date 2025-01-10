@@ -31,9 +31,6 @@ const SignIn = () => {
       if (event === "USER_UPDATED") {
         navigate("/"); // Redirect after password update
       }
-      if (event === "RECOVERY_ERROR") {
-        setError("Please enter a valid email address for password recovery.");
-      }
     });
 
     return () => subscription.unsubscribe();
