@@ -42,29 +42,7 @@ const AuthComponent = () => {
         theme="light"
         providers={[]}
         redirectTo={window.location.origin}
-        options={{
-          emailRedirectTo: window.location.origin,
-          metadata: {
-            username: undefined,
-            full_name: undefined,
-            phone: undefined,
-          },
-        }}
-        localization={{
-          variables: {
-            sign_up: {
-              email_label: "Email address",
-              password_label: "Create a Password",
-              email_input_placeholder: "Your email address",
-              password_input_placeholder: "Your password",
-              button_label: "Sign up",
-              loading_button_label: "Signing up ...",
-              social_provider_text: "Sign in with {{provider}}",
-              link_text: "Don't have an account? Sign up",
-              confirmation_text: "Check your email for the confirmation link",
-            },
-          },
-        }}
+        magicLink={false}
         view="sign_up"
         showLinks={true}
       />
