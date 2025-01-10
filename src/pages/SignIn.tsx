@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link, useLocation, useSearchParams } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,20 +8,28 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 const SignIn = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'sign_in' | 'update_password'>('sign_in');
   const siteUrl = "https://achieve.lovable.app";
 
   useEffect(() => {
     const handlePasswordReset = () => {
+      // Check URL parameters for verification link
+      const type = searchParams.get('type');
+      const token = searchParams.get('token');
+      
+      // Check hash parameters for recovery token
       const hashParams = new URLSearchParams(location.hash.substring(1));
-      const type = hashParams.get('type');
+      const hashType = hashParams.get('type');
       const accessToken = hashParams.get('access_token');
       
-      if (type === 'recovery' && accessToken) {
+      if ((type === 'recovery' && token) || (hashType === 'recovery' && accessToken)) {
         setView('update_password');
-        // Remove the hash to prevent re-triggering
-        window.history.replaceState(null, '', window.location.pathname);
+        // Clean up URL if it's a hash-based token
+        if (hashType === 'recovery') {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
         return true;
       }
       return false;
@@ -52,7 +60,7 @@ const SignIn = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, location]);
+  }, [navigate, location, searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
