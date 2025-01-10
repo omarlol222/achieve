@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,46 +8,27 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 const PasswordReset = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const siteUrl = "https://achieve.lovable.app";
 
   useEffect(() => {
-    const checkRecoveryToken = () => {
-      // Check URL parameters
-      const type = searchParams.get('type');
-      const token = searchParams.get('token');
-      const redirectTo = searchParams.get('redirect_to');
-      
-      // Check location state (from SignIn component)
-      const state = location.state as { token?: string; type?: string; redirectTo?: string } | null;
-      
-      // If no recovery token is present in either URL or state, redirect to signin
-      if (!((type === 'recovery' && token) || (state?.type === 'recovery' && state?.token))) {
-        navigate('/signin');
-        return;
-      }
+    const state = location.state as { recovery?: boolean } | null;
+    
+    if (!state?.recovery) {
+      navigate('/signin');
+      return;
+    }
 
-      // If we have a token, set it in the session
-      if (token || state?.token) {
-        supabase.auth.setSession({
-          access_token: token || state?.token || '',
-          refresh_token: '',
-        });
-      }
-    };
-
-    checkRecoveryToken();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "USER_UPDATED") {
-        setError(null);
-        navigate("/signin");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        // Stay on the page
+      } else if (event === "SIGNED_IN") {
+        navigate("/gat");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, location, searchParams]);
+  }, [navigate, location]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

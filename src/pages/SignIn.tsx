@@ -13,30 +13,41 @@ const SignIn = () => {
   const siteUrl = "https://achieve.lovable.app";
 
   useEffect(() => {
-    const handlePasswordReset = () => {
+    const handlePasswordReset = async () => {
       const type = searchParams.get('type');
       const token = searchParams.get('token');
-      const redirectTo = searchParams.get('redirect_to');
       
-      // If this is a recovery attempt, redirect to password reset
       if (type === 'recovery' && token) {
-        navigate('/password-reset', { 
-          state: { 
-            token,
-            type,
-            redirectTo
-          }
-        });
-        return true;
+        try {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'recovery'
+          });
+          
+          if (error) throw error;
+          
+          navigate('/password-reset', { 
+            state: { 
+              token,
+              type,
+              recovery: true
+            },
+            replace: true
+          });
+          return true;
+        } catch (error: any) {
+          setError(error.message);
+          return false;
+        }
       }
       return false;
     };
 
     // First check if this is a password reset attempt
-    const isPasswordReset = handlePasswordReset();
+    const checkReset = handlePasswordReset();
     
     // Only check session if not a password reset
-    if (!isPasswordReset) {
+    if (!checkReset) {
       const checkSession = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
