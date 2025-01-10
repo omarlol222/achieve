@@ -71,11 +71,16 @@ const SignIn = () => {
           redirectTo={window.location.origin}
         />
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center space-y-2">
           <p className="text-sm text-gray-600">
             Don't have an account?{" "}
             <Link to="/signup" className="font-medium text-black hover:text-gray-800">
               Sign up
+            </Link>
+          </p>
+          <p className="text-sm text-gray-600">
+            <Link to="/reset-password" className="font-medium text-black hover:text-gray-800">
+              Forgot your password?
             </Link>
           </p>
         </div>
