@@ -38,11 +38,17 @@ const SignIn = () => {
     // Check if user is already signed in
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      // Only redirect if it's not a password reset attempt
       if (session && !handlePasswordReset()) {
         navigate("/");
       }
     };
-    checkSession();
+    
+    // Handle the initial check
+    const isPasswordReset = handlePasswordReset();
+    if (!isPasswordReset) {
+      checkSession();
+    }
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
