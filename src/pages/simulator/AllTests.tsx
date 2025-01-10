@@ -78,7 +78,7 @@ export default function AllTests() {
                     {session.verbal_score || 0}
                   </p>
                   <p>
-                    <span className="font-medium">MATH: </span>
+                    <span className="font-medium">QUANTITATIVE: </span>
                     {session.quantitative_score || 0}
                   </p>
                   <p>
