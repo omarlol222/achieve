@@ -1,45 +1,39 @@
 import { format } from "date-fns";
+import { Card } from "@/components/ui/card";
 
 type ScoreHeaderProps = {
-  subjectScores: {
-    name: string;
-    score: number;
-  }[];
+  subjectScores: { name: string; score: number }[];
   totalScore: number;
   createdAt: string;
 };
 
 export function ScoreHeader({ subjectScores, totalScore, createdAt }: ScoreHeaderProps) {
-  // Filter out duplicate subjects by name, keeping only the first occurrence
-  const uniqueSubjectScores = subjectScores.filter(
-    (subject, index, self) =>
-      index === self.findIndex((s) => s.name === subject.name)
-  );
+  // Map "Math" to "Quantitative" in the display
+  const displayScores = subjectScores.map(score => ({
+    ...score,
+    name: score.name.toLowerCase() === 'math' ? 'Quantitative' : score.name
+  }));
 
   return (
-    <div className="flex justify-between items-start">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-4xl font-bold mb-2">Test score:</h1>
-        <div className="space-y-2">
-          {uniqueSubjectScores.map((subject) => (
-            <p key={subject.name} className="text-xl">
-              <span className="font-medium">{subject.name.toUpperCase()}: </span>
-              {subject.score}
-            </p>
-          ))}
-          <p className="text-xl">
-            <span className="font-medium">TOTAL: </span>
-            {totalScore}
-          </p>
-        </div>
+        <h1 className="text-4xl font-bold">Test Results</h1>
+        <p className="text-muted-foreground">
+          {format(new Date(createdAt), "MMMM d, yyyy")}
+        </p>
       </div>
-      <div className="text-right">
-        <p className="text-gray-600">
-          DATE: {format(new Date(createdAt), "dd/MM/yyyy")}
-        </p>
-        <p className="text-gray-600">
-          TIME: {format(new Date(createdAt), "HH:mm")}
-        </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {displayScores.map((score) => (
+          <Card key={score.name} className="p-6">
+            <h3 className="text-lg font-semibold mb-2">{score.name}</h3>
+            <p className="text-3xl font-bold">{score.score}</p>
+          </Card>
+        ))}
+        <Card className="p-6 bg-[#1B2B2B] text-white">
+          <h3 className="text-lg font-semibold mb-2">Total Score</h3>
+          <p className="text-3xl font-bold">{totalScore}</p>
+        </Card>
       </div>
     </div>
   );
