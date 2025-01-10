@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 const SignIn = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const siteUrl = "https://achieve.lovable.app";
 
   useEffect(() => {
     // Check if user is already signed in
@@ -73,7 +74,7 @@ const SignIn = () => {
           }}
           theme="light"
           providers={[]}
-          redirectTo={window.location.origin}
+          redirectTo={siteUrl}
         />
 
         <div className="mt-4 text-center">
