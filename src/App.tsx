@@ -10,6 +10,7 @@ import Shop from "./pages/Shop";
 import FAQ from "./pages/FAQ";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import PasswordReset from "./pages/PasswordReset";
 import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Questions from "./pages/admin/Questions";
@@ -56,6 +57,7 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/password-reset" element={<PasswordReset />} />
           <Route path="/gat" element={
             <ProtectedGatRoute>
               <GAT />

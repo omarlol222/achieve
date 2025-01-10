@@ -1,54 +1,42 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link, useLocation, useSearchParams } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const SignIn = () => {
+const PasswordReset = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<'sign_in' | 'update_password'>('sign_in');
   const siteUrl = "https://achieve.lovable.app";
 
   useEffect(() => {
-    const handlePasswordReset = () => {
+    const checkRecoveryToken = () => {
       const type = searchParams.get('type');
       const token = searchParams.get('token');
       const hashParams = new URLSearchParams(location.hash.substring(1));
       const hashType = hashParams.get('type');
       const accessToken = hashParams.get('access_token');
-      
-      if ((type === 'recovery' && token) || (hashType === 'recovery' && accessToken)) {
-        navigate('/password-reset');
-        return true;
-      }
-      return false;
-    };
 
-    // Check if user is already signed in
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/");
+      if (!((type === 'recovery' && token) || (hashType === 'recovery' && accessToken))) {
+        navigate('/signin');
+        return;
+      }
+
+      // Clean up URL if it's a hash-based token
+      if (hashType === 'recovery') {
+        window.history.replaceState(null, '', window.location.pathname);
       }
     };
-    
-    // Handle the initial check
-    const isPasswordReset = handlePasswordReset();
-    if (!isPasswordReset) {
-      checkSession();
-    }
 
-    // Listen for auth changes
+    checkRecoveryToken();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN") {
-        navigate("/");
-      }
-      if (event === "PASSWORD_RECOVERY") {
-        navigate("/password-reset");
+      if (event === "USER_UPDATED") {
+        setError(null);
+        navigate("/signin");
       }
     });
 
@@ -65,10 +53,10 @@ const SignIn = () => {
             className="h-12 mx-auto mb-6"
           />
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Welcome Back
+            Reset Password
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Please sign in to your account
+            Please enter your new password
           </p>
         </div>
 
@@ -80,7 +68,7 @@ const SignIn = () => {
 
         <Auth
           supabaseClient={supabase}
-          view="sign_in"
+          view="update_password"
           appearance={{
             theme: ThemeSupa,
             variables: {
@@ -96,18 +84,9 @@ const SignIn = () => {
           providers={[]}
           redirectTo={siteUrl}
         />
-
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link to="/signup" className="font-medium text-black hover:text-gray-800">
-              Sign up
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );
 };
 
-export default SignIn;
+export default PasswordReset;
