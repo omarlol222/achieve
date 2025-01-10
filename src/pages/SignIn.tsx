@@ -13,25 +13,32 @@ const SignIn = () => {
   const siteUrl = "https://achieve.lovable.app";
 
   useEffect(() => {
+    const handlePasswordReset = () => {
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      const type = hashParams.get('type');
+      const accessToken = hashParams.get('access_token');
+      
+      if (type === 'recovery' && accessToken) {
+        setView('update_password');
+        // Remove the hash to prevent re-triggering
+        window.history.replaceState(null, '', window.location.pathname);
+        return true;
+      }
+      return false;
+    };
+
     // Check if user is already signed in
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      if (session && !handlePasswordReset()) {
         navigate("/");
       }
     };
     checkSession();
 
-    // Check for recovery token in URL
-    const hashParams = new URLSearchParams(location.hash.substring(1));
-    const type = hashParams.get('type');
-    if (type === 'recovery') {
-      setView('update_password');
-    }
-
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN") {
+      if (event === "SIGNED_IN" && !handlePasswordReset()) {
         navigate("/");
       }
       if (event === "PASSWORD_RECOVERY") {
