@@ -14,12 +14,16 @@ const PasswordReset = () => {
 
   useEffect(() => {
     const checkRecoveryToken = () => {
+      // Check URL parameters
       const type = searchParams.get('type');
       const token = searchParams.get('token');
+      
+      // Check hash parameters
       const hashParams = new URLSearchParams(location.hash.substring(1));
       const hashType = hashParams.get('type');
       const accessToken = hashParams.get('access_token');
 
+      // If no recovery token is present, redirect to signin
       if (!((type === 'recovery' && token) || (hashType === 'recovery' && accessToken))) {
         navigate('/signin');
         return;

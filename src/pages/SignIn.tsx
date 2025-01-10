@@ -10,7 +10,6 @@ const SignIn = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<'sign_in' | 'update_password'>('sign_in');
   const siteUrl = "https://achieve.lovable.app";
 
   useEffect(() => {
@@ -22,23 +21,28 @@ const SignIn = () => {
       const accessToken = hashParams.get('access_token');
       
       if ((type === 'recovery' && token) || (hashType === 'recovery' && accessToken)) {
-        navigate('/password-reset');
+        navigate('/password-reset', { 
+          state: { 
+            token: token || accessToken,
+            type: type || hashType
+          }
+        });
         return true;
       }
       return false;
     };
 
-    // Check if user is already signed in
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/");
-      }
-    };
-    
-    // Handle the initial check
+    // First check if this is a password reset attempt
     const isPasswordReset = handlePasswordReset();
+    
+    // Only check session if not a password reset
     if (!isPasswordReset) {
+      const checkSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          navigate("/");
+        }
+      };
       checkSession();
     }
 
