@@ -21,7 +21,7 @@ const SignIn = () => {
     checkSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN") {
         navigate("/");
       }
@@ -30,6 +30,9 @@ const SignIn = () => {
       }
       if (event === "USER_UPDATED") {
         navigate("/"); // Redirect after password update
+      }
+      if (event === "RECOVERY_ERROR") {
+        setError("Please enter a valid email address for password recovery.");
       }
     });
 
@@ -75,9 +78,6 @@ const SignIn = () => {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
-          onError={(error) => {
-            setError(error.message);
-          }}
         />
 
         <div className="mt-4 text-center">
