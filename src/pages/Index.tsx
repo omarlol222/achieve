@@ -32,6 +32,12 @@ const AuthComponent = () => {
               },
             },
           },
+          className: {
+            container: 'auth-container',
+            label: 'auth-label',
+            button: 'auth-button',
+            input: 'auth-input',
+          },
         }}
         theme="light"
         providers={[]}
