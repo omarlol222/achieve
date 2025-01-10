@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<'sign_in' | 'update_password'>('sign_in');
   const siteUrl = "https://achieve.lovable.app";
 
   useEffect(() => {
@@ -20,21 +22,30 @@ const SignIn = () => {
     };
     checkSession();
 
+    // Check for recovery token in URL
+    const hashParams = new URLSearchParams(location.hash.substring(1));
+    const type = hashParams.get('type');
+    if (type === 'recovery') {
+      setView('update_password');
+    }
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN") {
         navigate("/");
       }
       if (event === "PASSWORD_RECOVERY") {
-        setError(null); // Clear any existing errors
+        setError(null);
+        setView('update_password');
       }
       if (event === "USER_UPDATED") {
-        navigate("/"); // Redirect after password update
+        setError(null);
+        navigate("/");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, location]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -46,10 +57,13 @@ const SignIn = () => {
             className="h-12 mx-auto mb-6"
           />
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Welcome Back
+            {view === 'update_password' ? 'Reset Password' : 'Welcome Back'}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Please sign in to your account
+            {view === 'update_password' 
+              ? 'Please enter your new password'
+              : 'Please sign in to your account'
+            }
           </p>
         </div>
 
@@ -61,6 +75,7 @@ const SignIn = () => {
 
         <Auth
           supabaseClient={supabase}
+          view={view}
           appearance={{
             theme: ThemeSupa,
             variables: {
@@ -77,14 +92,16 @@ const SignIn = () => {
           redirectTo={siteUrl}
         />
 
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{" "}
-            <Link to="/signup" className="font-medium text-black hover:text-gray-800">
-              Sign up
-            </Link>
-          </p>
-        </div>
+        {view === 'sign_in' && (
+          <div className="mt-4 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link to="/signup" className="font-medium text-black hover:text-gray-800">
+                Sign up
+              </Link>
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
