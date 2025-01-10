@@ -74,7 +74,6 @@ const SignIn = () => {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
-          emailRedirectTo={window.location.origin}
         />
 
         <div className="mt-4 text-center">
