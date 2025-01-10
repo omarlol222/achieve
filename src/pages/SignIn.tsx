@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -69,6 +70,15 @@ const SignIn = () => {
           providers={[]}
           redirectTo={window.location.origin}
         />
+
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-600">
+            Don't have an account?{" "}
+            <Link to="/signup" className="font-medium text-black hover:text-gray-800">
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
