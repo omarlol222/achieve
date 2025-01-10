@@ -43,32 +43,14 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
               <tbody>
                 <tr>
                   <td className="border-r p-4">
-                    <FormField
-                      control={form.control}
-                      name="comparison_value1"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input {...field} placeholder="First Value" className="text-center" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="text-center">
+                      {form.getValues("comparison_value1") || "First Value"}
+                    </div>
                   </td>
                   <td className="p-4">
-                    <FormField
-                      control={form.control}
-                      name="comparison_value2"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input {...field} placeholder="Second Value" className="text-center" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="text-center">
+                      {form.getValues("comparison_value2") || "Second Value"}
+                    </div>
                   </td>
                 </tr>
               </tbody>
