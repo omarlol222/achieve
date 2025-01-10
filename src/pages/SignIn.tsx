@@ -4,7 +4,6 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -74,7 +73,7 @@ const SignIn = () => {
           }}
           theme="light"
           providers={[]}
-          redirectTo={window.location.origin}
+          redirectTo={`${window.location.origin}/signin`}
         />
 
         <div className="mt-4 text-center">
