@@ -9,6 +9,7 @@ import About from "./pages/About";
 import Shop from "./pages/Shop";
 import FAQ from "./pages/FAQ";
 import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
 import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Questions from "./pages/admin/Questions";
@@ -22,7 +23,6 @@ import Simulator from "./pages/Simulator";
 import SimulatorTest from "./pages/simulator/SimulatorTest";
 import SimulatorResults from "./pages/simulator/SimulatorResults";
 import AllTests from "./pages/simulator/AllTests";
-import { useToast } from "./components/ui/use-toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,7 +33,6 @@ const queryClient = new QueryClient({
         onError: (error: any) => {
           if (error?.message?.includes('refresh_token_not_found') || 
               error?.message?.includes('Invalid Refresh Token')) {
-            // Clear any existing session data
             localStorage.removeItem('supabase.auth.token');
             window.location.href = '/signin';
           }
@@ -56,6 +55,7 @@ const App = () => (
           <Route path="/shop" element={<Shop />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/gat" element={
             <ProtectedGatRoute>
               <GAT />
