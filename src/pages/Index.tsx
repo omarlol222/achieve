@@ -39,6 +39,12 @@ const AuthComponent = () => {
         view="sign_up"
         showLinks={true}
         additionalData={{
+          username: {
+            label: 'Username',
+            type: 'text',
+            placeholder: 'Choose a username',
+            required: true,
+          },
           full_name: {
             label: 'Full Name',
             type: 'text',
