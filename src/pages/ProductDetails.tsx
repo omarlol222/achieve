@@ -111,6 +111,10 @@ const ProductDetails = () => {
     );
   }
 
+  const hasMedia = (product.media?.length ?? 0) > 0;
+  const showCarouselControls = hasMedia || product.image_url;
+  const multipleItems = (product.media?.length ?? 0) > 1;
+
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
@@ -148,7 +152,7 @@ const ProductDetails = () => {
             <div className="relative">
               <Carousel className="w-full">
                 <CarouselContent>
-                  {product.media.length > 0 ? (
+                  {hasMedia ? (
                     product.media.map((media, index) => (
                       <CarouselItem key={index}>
                         <div className="aspect-[16/9] w-full bg-[#1B2E35] rounded-lg overflow-hidden">
@@ -180,7 +184,7 @@ const ProductDetails = () => {
                     </CarouselItem>
                   ) : null}
                 </CarouselContent>
-                {(product.media.length > 1 || (product.media.length === 0 && product.image_url)) && (
+                {showCarouselControls && multipleItems && (
                   <>
                     <CarouselPrevious />
                     <CarouselNext />
