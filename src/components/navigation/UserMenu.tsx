@@ -7,7 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { supabase } from "@/integrations/supabase/client";
 
 interface UserMenuProps {
   isAdmin: boolean;
@@ -39,16 +38,6 @@ export const UserMenu = ({ isAdmin, hasPurchased, hideNavLinks, handleSignOut }:
               FAQ
             </DropdownMenuItem>
           </>
-        )}
-        {hasPurchased && (
-          <DropdownMenuItem onClick={() => navigate("/gat")}>
-            Dashboard
-          </DropdownMenuItem>
-        )}
-        {isAdmin && (
-          <DropdownMenuItem onClick={() => navigate("/admin")}>
-            Admin
-          </DropdownMenuItem>
         )}
         <DropdownMenuItem onClick={handleSignOut}>
           Sign Out

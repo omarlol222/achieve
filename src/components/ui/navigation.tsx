@@ -3,6 +3,7 @@ import { Logo } from "@/components/navigation/Logo";
 import { NavLinks } from "@/components/navigation/NavLinks";
 import { UserMenu } from "@/components/navigation/UserMenu";
 import { useNavigation } from "@/hooks/useNavigation";
+import { Button } from "@/components/ui/button";
 
 export const Navigation = () => {
   const {
@@ -42,7 +43,21 @@ export const Navigation = () => {
           </Link>
         </div>
         {!hideNavLinks && <NavLinks />}
-        <div className="w-[200px] flex justify-end">
+        <div className="w-[200px] flex justify-end items-center gap-2">
+          {hasPurchased && (
+            <Link to="/gat">
+              <Button variant="ghost" size="sm">
+                Dashboard
+              </Button>
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to="/admin">
+              <Button variant="ghost" size="sm">
+                Admin
+              </Button>
+            </Link>
+          )}
           <UserMenu
             isAdmin={isAdmin}
             hasPurchased={hasPurchased}
