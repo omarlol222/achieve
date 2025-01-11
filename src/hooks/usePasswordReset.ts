@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -6,7 +6,7 @@ export const usePasswordReset = (onSuccess: () => void) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const resetPassword = async (newPassword: string) => {
+  const resetPassword = useCallback(async (newPassword: string) => {
     setIsLoading(true);
     try {
       setError(null);
@@ -26,7 +26,7 @@ export const usePasswordReset = (onSuccess: () => void) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onSuccess]);
 
   return { error, isLoading, resetPassword };
 };

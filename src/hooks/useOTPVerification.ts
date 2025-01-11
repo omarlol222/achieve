@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -7,12 +7,12 @@ export const useOTPVerification = (email: string, onBack: () => void) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
 
-  const handleInvalidCode = () => {
+  const handleInvalidCode = useCallback(() => {
     setError("Invalid verification code. Please check the code or request a new one.");
     setTimeout(onBack, 3000);
-  };
+  }, [onBack]);
 
-  const verifyOTP = async (otp: string) => {
+  const verifyOTP = useCallback(async (otp: string) => {
     setIsLoading(true);
     setError(null);
 
@@ -49,7 +49,7 @@ export const useOTPVerification = (email: string, onBack: () => void) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [email, handleInvalidCode]);
 
   return { error, isLoading, isVerified, verifyOTP, setError };
 };
