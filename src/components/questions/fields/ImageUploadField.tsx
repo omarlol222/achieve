@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, Path } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Image } from "lucide-react";
 
-type ImageUploadFieldProps<T extends { [key: string]: any }> = {
+type ImageUploadFieldProps<T extends Record<string, any>> = {
   form: UseFormReturn<T>;
-  fieldName: keyof T;
+  fieldName: Path<T>;
   label: string;
 };
 
-export function ImageUploadField<T extends { [key: string]: any }>({
+export function ImageUploadField<T extends Record<string, any>>({
   form,
   fieldName,
   label,
@@ -58,13 +58,13 @@ export function ImageUploadField<T extends { [key: string]: any }>({
               variant="outline"
               className="w-full"
               disabled={isUploading}
-              onClick={() => document.getElementById(fieldName.toString())?.click()}
+              onClick={() => document.getElementById(fieldName)?.click()}
             >
               <Image className="h-4 w-4 mr-2" />
               {isUploading ? "Uploading..." : "Upload Image"}
             </Button>
             <input
-              id={fieldName.toString()}
+              id={fieldName}
               type="file"
               accept="image/*"
               className="hidden"
