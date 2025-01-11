@@ -73,11 +73,11 @@ const ProductDetails = () => {
                   <CarouselContent>
                     {product.media?.map((media: any, index: number) => (
                       <CarouselItem key={index}>
-                        <div className="aspect-video">
+                        <div className="h-[300px]"> {/* Reduced height from aspect-video */}
                           <img 
                             src={media.media_url}
                             alt={`Product image ${index + 1}`}
-                            className="w-full h-full object-cover rounded-none"
+                            className="w-full h-full object-contain rounded-none" /* Changed from object-cover to object-contain */
                           />
                         </div>
                       </CarouselItem>
