@@ -4,10 +4,10 @@ import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export function TestTypePermissions({ 
+export function TestTypePermissions<T extends Record<string, any>>({ 
   form 
 }: { 
-  form: UseFormReturn<any>
+  form: UseFormReturn<T>
 }) {
   const { data: testTypes } = useQuery({
     queryKey: ["test-types"],
