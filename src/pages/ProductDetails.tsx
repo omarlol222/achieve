@@ -40,7 +40,37 @@ const ProductDetails = () => {
       <div className="container mx-auto px-4 py-16 max-w-7xl">
         {product && (
           <div className="flex flex-col lg:flex-row gap-16 items-start">
-            {/* Left Column - Description */}
+            {/* Left Column - Image and Buy Button */}
+            <div className="lg:w-[400px] space-y-8">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {product.media?.map((media: any, index: number) => (
+                    <CarouselItem key={index}>
+                      <img 
+                        src={media.media_url}
+                        alt={`Product image ${index + 1}`}
+                        className="h-[300px] w-full object-cover rounded-lg"
+                      />
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-4" />
+                <CarouselNext className="right-4" />
+              </Carousel>
+
+              <div className="space-y-4">
+                <h2 className="text-5xl font-bold text-[#1B2E35] text-center">
+                  {product.price} {product.currency}
+                </h2>
+                <Button 
+                  className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-white text-xl py-6"
+                >
+                  BUY
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Column - Description */}
             <div className="flex-1 space-y-8">
               <h1 className="text-5xl font-bold text-[#1B2E35]">{product.name}</h1>
               
@@ -65,36 +95,6 @@ const ProductDetails = () => {
                   ))}
                 </ul>
               </div>
-
-              <div className="space-y-4">
-                <h2 className="text-5xl font-bold text-[#1B2E35] text-center">
-                  {product.price} {product.currency}
-                </h2>
-                <Button 
-                  className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-white text-xl py-6"
-                >
-                  BUY
-                </Button>
-              </div>
-            </div>
-
-            {/* Right Column - Image */}
-            <div className="lg:w-[400px] relative">
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {product.media?.map((media: any, index: number) => (
-                    <CarouselItem key={index}>
-                      <img 
-                        src={media.media_url}
-                        alt={`Product image ${index + 1}`}
-                        className="h-[300px] w-full object-cover rounded-lg"
-                      />
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-4" />
-                <CarouselNext className="right-4" />
-              </Carousel>
             </div>
           </div>
         )}
