@@ -28,12 +28,16 @@ interface Product {
 }
 
 const ProductDetails = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
+      if (!id) {
+        throw new Error("Product ID is required");
+      }
+
       const { data, error } = await supabase
         .from("products")
         .select(`
@@ -60,6 +64,7 @@ const ProductDetails = () => {
 
       return data as Product;
     },
+    enabled: !!id,
   });
 
   const handlePurchase = async () => {
