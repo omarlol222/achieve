@@ -47,7 +47,6 @@ export function ImageUploadField<T extends Record<string, any>>({
       }
 
       if (multiple) {
-        // Get current URLs (if any) and combine with new ones
         const currentUrls = form.getValues(fieldName) || [];
         const newUrls = Array.isArray(currentUrls) 
           ? [...currentUrls, ...uploadedUrls]
@@ -56,11 +55,13 @@ export function ImageUploadField<T extends Record<string, any>>({
         form.setValue(fieldName, newUrls as PathValue<T, Path<T>>, {
           shouldValidate: true,
           shouldDirty: true,
+          shouldTouch: true,
         });
       } else {
         form.setValue(fieldName, uploadedUrls[0] as PathValue<T, Path<T>>, {
           shouldValidate: true,
           shouldDirty: true,
+          shouldTouch: true,
         });
       }
     } catch (error: any) {
@@ -75,16 +76,18 @@ export function ImageUploadField<T extends Record<string, any>>({
 
   const removeImage = (urlToRemove: string) => {
     if (multiple) {
-      const currentUrls = (form.getValues(fieldName) as string[]) || [];
+      const currentUrls = form.getValues(fieldName) as string[];
       const updatedUrls = currentUrls.filter(url => url !== urlToRemove);
       form.setValue(fieldName, updatedUrls as PathValue<T, Path<T>>, {
         shouldValidate: true,
         shouldDirty: true,
+        shouldTouch: true,
       });
     } else {
       form.setValue(fieldName, "" as PathValue<T, Path<T>>, {
         shouldValidate: true,
         shouldDirty: true,
+        shouldTouch: true,
       });
     }
   };
