@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
 import {
   BarChart,
   BookOpen,
@@ -8,8 +9,6 @@ import {
 } from "lucide-react";
 import { StatsCard } from "@/components/admin/dashboard/StatsCard";
 import { UserProgressCard } from "@/components/admin/dashboard/UserProgressCard";
-import { RecentActivityCard } from "@/components/admin/dashboard/RecentActivityCard";
-import { PerformanceCard } from "@/components/admin/dashboard/PerformanceCard";
 
 const Dashboard = () => {
   const { data: usersCount } = useQuery({
@@ -63,6 +62,37 @@ const Dashboard = () => {
     },
   });
 
+  const { data: userProgress, isLoading: isLoadingProgress } = useQuery({
+    queryKey: ["user-progress"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_progress")
+        .select(`
+          questions_attempted,
+          questions_correct,
+          user_id,
+          topic:topics(
+            name,
+            subject:subjects(name)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const userIds = [...new Set(data?.map(progress => progress.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+
+      return data?.map(progress => ({
+        ...progress,
+        user: profiles?.find(profile => profile.id === progress.user_id) || { full_name: 'Unknown User' }
+      }));
+    },
+  });
+
   const stats = [
     {
       name: "Total Users",
@@ -107,13 +137,19 @@ const Dashboard = () => {
       </div>
 
       <UserProgressCard 
-        userProgress={undefined} 
-        isLoading={false} 
+        userProgress={userProgress} 
+        isLoading={isLoadingProgress} 
       />
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <RecentActivityCard />
-        <PerformanceCard />
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+        </Card>
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Performance Overview
+          </h2>
+        </Card>
       </div>
     </div>
   );

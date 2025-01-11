@@ -1,123 +1,65 @@
-import { useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  currency: string;
-  image_url: string | null;
-  permissions: {
-    has_course: boolean;
-    has_simulator: boolean;
-    test_type: {
-      name: string;
-    };
-  }[];
-}
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const Shop = () => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
-  // Fetch products with their permissions
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["products"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select(`
-          *,
-          permissions:product_permissions(
-            has_course,
-            has_simulator,
-            test_type:test_types(name)
-          )
-        `)
-        .eq("status", "active");
-
-      if (error) {
-        toast({
-          title: "Error fetching products",
-          description: error.message,
-          variant: "destructive",
-        });
-        return [];
-      }
-
-      return data as Product[];
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Navigation />
-        <div className="container mx-auto px-4 py-16">
-          <div className="animate-pulse space-y-8">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-96 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
       
+      {/* Content */}
       <div className="container mx-auto px-4 py-16 max-w-7xl">
-        <h1 className="text-4xl font-bold text-center mb-12 text-[#1B2E35]">
-          Choose Your Plan
-        </h1>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+          {/* Left Column - Description */}
+          <div className="space-y-8">
+            <h1 className="text-5xl font-bold text-[#1B2E35]">Product Name</h1>
+            
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-[#1B2E35]">PRODUCT DESCRIPTION:</h2>
+              <p className="text-gray-700 leading-relaxed">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean mattis congue metus. 
+                Nam imperdiet quis nunc et faucibus. Proin efficitur, ligula eu aliquam dictum, 
+                nulla diam placerat augue, sed auctor arcu nisl in mauris. Cras ullamcorper hendrerit odio, 
+                vitae vestibulum nisi placerat nec.
+              </p>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products?.map((product) => (
-            <Card key={product.id} className="flex flex-col">
-              <CardHeader>
-                <CardTitle className="text-2xl font-bold text-[#1B2E35]">
-                  {product.name}
-                </CardTitle>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {product.permissions.map((permission, idx) => (
-                    <Badge key={idx} variant="secondary">
-                      {permission.test_type.name}
-                      {permission.has_course && " Course"}
-                      {permission.has_simulator && " + Simulator"}
-                    </Badge>
-                  ))}
-                </div>
-              </CardHeader>
-              <CardContent className="flex-grow">
-                <p className="text-gray-600">{product.description}</p>
-              </CardContent>
-              <CardFooter className="flex flex-col gap-4">
-                <p className="text-3xl font-bold text-[#1B2E35]">
-                  {product.price} {product.currency}
-                </p>
-                <Button 
-                  className="w-full bg-[#1B2E35] hover:bg-[#2d3f48]"
-                  onClick={() => navigate(`/products/${product.id}`)}
-                >
-                  View Details
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-[#1B2E35]">FEATURES:</h2>
+              <ul className="space-y-3">
+                {['Lorem Ipsum', 'Lorem Ipsum', 'Lorem Ipsum', 'Lorem Ipsum'].map((feature, index) => (
+                  <li key={index} className="flex items-center gap-3">
+                    <span className="text-[#1B2E35]">✦</span>
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Right Column - Image and Price */}
+          <div className="space-y-8">
+            <Carousel className="w-full">
+              <CarouselContent>
+                {[1, 2, 3, 4, 5].map((_, index) => (
+                  <CarouselItem key={index}>
+                    <div className="aspect-video bg-[#1B2E35] rounded-lg"></div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-4" />
+              <CarouselNext className="right-4" />
+            </Carousel>
+
+            <div className="space-y-4">
+              <h2 className="text-5xl font-bold text-[#1B2E35] text-center">299 SAR</h2>
+              <Button 
+                className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-white text-xl py-6"
+              >
+                BUY
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
