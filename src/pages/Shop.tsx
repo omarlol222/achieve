@@ -40,9 +40,9 @@ const Shop = () => {
           {products?.map((product) => (
             <Card key={product.id} className="overflow-hidden">
               <div 
-                className="h-48 bg-cover bg-center"
+                className="h-48 bg-cover bg-center bg-gray-100"
                 style={{ 
-                  backgroundImage: `url(${product.media?.[0]?.media_url || product.image_url})` 
+                  backgroundImage: product.thumbnail_url ? `url(${product.thumbnail_url})` : 'none',
                 }}
               />
               <CardContent className="p-6">
