@@ -104,11 +104,11 @@ const ProductDetails = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-16 max-w-7xl">
-        <h1 className="text-5xl font-bold text-[#1B2E35] mb-12">{product.name}</h1>
-        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Left Column - Product Info */}
           <div className="space-y-8">
+            <h1 className="text-5xl font-bold text-[#1B2E35] mb-12">{product.name}</h1>
+            
             <div>
               <h2 className="text-xl font-bold text-[#1B2E35] mb-4">PRODUCT DESCRIPTION:</h2>
               <p className="text-gray-700 leading-relaxed">{product.description}</p>
@@ -133,27 +133,31 @@ const ProductDetails = () => {
 
           {/* Right Column - Image and Purchase */}
           <div className="space-y-8">
-            {product.image_url && (
-              <div className="aspect-video w-full bg-[#1B2E35] rounded-lg overflow-hidden">
-                <img
-                  src={product.image_url}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
-
-            <div className="flex flex-col items-center space-y-6">
-              <p className="text-6xl font-bold text-[#1B2E35]">
-                {product.price} {product.currency}
-              </p>
+            <div className="relative">
+              {product.image_url && (
+                <div className="aspect-[16/9] w-full bg-[#1B2E35] rounded-lg overflow-hidden">
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
               
-              <Button 
-                className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-xl py-6"
-                onClick={handlePurchase}
-              >
-                BUY
-              </Button>
+              <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-[#1B2E35]/80 to-transparent">
+                <div className="flex flex-col items-end space-y-4">
+                  <p className="text-6xl font-bold text-white">
+                    {product.price} {product.currency}
+                  </p>
+                  
+                  <Button 
+                    className="w-48 bg-white hover:bg-gray-100 text-[#1B2E35] text-xl py-6"
+                    onClick={handlePurchase}
+                  >
+                    BUY
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
