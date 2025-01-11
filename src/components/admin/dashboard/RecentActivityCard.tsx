@@ -25,14 +25,30 @@ export const RecentActivityCard = () => {
           id,
           score,
           completed_at,
-          user:test_sessions(user:profiles(full_name)),
-          module:test_modules(name)
+          module:test_modules(name),
+          test_sessions!inner(
+            user:user_id(
+              full_name
+            )
+          )
         `)
         .order("completed_at", { ascending: false })
         .limit(5);
 
       if (error) throw error;
-      return data as Activity[];
+
+      // Transform the data to match the Activity type
+      return data.map((item: any) => ({
+        id: item.id,
+        score: item.score,
+        completed_at: item.completed_at,
+        user: {
+          full_name: item.test_sessions.user.full_name
+        },
+        module: {
+          name: item.module.name
+        }
+      })) as Activity[];
     },
   });
 
