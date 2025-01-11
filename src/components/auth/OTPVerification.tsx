@@ -3,8 +3,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { useOTPVerification } from "@/hooks/useOTPVerification";
+import { NewPasswordForm } from "./NewPasswordForm";
 
 type OTPVerificationProps = {
   email: string;
@@ -13,120 +13,16 @@ type OTPVerificationProps = {
 };
 
 export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationProps) => {
-  const [error, setError] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [isVerified, setIsVerified] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { error, isLoading, isVerified, verifyOTP } = useOTPVerification(email, onBack);
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: 'recovery'
-      });
-
-      if (verifyError) {
-        // Check if the error is related to an invalid or expired token
-        if (verifyError.message.includes('expired') || verifyError.message.includes('invalid')) {
-          setError("Invalid verification code. Please check the code or request a new one.");
-          setTimeout(() => {
-            onBack();
-          }, 3000);
-          return;
-        }
-        throw verifyError;
-      }
-
-      if (!data?.user) {
-        throw new Error("Verification failed. Please try again.");
-      }
-
-      setIsVerified(true);
-      toast({
-        title: "Success",
-        description: "Code verified successfully. Please enter your new password.",
-      });
-    } catch (err: any) {
-      // Handle the specific case where the error is about invalid JSON
-      if (err.message?.includes('body stream already read')) {
-        setError("Invalid verification code. Please check the code or request a new one.");
-        setTimeout(() => {
-          onBack();
-        }, 3000);
-        return;
-      }
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePasswordReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      setError(null);
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Password updated",
-        description: "Your password has been successfully reset.",
-      });
-      onSuccess();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
+    await verifyOTP(otp);
   };
 
   if (isVerified) {
-    return (
-      <div className="space-y-8">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Set New Password
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Enter your new password below
-          </p>
-        </div>
-
-        <form onSubmit={handlePasswordReset} className="space-y-4">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          <div>
-            <Label htmlFor="new-password">New Password</Label>
-            <Input
-              id="new-password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter your new password"
-              required
-              className="mt-1"
-              minLength={6}
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Updating..." : "Update Password"}
-          </Button>
-        </form>
-      </div>
-    );
+    return <NewPasswordForm onSuccess={onSuccess} />;
   }
 
   return (
