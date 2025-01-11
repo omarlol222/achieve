@@ -69,29 +69,31 @@ const ProductDetails = () => {
 
               {/* Right Column - Image and Buy Button */}
               <div className="lg:w-[600px] space-y-8">
-                <Carousel className="w-full">
-                  <CarouselContent>
-                    {product.media?.map((media: any, index: number) => (
-                      <CarouselItem key={index}>
-                        <div className="h-[300px]"> {/* Reduced height from aspect-video */}
-                          <img 
-                            src={media.media_url}
-                            alt={`Product image ${index + 1}`}
-                            className="w-full h-full object-contain rounded-none" /* Changed from object-cover to object-contain */
-                          />
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <div className="flex justify-center gap-2 mt-4">
-                    {product.media?.map((_: any, index: number) => (
-                      <div
-                        key={index}
-                        className="w-2 h-2 rounded-full bg-gray-300"
-                      />
-                    ))}
-                  </div>
-                </Carousel>
+                <div className="flex items-center justify-center"> {/* Added flex container for centering */}
+                  <Carousel className="w-full">
+                    <CarouselContent>
+                      {product.media?.map((media: any, index: number) => (
+                        <CarouselItem key={index}>
+                          <div className="h-[300px]">
+                            <img 
+                              src={media.media_url}
+                              alt={`Product image ${index + 1}`}
+                              className="w-full h-full object-contain rounded-none"
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <div className="flex justify-center gap-2 mt-4">
+                      {product.media?.map((_: any, index: number) => (
+                        <div
+                          key={index}
+                          className="w-2 h-2 rounded-full bg-gray-300"
+                        />
+                      ))}
+                    </div>
+                  </Carousel>
+                </div>
 
                 <div className="space-y-4">
                   <h2 className="text-5xl font-bold text-[#1B2E35] text-center">
