@@ -54,13 +54,37 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
         .from("module_progress")
         .update({ 
           completed_at: new Date().toISOString(),
-          // Calculate and update score if needed
         })
         .eq("id", moduleProgress.id);
 
       if (progressError) {
         console.error("Error updating module progress:", progressError);
         throw progressError;
+      }
+
+      // Get the session ID from module progress
+      const { data: moduleProgressData, error: sessionError } = await supabase
+        .from("module_progress")
+        .select("session_id")
+        .eq("id", moduleProgress.id)
+        .single();
+
+      if (sessionError) {
+        console.error("Error getting session ID:", sessionError);
+        throw sessionError;
+      }
+
+      // Update the test session to trigger score calculation
+      const { error: sessionUpdateError } = await supabase
+        .from("test_sessions")
+        .update({ 
+          completed_at: new Date().toISOString()
+        })
+        .eq("id", moduleProgressData.session_id);
+
+      if (sessionUpdateError) {
+        console.error("Error updating test session:", sessionUpdateError);
+        throw sessionUpdateError;
       }
 
       console.log("Module submitted successfully");
