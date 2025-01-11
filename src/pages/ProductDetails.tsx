@@ -20,7 +20,6 @@ interface Product {
   price: number;
   currency: string;
   image_url: string | null;
-  video_url: string | null;
   media_urls: string[];
   media_types: ('image' | 'video')[];
   permissions: {
@@ -62,18 +61,14 @@ const ProductDetails = () => {
         return null;
       }
 
-      // For demonstration, we'll combine image_url and video_url into arrays
-      // In a real application, you might want to store these in a separate table
+      // For now, we'll just use image_url for the carousel
+      // In the future, you might want to create a separate product_media table
       const mediaUrls = [];
       const mediaTypes = [];
       
       if (data.image_url) {
         mediaUrls.push(data.image_url);
         mediaTypes.push('image');
-      }
-      if (data.video_url) {
-        mediaUrls.push(data.video_url);
-        mediaTypes.push('video');
       }
 
       return {
