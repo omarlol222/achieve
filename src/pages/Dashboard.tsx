@@ -81,7 +81,7 @@ const Dashboard = () => {
         <TabsList>
           <TabsTrigger value="tests" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
-            My Tests
+            My Platforms
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
@@ -101,7 +101,7 @@ const Dashboard = () => {
             {accessibleTests?.length === 0 && (
               <Card className="p-6 col-span-full">
                 <p className="text-center text-gray-500">
-                  You don't have access to any tests yet. Visit our shop to purchase access.
+                  You don't have access to any platforms yet. Visit our shop to purchase access.
                 </p>
                 <div className="mt-4 flex justify-center">
                   <Button onClick={() => navigate("/shop")}>
