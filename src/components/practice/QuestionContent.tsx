@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import 'katex/dist/katex.min.css';
+import { InlineMath, BlockMath } from 'react-katex';
 
 type QuestionContentProps = {
   question: {
@@ -18,6 +20,32 @@ type QuestionContentProps = {
   selectedAnswer: number | null;
   showFeedback?: boolean;
   onAnswerSelect: (answer: number) => void;
+};
+
+const processMathText = (text: string) => {
+  // Regular expression to match LaTeX expressions between $$ or $ symbols
+  const blockRegex = /\$\$(.*?)\$\$/g;
+  const inlineRegex = /\$(.*?)\$/g;
+
+  // First, handle block math ($$...$$)
+  const blockParts = text.split(blockRegex);
+  const blockResult = blockParts.map((part, index) => {
+    if (index % 2 === 1) {
+      // This is a math expression
+      return <BlockMath key={index} math={part} />;
+    }
+    // Now handle inline math ($...$) in the text parts
+    const inlineParts = part.split(inlineRegex);
+    return inlineParts.map((inlinePart, inlineIndex) => {
+      if (inlineIndex % 2 === 1) {
+        // This is an inline math expression
+        return <InlineMath key={`${index}-${inlineIndex}`} math={inlinePart} />;
+      }
+      return inlinePart;
+    });
+  });
+
+  return <>{blockResult}</>;
 };
 
 export function QuestionContent({
@@ -40,7 +68,7 @@ export function QuestionContent({
           <div className="w-1/3 flex-shrink-0">
             <div className="rounded-lg border p-4 bg-muted/20 max-h-[500px] overflow-y-auto">
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {question.passage_text}
+                {processMathText(question.passage_text)}
               </p>
             </div>
           </div>
@@ -50,7 +78,9 @@ export function QuestionContent({
           <div className="flex gap-6">
             <div className="flex-grow">
               <div className="flex items-center justify-between">
-                <p className="text-lg font-medium">{question.question_text}</p>
+                <p className="text-lg font-medium">
+                  {processMathText(question.question_text)}
+                </p>
                 {question.id && (
                   <span className="text-xs text-muted-foreground">
                     ID: {question.id}
@@ -92,7 +122,7 @@ export function QuestionContent({
                   )}
                   variant="outline"
                 >
-                  {choice}
+                  {processMathText(choice)}
                 </Button>
               );
             })}
@@ -101,7 +131,9 @@ export function QuestionContent({
           {showFeedback && (question.explanation || question.explanation_image_url) && (
             <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200 space-y-4">
               {question.explanation && (
-                <p className="text-sm text-blue-800">{question.explanation}</p>
+                <p className="text-sm text-blue-800">
+                  {processMathText(question.explanation)}
+                </p>
               )}
               {question.explanation_image_url && (
                 <div className="rounded-lg border overflow-hidden">
