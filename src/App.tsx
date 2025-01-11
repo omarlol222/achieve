@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "next-themes";
 import Shop from "@/pages/Shop";
 import ProductDetails from "@/pages/ProductDetails";
+import Index from "@/pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -13,7 +14,8 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Shop />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/shop" element={<Shop />} />
             <Route path="/products/:id" element={<ProductDetails />} />
           </Routes>
           <Toaster />
