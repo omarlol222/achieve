@@ -31,8 +31,13 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
       });
 
       if (verifyError) {
-        if (verifyError.message.includes('expired')) {
-          throw new Error('Verification code has expired. Please request a new one.');
+        if (verifyError.message.includes('expired') || verifyError.message.includes('invalid')) {
+          toast({
+            variant: "destructive",
+            title: "Code Expired",
+            description: "Please go back and request a new code.",
+          });
+          throw new Error('Verification code has expired or is invalid. Please request a new one.');
         }
         throw verifyError;
       }
@@ -44,13 +49,6 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
       });
     } catch (err: any) {
       setError(err.message);
-      if (err.message.includes('expired')) {
-        toast({
-          variant: "destructive",
-          title: "Code Expired",
-          description: "Please go back and request a new code.",
-        });
-      }
     } finally {
       setIsLoading(false);
     }
