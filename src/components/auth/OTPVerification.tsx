@@ -33,24 +33,24 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
 
       if (verifyError) {
         if (verifyError.message.includes('expired') || verifyError.message.includes('invalid')) {
-          toast({
-            variant: "destructive",
-            title: "Invalid Code",
-            description: "The verification code has expired or is invalid. Please request a new one.",
-          });
-          onBack();
+          setError("The verification code has expired or is invalid. Please request a new one.");
+          setTimeout(() => {
+            onBack();
+          }, 3000);
           return;
         }
         throw verifyError;
       }
 
-      if (data?.user) {
-        setIsVerified(true);
-        toast({
-          title: "Success",
-          description: "Code verified successfully. Please enter your new password.",
-        });
+      if (!data?.user) {
+        throw new Error("Verification failed. Please try again.");
       }
+
+      setIsVerified(true);
+      toast({
+        title: "Success",
+        description: "Code verified successfully. Please enter your new password.",
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
