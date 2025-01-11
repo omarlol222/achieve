@@ -35,19 +35,21 @@ export const Navigation = () => {
 
   return (
     <nav className="border-b">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
+      <div className="container flex h-16 items-center">
+        <div className="w-[200px]">
           <Link to="/">
             <Logo />
           </Link>
-          {!hideNavLinks && <NavLinks />}
         </div>
-        <UserMenu
-          isAdmin={isAdmin}
-          hasPurchased={hasPurchased}
-          hideNavLinks={hideNavLinks}
-          handleSignOut={handleSignOut}
-        />
+        {!hideNavLinks && <NavLinks />}
+        <div className="w-[200px] flex justify-end">
+          <UserMenu
+            isAdmin={isAdmin}
+            hasPurchased={hasPurchased}
+            hideNavLinks={hideNavLinks}
+            handleSignOut={handleSignOut}
+          />
+        </div>
       </div>
     </nav>
   );
