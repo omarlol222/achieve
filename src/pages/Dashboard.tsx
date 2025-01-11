@@ -28,44 +28,36 @@ const Dashboard = () => {
     },
   });
 
-  const { data: accessibleTests, isLoading: isLoadingTests } = useQuery({
-    queryKey: ["accessible-tests"],
+  const { data: platformAccess, isLoading: isLoadingAccess } = useQuery({
+    queryKey: ["platform-access"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return [];
+      if (!session?.user) return false;
 
       const { data, error } = await supabase
-        .from("user_product_access")
-        .select(`
-          product:products(
-            test_type:test_types(
-              id,
-              name,
-              description
-            )
-          )
-        `)
-        .eq("user_id", session.user.id)
-        .gte("expires_at", new Date().toISOString());
+        .rpc('check_platform_access', {
+          user_id: session.user.id,
+          platform: 'gat'
+        });
 
       if (error) throw error;
-      
-      // Extract unique test types
-      const testTypes = data
-        .map(access => access.product?.test_type)
-        .filter(Boolean)
-        .reduce((unique: any[], testType: any) => {
-          if (!unique.some(t => t.id === testType.id)) {
-            unique.push(testType);
-          }
-          return unique;
-        }, []);
-
-      return testTypes;
+      return data;
     },
   });
 
-  if (isLoadingProfile || isLoadingTests) {
+  const { data: testTypes, isLoading: isLoadingTestTypes } = useQuery({
+    queryKey: ["test-types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("test_types")
+        .select("*");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoadingProfile || isLoadingAccess || isLoadingTestTypes) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -91,14 +83,15 @@ const Dashboard = () => {
 
         <TabsContent value="tests">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {accessibleTests?.map((testType: any) => (
-              <TestTypeCard
-                key={testType.id}
-                testType={testType}
-                onStart={() => navigate(`/gat`)}
-              />
-            ))}
-            {accessibleTests?.length === 0 && (
+            {platformAccess ? (
+              testTypes?.map((testType) => (
+                <TestTypeCard
+                  key={testType.id}
+                  testType={testType}
+                  onStart={() => navigate(`/gat`)}
+                />
+              ))
+            ) : (
               <Card className="p-6 col-span-full">
                 <p className="text-center text-gray-500">
                   You don't have access to any platforms yet. Visit our shop to purchase access.
