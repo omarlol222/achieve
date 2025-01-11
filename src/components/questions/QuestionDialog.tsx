@@ -12,6 +12,7 @@ import { Form } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { QuestionFormFields } from "./QuestionFormFields";
+import { QuestionPreviewDialog } from "./QuestionPreviewDialog";
 import { QuestionFormData } from "@/types/question";
 
 type QuestionDialogProps = {
@@ -29,6 +30,7 @@ export function QuestionDialog({
 }: QuestionDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const form = useForm<QuestionFormData>({
     defaultValues: {
@@ -117,7 +119,6 @@ export function QuestionDialog({
       const questionData = {
         ...data,
         correct_answer: parseInt(data.correct_answer),
-        // Ensure these fields are not empty strings if they're optional
         topic_id: data.topic_id || null,
         test_type_id: data.test_type_id || null,
         explanation: data.explanation || null,
@@ -159,41 +160,56 @@ export function QuestionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {initialData ? "Edit Question" : "Add New Question"}
-          </DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <QuestionFormFields 
-              form={form} 
-              topics={topics || []} 
-              subjects={subjects || []}
-              testTypes={testTypes || []}
-            />
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {initialData ? "Edit Question" : "Add New Question"}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <QuestionFormFields 
+                form={form} 
+                topics={topics || []} 
+                subjects={subjects || []}
+                testTypes={testTypes || []}
+              />
 
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
-                  ? "Saving..."
-                  : initialData
-                  ? "Update Question"
-                  : "Add Question"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setPreviewOpen(true)}
+                >
+                  Preview Question
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting
+                    ? "Saving..."
+                    : initialData
+                    ? "Update Question"
+                    : "Add Question"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      <QuestionPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        formData={form.getValues()}
+      />
+    </>
   );
 }
