@@ -20,6 +20,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ImageUploadField } from "@/components/questions/fields/ImageUploadField";
 import { TestTypePermissions } from "../TestTypePermissions";
 import { ProductFormData } from "../types";
+import { Button } from "@/components/ui/button";
+import { Plus, X } from "lucide-react";
 
 export function ProductFormFields({ 
   form 
@@ -38,6 +40,17 @@ export function ProductFormFields({
       return data;
     },
   });
+
+  const customFeatures = form.watch("custom_features") || [];
+
+  const addCustomFeature = () => {
+    form.setValue("custom_features", [...customFeatures, ""]);
+  };
+
+  const removeCustomFeature = (index: number) => {
+    const newFeatures = customFeatures.filter((_, i) => i !== index);
+    form.setValue("custom_features", newFeatures);
+  };
 
   return (
     <div className="space-y-6">
@@ -141,6 +154,41 @@ export function ProductFormFields({
         label="Product Detail Images"
         multiple={true}
       />
+
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <FormLabel>Custom Features</FormLabel>
+          <Button type="button" variant="outline" size="sm" onClick={addCustomFeature}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Feature
+          </Button>
+        </div>
+        
+        {customFeatures.map((_, index) => (
+          <div key={index} className="flex gap-2">
+            <FormField
+              control={form.control}
+              name={`custom_features.${index}`}
+              render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormControl>
+                    <Input {...field} placeholder="Enter feature text" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="icon"
+              onClick={() => removeCustomFeature(index)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
 
       <TestTypePermissions form={form} />
     </div>

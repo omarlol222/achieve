@@ -30,6 +30,7 @@ export function ProductDialog({
       thumbnail_url: "",
       detail_images: [],
       test_type_id: "",
+      custom_features: [],
       permissions: [],
     },
   });
@@ -49,6 +50,7 @@ export function ProductDialog({
         thumbnail_url: product.image_url || "",
         detail_images: detailImages,
         test_type_id: product.test_type_id || "",
+        custom_features: product.custom_features || [],
         permissions: product.permissions?.map((p: any) => ({
           test_type_id: p.test_type.id,
           has_course: p.has_course,
@@ -68,6 +70,7 @@ export function ProductDialog({
         thumbnail_url: "",
         detail_images: [],
         test_type_id: "",
+        custom_features: [],
         permissions: [],
       });
     }
