@@ -80,6 +80,22 @@ export function TestTypePermissions<T extends FieldValues>({
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name={`${fieldName}.has_practice` as Path<T>}
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                    <FormLabel className="text-sm font-normal">
+                      Practice Access
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
             </div>
           </div>
         );

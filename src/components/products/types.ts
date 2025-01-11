@@ -9,5 +9,6 @@ export type ProductFormData = {
     test_type_id: string;
     has_course: boolean;
     has_simulator: boolean;
+    has_practice: boolean;
   }[];
 };
