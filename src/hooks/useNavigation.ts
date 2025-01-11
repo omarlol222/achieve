@@ -70,16 +70,24 @@ export const useNavigation = () => {
   });
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast({
+          title: "Error signing out",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        setUserId(null); // Clear the user ID immediately
+        navigate("/"); // Navigate to home page immediately after sign out
+      }
+    } catch (error) {
       toast({
         title: "Error signing out",
-        description: error.message,
+        description: "An unexpected error occurred",
         variant: "destructive",
       });
-    } else {
-      setUserId(null); // Clear the user ID immediately
-      navigate("/"); // Navigate to home page immediately after sign out
     }
   };
 
