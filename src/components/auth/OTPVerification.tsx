@@ -138,8 +138,8 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
             onChange={setOtp}
             render={({ slots }) => (
               <InputOTPGroup>
-                {slots.map((slot, index) => (
-                  <InputOTPSlot key={index} {...slot} index={index} />
+                {Array.from({ length: 6 }, (_, i) => (
+                  <InputOTPSlot key={i} {...slots[i]} index={i} />
                 ))}
               </InputOTPGroup>
             )}
