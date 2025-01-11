@@ -5,6 +5,7 @@ export type ProductFormData = {
   currency: string;
   thumbnail_url: string;
   detail_images: string[];
+  test_type_id: string;
   permissions: {
     test_type_id: string;
     has_course: boolean;

@@ -19,6 +19,7 @@ export function useProductSubmit(onClose: () => void) {
             price: data.price,
             currency: data.currency,
             image_url: data.thumbnail_url,
+            test_type_id: data.test_type_id,
           })
           .eq("id", productId);
 
@@ -65,6 +66,7 @@ export function useProductSubmit(onClose: () => void) {
             price: data.price,
             currency: data.currency,
             image_url: data.thumbnail_url,
+            test_type_id: data.test_type_id,
           })
           .select()
           .single();
@@ -99,6 +101,7 @@ export function useProductSubmit(onClose: () => void) {
               test_type_id: permission.test_type_id,
               has_course: permission.has_course,
               has_simulator: permission.has_simulator,
+              has_practice: permission.has_practice,
             }))
           );
 

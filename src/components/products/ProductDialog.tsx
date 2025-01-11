@@ -29,6 +29,7 @@ export function ProductDialog({
       currency: "SAR",
       thumbnail_url: "",
       detail_images: [],
+      test_type_id: "",
       permissions: [],
     },
   });
@@ -47,10 +48,12 @@ export function ProductDialog({
         currency: product.currency,
         thumbnail_url: product.image_url || "",
         detail_images: detailImages,
+        test_type_id: product.test_type_id || "",
         permissions: product.permissions?.map((p: any) => ({
           test_type_id: p.test_type.id,
           has_course: p.has_course,
           has_simulator: p.has_simulator,
+          has_practice: p.has_practice,
         })) || [],
       });
     } else {
@@ -61,6 +64,7 @@ export function ProductDialog({
         currency: "SAR",
         thumbnail_url: "",
         detail_images: [],
+        test_type_id: "",
         permissions: [],
       });
     }

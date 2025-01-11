@@ -1,4 +1,6 @@
 import { UseFormReturn } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   FormField,
   FormItem,
@@ -6,6 +8,13 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUploadField } from "@/components/questions/fields/ImageUploadField";
@@ -17,6 +26,19 @@ export function ProductFormFields({
 }: { 
   form: UseFormReturn<ProductFormData> 
 }) {
+  const { data: testTypes } = useQuery({
+    queryKey: ["test-types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("test_types")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="space-y-6">
       <FormField
@@ -80,6 +102,31 @@ export function ProductFormFields({
           )}
         />
       </div>
+
+      <FormField
+        control={form.control}
+        name="test_type_id"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Test Type</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select test type" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {testTypes?.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       <ImageUploadField
         form={form}
