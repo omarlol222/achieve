@@ -14,9 +14,10 @@ type Permission = {
 
 type ProductFeaturesProps = {
   permissions: Permission[];
+  customFeatures?: string[];
 };
 
-export const ProductFeatures = ({ permissions }: ProductFeaturesProps) => (
+export const ProductFeatures = ({ permissions, customFeatures = [] }: ProductFeaturesProps) => (
   <div className="space-y-4">
     <h2 className="text-xl font-semibold text-[#1B2E35] uppercase">FEATURES:</h2>
     <ul className="space-y-3">
@@ -47,6 +48,12 @@ export const ProductFeatures = ({ permissions }: ProductFeaturesProps) => (
             </li>
           )}
         </React.Fragment>
+      ))}
+      {customFeatures.map((feature, index) => (
+        <li key={`custom-${index}`} className="flex items-center gap-3">
+          <span className="text-[#1B2E35] text-2xl">✦</span>
+          <span className="text-lg text-gray-700">{feature}</span>
+        </li>
       ))}
     </ul>
   </div>
