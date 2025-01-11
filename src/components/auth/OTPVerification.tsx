@@ -1,11 +1,6 @@
 import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -142,18 +137,16 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
 
       <form onSubmit={handleVerifyOTP} className="mt-8 space-y-6">
         <div className="flex flex-col space-y-2">
-          <Label htmlFor="otp">Verification Code</Label>
-          <InputOTP
-            maxLength={6}
+          <Label htmlFor="verification-code">Verification Code</Label>
+          <Input
+            id="verification-code"
+            type="text"
             value={otp}
-            onChange={setOtp}
-            render={({ slots }) => (
-              <InputOTPGroup>
-                {slots.map((slot, index) => (
-                  <InputOTPSlot key={index} {...slot} index={index} />
-                ))}
-              </InputOTPGroup>
-            )}
+            onChange={(e) => setOtp(e.target.value)}
+            placeholder="Enter verification code"
+            required
+            maxLength={6}
+            className="mt-1"
           />
         </div>
 
