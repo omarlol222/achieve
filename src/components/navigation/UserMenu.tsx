@@ -26,6 +26,11 @@ export const UserMenu = ({ isAdmin, hasPurchased, hideNavLinks, handleSignOut }:
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {isAdmin && (
+          <DropdownMenuItem onClick={() => navigate("/admin")}>
+            Admin
+          </DropdownMenuItem>
+        )}
         {!hideNavLinks && (
           <>
             <DropdownMenuItem onClick={() => navigate("/about")}>
