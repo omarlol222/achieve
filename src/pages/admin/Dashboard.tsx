@@ -49,13 +49,13 @@ const Dashboard = () => {
     queryKey: ["average-score"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("test_results")
-        .select("total_score, total_questions");
+        .from("test_sessions")
+        .select("total_score")
+        .not("total_score", "is", null);
       if (error) throw error;
       if (!data?.length) return 0;
-      const scores = data.map(
-        (result) => (result.total_score / result.total_questions) * 100
-      );
+      
+      const scores = data.map(session => session.total_score || 0);
       return Math.round(
         scores.reduce((sum, score) => sum + score, 0) / scores.length
       );
