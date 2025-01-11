@@ -27,6 +27,10 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
             module:test_modules (
               id,
               name,
+              test_type:test_types (
+                id,
+                name
+              ),
               subject:subjects (
                 id,
                 name
@@ -136,12 +140,10 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
   const subjectScores = uniqueSubjects.map(subject => ({
     name: subject.name,
-    score: calculateSubjectScore(subject.id)
+    score: session[subject.name.toLowerCase() === 'math' ? 'quantitative_score' : 'verbal_score'] || 0
   }));
 
-  const totalScore = Math.round(
-    subjectScores.reduce((acc, subject) => acc + subject.score, 0) / subjectScores.length
-  );
+  const totalScore = session.total_score || 0;
 
   const topicPerformance = calculateTopicPerformance();
 
