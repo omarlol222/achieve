@@ -39,9 +39,9 @@ const ProductDetails = () => {
       {/* Content */}
       <div className="container mx-auto px-4 py-16 max-w-7xl">
         {product && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+          <div className="flex flex-col lg:flex-row gap-16 items-start">
             {/* Left Column - Description */}
-            <div className="space-y-8">
+            <div className="flex-1 space-y-8">
               <h1 className="text-5xl font-bold text-[#1B2E35]">{product.name}</h1>
               
               <div className="space-y-4">
@@ -79,13 +79,13 @@ const ProductDetails = () => {
             </div>
 
             {/* Right Column - Image */}
-            <div>
+            <div className="lg:w-[400px]">
               <Carousel className="w-full">
                 <CarouselContent>
                   {product.media?.map((media: any, index: number) => (
                     <CarouselItem key={index}>
                       <div 
-                        className="aspect-video rounded-lg bg-cover bg-center"
+                        className="aspect-video rounded-lg bg-cover bg-center bg-gray-100"
                         style={{ backgroundImage: `url(${media.media_url})` }}
                       />
                     </CarouselItem>
