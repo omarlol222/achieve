@@ -20,7 +20,7 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
       
       <QuestionTextField form={form} questionType={questionType} />
 
-      {(questionType === "normal" || questionType === "analogy" || questionType === "comparison") && (
+      {(questionType === "normal" || questionType === "analogy") && (
         <>
           <ImageUploadField
             form={form}
@@ -33,6 +33,14 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
             label="Explanation Image (Optional)"
           />
         </>
+      )}
+
+      {questionType === "comparison" && (
+        <ImageUploadField
+          form={form}
+          fieldName="image_url"
+          label="Question Image (Optional)"
+        />
       )}
 
       <ChoiceFields form={form} />
