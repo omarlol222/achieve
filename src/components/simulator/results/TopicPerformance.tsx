@@ -1,11 +1,4 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card } from "@/components/ui/card";
 
 type TopicStats = {
   name: string;
@@ -40,29 +33,19 @@ export function TopicPerformance({ topics }: TopicPerformanceProps) {
         {Object.entries(topicsBySubject).map(([subjectId, subject]) => (
           <div key={subjectId}>
             <h3 className="text-xl font-semibold mb-3">{subject.name}</h3>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Topic</TableHead>
-                    <TableHead className="text-right">Correct</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Percentage</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {subject.topics.map((topic) => (
-                    <TableRow key={topic.name}>
-                      <TableCell className="font-medium">{topic.name}</TableCell>
-                      <TableCell className="text-right">{topic.correct}</TableCell>
-                      <TableCell className="text-right">{topic.total}</TableCell>
-                      <TableCell className="text-right">
-                        {Math.round((topic.correct / topic.total) * 100)}%
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {subject.topics.map((topic) => (
+                <Card key={topic.name} className="p-4">
+                  <h4 className="font-medium text-lg mb-2">{topic.name}</h4>
+                  <div className="space-y-1 text-sm">
+                    <p>Correct: {topic.correct}</p>
+                    <p>Total: {topic.total}</p>
+                    <p className="font-semibold">
+                      Score: {Math.round((topic.correct / topic.total) * 100)}%
+                    </p>
+                  </div>
+                </Card>
+              ))}
             </div>
           </div>
         ))}
