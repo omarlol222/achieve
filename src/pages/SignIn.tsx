@@ -5,6 +5,8 @@ import { SignInForm } from "@/components/auth/SignInForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 
+type PlatformType = 'gat' | 'sat' | 'act';
+
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -17,7 +19,7 @@ const SignIn = () => {
         const { data: hasAccess, error: accessError } = await supabase
           .rpc('check_platform_access', {
             user_id_input: session.user.id,
-            platform: 'gat'
+            platform: 'gat' as PlatformType
           });
 
         if (accessError) {
@@ -62,7 +64,7 @@ const SignIn = () => {
         const { data: hasAccess, error: accessError } = await supabase
           .rpc('check_platform_access', {
             user_id_input: session.user.id,
-            platform: 'gat'
+            platform: 'gat' as PlatformType
           });
 
         if (accessError) {

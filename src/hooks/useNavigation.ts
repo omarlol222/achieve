@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+type PlatformType = 'gat' | 'sat' | 'act';
+
 export const useNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -52,10 +54,11 @@ export const useNavigation = () => {
       const { data, error } = await supabase
         .rpc('check_platform_access', {
           user_id_input: userId,
-          platform: 'gat'
+          platform: 'gat' as PlatformType
         });
 
       if (error) {
+        console.error("Platform access check error:", error);
         toast({
           title: "Error checking platform access",
           description: error.message,
