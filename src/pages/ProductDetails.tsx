@@ -104,11 +104,11 @@ const ProductDetails = () => {
       <Navigation />
       
       <div className="container mx-auto px-4 py-16 max-w-7xl">
+        <h1 className="text-5xl font-bold text-[#1B2E35] mb-12">{product.name}</h1>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Left Column - Product Info */}
           <div className="space-y-8">
-            <h1 className="text-4xl font-bold text-[#1B2E35]">{product.name}</h1>
-            
             <div>
               <h2 className="text-xl font-bold text-[#1B2E35] mb-4">PRODUCT DESCRIPTION:</h2>
               <p className="text-gray-700 leading-relaxed">{product.description}</p>
@@ -134,7 +134,7 @@ const ProductDetails = () => {
           {/* Right Column - Image and Purchase */}
           <div className="space-y-8">
             {product.image_url && (
-              <div className="aspect-video w-full bg-gray-100 rounded-lg overflow-hidden">
+              <div className="aspect-video w-full bg-[#1B2E35] rounded-lg overflow-hidden">
                 <img
                   src={product.image_url}
                   alt={product.name}
@@ -144,7 +144,7 @@ const ProductDetails = () => {
             )}
 
             <div className="text-center space-y-6">
-              <p className="text-5xl font-bold text-[#1B2E35]">
+              <p className="text-6xl font-bold text-[#1B2E35]">
                 {product.price} {product.currency}
               </p>
               
