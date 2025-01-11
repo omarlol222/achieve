@@ -45,19 +45,29 @@ export const useNavigation = () => {
     enabled: !!userId,
   });
 
-  const { data: purchases } = useQuery({
-    queryKey: ["purchases", userId],
+  const { data: userAccess } = useQuery({
+    queryKey: ["user-access", userId],
     queryFn: async () => {
       if (!userId) return null;
       const { data, error } = await supabase
-        .from("purchases")
-        .select("*")
+        .from("user_product_access")
+        .select(`
+          product:products (
+            id,
+            name,
+            product_permissions (
+              has_course,
+              has_simulator,
+              has_practice
+            )
+          )
+        `)
         .eq("user_id", userId)
-        .eq("status", "completed");
+        .is("expires_at", null);
 
       if (error) {
         toast({
-          title: "Error fetching purchases",
+          title: "Error fetching user access",
           description: error.message,
           variant: "destructive",
         });
@@ -79,8 +89,8 @@ export const useNavigation = () => {
           variant: "destructive",
         });
       } else {
-        setUserId(null); // Clear the user ID immediately
-        navigate("/"); // Navigate to home page immediately after sign out
+        setUserId(null);
+        navigate("/");
       }
     } catch (error) {
       toast({
@@ -97,12 +107,12 @@ export const useNavigation = () => {
                       location.pathname.startsWith("/gat");
 
   const isAdmin = profile?.role === "admin";
-  const hasPurchased = purchases && purchases.length > 0;
+  const hasGatAccess = userAccess && userAccess.length > 0;
 
   return {
     userId,
     isAdmin,
-    hasPurchased,
+    hasGatAccess,
     hideNavLinks,
     handleSignOut,
   };
