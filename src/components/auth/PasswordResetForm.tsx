@@ -14,9 +14,31 @@ export const PasswordResetForm = ({ onResetSuccess }: PasswordResetFormProps) =>
   const [error, setError] = useState<string | null>(null);
   const [resetEmail, setResetEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [cooldownActive, setCooldownActive] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(45);
+
+  const startCooldownTimer = () => {
+    setCooldownActive(true);
+    setCooldownSeconds(45);
+    const timer = setInterval(() => {
+      setCooldownSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCooldownActive(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (cooldownActive) {
+      setError(`Please wait ${cooldownSeconds} seconds before requesting another reset.`);
+      return;
+    }
+
     setIsLoading(true);
     try {
       setError(null);
@@ -24,7 +46,13 @@ export const PasswordResetForm = ({ onResetSuccess }: PasswordResetFormProps) =>
         redirectTo: window.location.origin + '/password-reset'
       });
       
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('over_email_send_rate_limit')) {
+          startCooldownTimer();
+          throw new Error(`Please wait ${cooldownSeconds} seconds before requesting another reset.`);
+        }
+        throw error;
+      }
       
       onResetSuccess(resetEmail);
       toast({
@@ -67,8 +95,14 @@ export const PasswordResetForm = ({ onResetSuccess }: PasswordResetFormProps) =>
             className="mt-1"
           />
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Sending..." : "Send Reset Code"}
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isLoading || cooldownActive}
+        >
+          {isLoading ? "Sending..." : cooldownActive 
+            ? `Wait ${cooldownSeconds}s` 
+            : "Send Reset Code"}
         </Button>
       </form>
     </div>
