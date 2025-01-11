@@ -27,6 +27,7 @@ export const SignInForm = ({ siteUrl }: SignInFormProps) => {
         theme="light"
         providers={[]}
         redirectTo={siteUrl}
+        showLinks={false}
       />
 
       <div className="mt-4 text-center space-y-4">
