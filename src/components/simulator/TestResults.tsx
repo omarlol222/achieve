@@ -19,6 +19,7 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
   const { data: session, isLoading: isLoadingSession } = useQuery({
     queryKey: ["test-session", sessionId],
     queryFn: async () => {
+      console.log("Fetching session:", sessionId);
       const { data, error } = await supabase
         .from("test_sessions")
         .select(`
@@ -58,7 +59,11 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
         .eq("id", sessionId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching session:", error);
+        throw error;
+      }
+      console.log("Session data:", data);
       return data;
     },
   });

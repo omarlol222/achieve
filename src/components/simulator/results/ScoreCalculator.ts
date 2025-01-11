@@ -24,13 +24,17 @@ type ModuleProgress = {
 };
 
 export const calculateSubjectScore = (subjectName: string, session: any) => {
+  console.log("Calculating score for subject:", subjectName);
+  console.log("Session data:", session);
+  
   const name = subjectName.toLowerCase();
   
-  // Return the scores directly from the session object
-  if (name === 'math' || name.includes('quant')) {
-    return session.quantitative_score || 0;
-  } else if (name === 'english' || name.includes('verbal')) {
+  if (name === 'english' || name.includes('verbal')) {
+    console.log("Verbal score:", session.verbal_score);
     return session.verbal_score || 0;
+  } else if (name === 'math' || name.includes('quant')) {
+    console.log("Quantitative score:", session.quantitative_score);
+    return session.quantitative_score || 0;
   }
   
   return 0;
