@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Star } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface Product {
   id: string;
@@ -13,6 +20,9 @@ interface Product {
   price: number;
   currency: string;
   image_url: string | null;
+  video_url: string | null;
+  media_urls: string[];
+  media_types: ('image' | 'video')[];
   permissions: {
     has_course: boolean;
     has_simulator: boolean;
@@ -52,7 +62,25 @@ const ProductDetails = () => {
         return null;
       }
 
-      return data as Product;
+      // For demonstration, we'll combine image_url and video_url into arrays
+      // In a real application, you might want to store these in a separate table
+      const mediaUrls = [];
+      const mediaTypes = [];
+      
+      if (data.image_url) {
+        mediaUrls.push(data.image_url);
+        mediaTypes.push('image');
+      }
+      if (data.video_url) {
+        mediaUrls.push(data.video_url);
+        mediaTypes.push('video');
+      }
+
+      return {
+        ...data,
+        media_urls: mediaUrls,
+        media_types: mediaTypes,
+      } as Product;
     },
   });
 
@@ -134,15 +162,31 @@ const ProductDetails = () => {
           {/* Right Column - Image and Purchase */}
           <div>
             <div className="relative">
-              {product.image_url && (
-                <div className="aspect-[16/9] w-full bg-[#1B2E35] rounded-lg overflow-hidden">
-                  <img
-                    src={product.image_url}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {product.media_urls.map((url, index) => (
+                    <CarouselItem key={index}>
+                      <div className="aspect-[16/9] w-full bg-[#1B2E35] rounded-lg overflow-hidden">
+                        {product.media_types[index] === 'video' ? (
+                          <video
+                            className="w-full h-full object-cover"
+                            controls
+                            src={url}
+                          />
+                        ) : (
+                          <img
+                            src={url}
+                            alt={`${product.name} - ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
               
               <div className="mt-8 space-y-4">
                 <p className="text-6xl font-bold text-[#1B2E35] text-right">
