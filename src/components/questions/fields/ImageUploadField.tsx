@@ -1,63 +1,48 @@
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2, X } from "lucide-react";
-import { UseFormReturn } from "react-hook-form";
-import { QuestionFormData } from "@/types/question";
 import { useState } from "react";
+import { UseFormReturn } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Image } from "lucide-react";
 
-type ImageUploadFieldProps = {
-  form: UseFormReturn<QuestionFormData>;
-  fieldName: "image_url" | "explanation_image_url";
+type ImageUploadFieldProps<T extends { [key: string]: any }> = {
+  form: UseFormReturn<T>;
+  fieldName: keyof T;
   label: string;
 };
 
-export function ImageUploadField({ form, fieldName, label }: ImageUploadFieldProps) {
-  const { toast } = useToast();
+export function ImageUploadField<T extends { [key: string]: any }>({
+  form,
+  fieldName,
+  label,
+}: ImageUploadFieldProps<T>) {
   const [isUploading, setIsUploading] = useState(false);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
-
     try {
-      const fileExt = file.name.split('.').pop();
+      setIsUploading(true);
+      const fileExt = file.name.split(".").pop();
       const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('question_images')
+        .from("question_images")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('question_images')
+      const { data: publicUrl } = supabase.storage
+        .from("question_images")
         .getPublicUrl(filePath);
 
-      form.setValue(fieldName, publicUrl);
-      toast({
-        title: "Image uploaded successfully",
-      });
+      form.setValue(fieldName, publicUrl.publicUrl);
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error uploading image",
-        description: error.message,
-      });
+      console.error("Error uploading image:", error.message);
     } finally {
       setIsUploading(false);
     }
-  };
-
-  const handleDeleteImage = () => {
-    form.setValue(fieldName, "");
-    toast({
-      title: "Image removed successfully",
-    });
   };
 
   return (
@@ -67,36 +52,32 @@ export function ImageUploadField({ form, fieldName, label }: ImageUploadFieldPro
       render={({ field }) => (
         <FormItem>
           <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <div className="space-y-2">
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={isUploading}
+          <div className="space-y-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              disabled={isUploading}
+              onClick={() => document.getElementById(fieldName.toString())?.click()}
+            >
+              <Image className="h-4 w-4 mr-2" />
+              {isUploading ? "Uploading..." : "Upload Image"}
+            </Button>
+            <input
+              id={fieldName.toString()}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
+            {field.value && (
+              <img
+                src={field.value}
+                alt="Uploaded"
+                className="max-w-full h-auto rounded-md"
               />
-              {isUploading && (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Uploading...</span>
-                </div>
-              )}
-              {field.value && (
-                <div className="mt-2 relative">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2"
-                    onClick={handleDeleteImage}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                  <img src={field.value} alt={label} className="max-w-xs rounded-md" />
-                </div>
-              )}
-            </div>
-          </FormControl>
+            )}
+          </div>
           <FormMessage />
         </FormItem>
       )}
