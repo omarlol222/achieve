@@ -41,7 +41,7 @@ export const SignInForm = ({ siteUrl }: SignInFormProps) => {
         </p>
         <p className="text-sm text-gray-600">
           <button
-            onClick={() => navigate("/password-reset")}
+            onClick={() => navigate("/password-reset", { state: { recovery: true } })}
             className="font-medium text-black hover:text-gray-800"
           >
             Forgot password?
