@@ -38,7 +38,7 @@ export function Navigation({ hideNavLinks }: { hideNavLinks?: boolean }) {
           ) : (
             <>
               <Button variant="ghost" asChild>
-                <Link to="/gat">Dashboard</Link>
+                <Link to="/dashboard">Dashboard</Link>
               </Button>
               <UserMenu 
                 isAdmin={isAdmin} 
