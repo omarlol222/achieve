@@ -16,14 +16,14 @@ export const Navigation = () => {
 
   return (
     <nav className="border-b">
-      <div className="container flex h-16 items-center">
-        <div className="w-[200px]">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex-shrink-0">
           <Link to="/">
             <Logo />
           </Link>
         </div>
         {!hideNavLinks && <NavLinks />}
-        <div className="w-[200px] flex justify-end items-center gap-2">
+        <div className="flex items-center gap-2">
           {!userId ? (
             <Link
               to="/signin"
@@ -33,14 +33,7 @@ export const Navigation = () => {
             </Link>
           ) : (
             <>
-              {hasPurchased && (
-                <Link to="/gat">
-                  <Button variant="ghost" size="sm">
-                    Dashboard
-                  </Button>
-                </Link>
-              )}
-              {isAdmin && (
+              {isAdmin && !hideNavLinks && (
                 <Link to="/admin">
                   <Button variant="ghost" size="sm">
                     Admin
