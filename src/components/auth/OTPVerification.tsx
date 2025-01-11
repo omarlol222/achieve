@@ -32,8 +32,9 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
       });
 
       if (verifyError) {
+        // Check if the error is related to an invalid or expired token
         if (verifyError.message.includes('expired') || verifyError.message.includes('invalid')) {
-          setError("The verification code has expired or is invalid. Please request a new one.");
+          setError("Invalid verification code. Please check the code or request a new one.");
           setTimeout(() => {
             onBack();
           }, 3000);
@@ -52,6 +53,14 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
         description: "Code verified successfully. Please enter your new password.",
       });
     } catch (err: any) {
+      // Handle the specific case where the error is about invalid JSON
+      if (err.message?.includes('body stream already read')) {
+        setError("Invalid verification code. Please check the code or request a new one.");
+        setTimeout(() => {
+          onBack();
+        }, 3000);
+        return;
+      }
       setError(err.message);
     } finally {
       setIsLoading(false);
