@@ -47,11 +47,21 @@ export function ImageUploadField<T extends Record<string, any>>({
       }
 
       if (multiple) {
-        const currentUrls = (form.getValues(fieldName) as string[]) || [];
-        const newUrls = [...currentUrls, ...uploadedUrls];
-        form.setValue(fieldName, newUrls as PathValue<T, Path<T>>);
+        // Get current URLs (if any) and combine with new ones
+        const currentUrls = form.getValues(fieldName) || [];
+        const newUrls = Array.isArray(currentUrls) 
+          ? [...currentUrls, ...uploadedUrls]
+          : uploadedUrls;
+        
+        form.setValue(fieldName, newUrls as PathValue<T, Path<T>>, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
       } else {
-        form.setValue(fieldName, uploadedUrls[0] as PathValue<T, Path<T>>);
+        form.setValue(fieldName, uploadedUrls[0] as PathValue<T, Path<T>>, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
       }
     } catch (error: any) {
       console.error("Error uploading image:", error.message);
@@ -67,9 +77,15 @@ export function ImageUploadField<T extends Record<string, any>>({
     if (multiple) {
       const currentUrls = (form.getValues(fieldName) as string[]) || [];
       const updatedUrls = currentUrls.filter(url => url !== urlToRemove);
-      form.setValue(fieldName, updatedUrls as PathValue<T, Path<T>>);
+      form.setValue(fieldName, updatedUrls as PathValue<T, Path<T>>, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     } else {
-      form.setValue(fieldName, "" as PathValue<T, Path<T>>);
+      form.setValue(fieldName, "" as PathValue<T, Path<T>>, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     }
   };
 
