@@ -22,6 +22,7 @@ const ProductDetails = () => {
           permissions:product_permissions(
             has_course,
             has_simulator,
+            has_practice,
             test_type:test_types(name)
           )
         `)
