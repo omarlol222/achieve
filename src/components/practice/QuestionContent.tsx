@@ -38,7 +38,7 @@ export function QuestionContent({
 
       <div className="space-y-4">
         <div className="text-lg font-medium">
-          <TeXComponent text={question.question_text} />
+          <TeXComponent>{question.question_text}</TeXComponent>
         </div>
 
         <QuestionChoices
@@ -52,7 +52,7 @@ export function QuestionContent({
         {showFeedback && question.explanation && (
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
             <p className="font-medium mb-2">Explanation:</p>
-            <TeXComponent text={question.explanation} />
+            <TeXComponent>{question.explanation}</TeXComponent>
           </div>
         )}
       </div>

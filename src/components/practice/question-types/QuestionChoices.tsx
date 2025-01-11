@@ -41,7 +41,7 @@ export function QuestionChoices({
               "disabled:cursor-default"
             )}
           >
-            <TeXComponent text={choice} />
+            <TeXComponent>{choice}</TeXComponent>
           </button>
         );
       })}
