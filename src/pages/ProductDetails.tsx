@@ -89,7 +89,7 @@ const ProductDetails = () => {
     return (
       <div className="min-h-screen bg-white">
         <Navigation />
-        <div className="container mx-auto px-4 py-16">
+        <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-8">
             <div className="h-8 bg-gray-200 rounded w-1/4"></div>
             <div className="h-96 bg-gray-200 rounded"></div>
@@ -103,7 +103,7 @@ const ProductDetails = () => {
     return (
       <div className="min-h-screen bg-white">
         <Navigation />
-        <div className="container mx-auto px-4 py-16 text-center">
+        <div className="container mx-auto px-4 py-8 text-center">
           <h1 className="text-2xl font-bold text-gray-900">Product not found</h1>
           <p className="mt-4 text-gray-600">The product you're looking for doesn't exist or has been removed.</p>
         </div>
@@ -119,10 +119,10 @@ const ProductDetails = () => {
     <div className="min-h-screen bg-white">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-16 max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Product Info */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             <h1 className="text-5xl font-bold text-[#1B2E35]">{product.name}</h1>
             
             <div>
@@ -149,7 +149,7 @@ const ProductDetails = () => {
 
           {/* Right Column - Image and Purchase */}
           <div>
-            <div className="relative space-y-6">
+            <div className="relative space-y-4">
               <Carousel className="w-full">
                 <CarouselContent>
                   {hasMedia ? (
@@ -192,7 +192,7 @@ const ProductDetails = () => {
                 )}
               </Carousel>
               
-              <div className="mt-4 space-y-3">
+              <div className="mt-2 space-y-2">
                 <p className="text-6xl font-bold text-[#1B2E35] text-right">
                   {product.price} {product.currency}
                 </p>
