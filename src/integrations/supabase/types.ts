@@ -294,6 +294,7 @@ export type Database = {
           name: string
           price: number
           status: Database["public"]["Enums"]["product_status"] | null
+          test_type_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -305,6 +306,7 @@ export type Database = {
           name: string
           price: number
           status?: Database["public"]["Enums"]["product_status"] | null
+          test_type_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -316,9 +318,18 @@ export type Database = {
           name?: string
           price?: number
           status?: Database["public"]["Enums"]["product_status"] | null
+          test_type_id?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_test_type_id_fkey"
+            columns: ["test_type_id"]
+            isOneToOne: false
+            referencedRelation: "test_types"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
