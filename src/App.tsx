@@ -24,6 +24,7 @@ import Simulator from "./pages/Simulator";
 import SimulatorTest from "./pages/simulator/SimulatorTest";
 import SimulatorResults from "./pages/simulator/SimulatorResults";
 import AllTests from "./pages/simulator/AllTests";
+import Leaderboard from "./pages/Leaderboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,6 +92,11 @@ const App = () => (
           <Route path="/gat/simulator/all-tests" element={
             <ProtectedGatRoute>
               <AllTests />
+            </ProtectedGatRoute>
+          } />
+          <Route path="/gat/leaderboard" element={
+            <ProtectedGatRoute>
+              <Leaderboard />
             </ProtectedGatRoute>
           } />
           <Route path="/admin" element={<AdminLayout />}>

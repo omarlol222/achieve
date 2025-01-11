@@ -1,62 +1,43 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Logo } from "@/components/navigation/Logo";
 import { NavLinks } from "@/components/navigation/NavLinks";
 import { UserMenu } from "@/components/navigation/UserMenu";
-import { useNavigation } from "@/hooks/useNavigation";
-import { Button } from "@/components/ui/button";
+import { Trophy } from "lucide-react";
+import { Button } from "./button";
 
-export const Navigation = () => {
-  const {
-    userId,
-    isAdmin,
-    hasPurchased,
-    hideNavLinks,
-    handleSignOut,
-  } = useNavigation();
+export function Navigation({ hideNavLinks }: { hideNavLinks?: boolean }) {
+  const location = useLocation();
+  const isGatPage = location.pathname.startsWith('/gat');
 
   return (
-    <nav className="border-b">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex-shrink-0">
-          <Link to="/">
-            <Logo />
-          </Link>
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center justify-between">
+        <div className="flex items-center gap-8">
+          <Logo />
+          {!hideNavLinks && <NavLinks />}
         </div>
-        {!hideNavLinks && <NavLinks />}
-        <div className="flex items-center gap-2">
-          {!userId ? (
-            <Link
-              to="/signin"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              Sign in
-            </Link>
+
+        <div className="flex items-center gap-4">
+          {isGatPage ? (
+            <>
+              <Button variant="ghost" asChild>
+                <Link to="/gat/leaderboard" className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4" />
+                  Leaderboard
+                </Link>
+              </Button>
+              <UserMenu />
+            </>
           ) : (
             <>
-              {hasPurchased && !hideNavLinks && (
-                <Link to="/gat">
-                  <Button variant="ghost" size="sm">
-                    Dashboard
-                  </Button>
-                </Link>
-              )}
-              {isAdmin && !hideNavLinks && (
-                <Link to="/admin">
-                  <Button variant="ghost" size="sm">
-                    Admin
-                  </Button>
-                </Link>
-              )}
-              <UserMenu
-                isAdmin={isAdmin}
-                hasPurchased={hasPurchased}
-                hideNavLinks={hideNavLinks}
-                handleSignOut={handleSignOut}
-              />
+              <Button variant="ghost" asChild>
+                <Link to="/gat">Dashboard</Link>
+              </Button>
+              <UserMenu />
             </>
           )}
         </div>
       </div>
-    </nav>
+    </header>
   );
-};
+}
