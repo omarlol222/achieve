@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -7,6 +8,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Eye } from "lucide-react";
+import { ModuleStats } from "./stats/ModuleStats";
+import { QuestionGrid } from "./stats/QuestionGrid";
 
 type ModuleOverviewProps = {
   moduleName: string;
@@ -17,14 +20,14 @@ type ModuleOverviewProps = {
   onQuestionSelect: (index: number) => void;
 };
 
-export function ModuleOverview({
+export const ModuleOverview = memo(({
   moduleName,
   questions,
   currentIndex,
   answers,
   flagged,
   onQuestionSelect,
-}: ModuleOverviewProps) {
+}: ModuleOverviewProps) => {
   const totalQuestions = questions.length;
   const answeredCount = Object.keys(answers).length;
   const flaggedCount = Object.values(flagged).filter(Boolean).length;
@@ -44,50 +47,22 @@ export function ModuleOverview({
         </SheetHeader>
         
         <div className="mt-6 space-y-6">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-lg border p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{answeredCount}</div>
-              <div className="text-sm text-gray-600">Answered</div>
-            </div>
-            <div className="rounded-lg border p-4 text-center">
-              <div className="text-2xl font-bold text-red-600">{unansweredCount}</div>
-              <div className="text-sm text-gray-600">Unanswered</div>
-            </div>
-            <div className="rounded-lg border p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-600">{flaggedCount}</div>
-              <div className="text-sm text-gray-600">Flagged</div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="font-medium">Questions</h3>
-            <div className="grid grid-cols-6 gap-2">
-              {questions.map((_, index) => {
-                const questionId = questions[index].id;
-                const isAnswered = answers[questionId] !== undefined;
-                const isFlagged = flagged[questionId];
-                const isCurrent = index === currentIndex;
-
-                return (
-                  <Button
-                    key={index}
-                    variant={isCurrent ? "default" : "outline"}
-                    size="sm"
-                    className={`relative h-10 w-10 p-0 font-medium 
-                      ${isAnswered ? "bg-green-100" : ""} 
-                      ${isCurrent ? "ring-2 ring-primary" : ""}
-                      ${isFlagged ? "border-2 border-yellow-500" : ""}
-                    `}
-                    onClick={() => onQuestionSelect(index)}
-                  >
-                    {index + 1}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
+          <ModuleStats
+            answeredCount={answeredCount}
+            unansweredCount={unansweredCount}
+            flaggedCount={flaggedCount}
+          />
+          <QuestionGrid
+            questions={questions}
+            currentIndex={currentIndex}
+            answers={answers}
+            flagged={flagged}
+            onQuestionSelect={onQuestionSelect}
+          />
         </div>
       </SheetContent>
     </Sheet>
   );
-}
+});
+
+ModuleOverview.displayName = "ModuleOverview";

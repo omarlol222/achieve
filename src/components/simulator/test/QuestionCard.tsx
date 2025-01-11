@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { QuestionContent } from "@/components/practice/QuestionContent";
@@ -19,7 +20,7 @@ type QuestionCardProps = {
   onQuestionSelect: (index: number) => void;
 };
 
-export function QuestionCard({
+export const QuestionCard = memo(({
   question,
   selectedAnswer,
   isFlagged,
@@ -32,35 +33,35 @@ export function QuestionCard({
   answers,
   flagged,
   onQuestionSelect,
-}: QuestionCardProps) {
-  return (
-    <Card className="p-6">
-      <div className="flex justify-between mb-4">
-        <ModuleOverview
-          moduleName={moduleName}
-          questions={questions}
-          currentIndex={currentIndex}
-          answers={answers}
-          flagged={flagged}
-          onQuestionSelect={onQuestionSelect}
-        />
-        <Button
-          variant={isFlagged ? "default" : "outline"}
-          size="sm"
-          onClick={onToggleFlag}
-          className="flex items-center gap-2"
-        >
-          <Flag className="h-4 w-4" />
-          {isFlagged ? "Flagged" : "Flag for review"}
-        </Button>
-      </div>
-
-      <QuestionContent
-        question={question}
-        selectedAnswer={selectedAnswer}
-        showFeedback={showFeedback}
-        onAnswerSelect={onAnswerSelect}
+}: QuestionCardProps) => (
+  <Card className="p-6">
+    <div className="flex justify-between mb-4">
+      <ModuleOverview
+        moduleName={moduleName}
+        questions={questions}
+        currentIndex={currentIndex}
+        answers={answers}
+        flagged={flagged}
+        onQuestionSelect={onQuestionSelect}
       />
-    </Card>
-  );
-}
+      <Button
+        variant={isFlagged ? "default" : "outline"}
+        size="sm"
+        onClick={onToggleFlag}
+        className="flex items-center gap-2"
+      >
+        <Flag className="h-4 w-4" />
+        {isFlagged ? "Flagged" : "Flag for review"}
+      </Button>
+    </div>
+
+    <QuestionContent
+      question={question}
+      selectedAnswer={selectedAnswer}
+      showFeedback={showFeedback}
+      onAnswerSelect={onAnswerSelect}
+    />
+  </Card>
+));
+
+QuestionCard.displayName = "QuestionCard";
