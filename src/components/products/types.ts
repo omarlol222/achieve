@@ -11,5 +11,8 @@ export type ProductFormData = {
     has_course: boolean;
     has_simulator: boolean;
     has_practice: boolean;
+    course_text?: string;
+    simulator_text?: string;
+    practice_text?: string;
   }[];
 };

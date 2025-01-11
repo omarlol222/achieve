@@ -4,6 +4,9 @@ type Permission = {
   has_course: boolean;
   has_simulator: boolean;
   has_practice: boolean;
+  course_text?: string;
+  simulator_text?: string;
+  practice_text?: string;
   test_type: {
     name: string;
   };
@@ -23,7 +26,7 @@ export const ProductFeatures = ({ permissions }: ProductFeaturesProps) => (
             <li className="flex items-center gap-3">
               <span className="text-[#1B2E35] text-2xl">✦</span>
               <span className="text-lg text-gray-700">
-                Access to {permission.test_type.name} Course
+                {permission.course_text || `Access to ${permission.test_type.name} Course`}
               </span>
             </li>
           )}
@@ -31,7 +34,7 @@ export const ProductFeatures = ({ permissions }: ProductFeaturesProps) => (
             <li className="flex items-center gap-3">
               <span className="text-[#1B2E35] text-2xl">✦</span>
               <span className="text-lg text-gray-700">
-                Access to {permission.test_type.name} Simulator
+                {permission.simulator_text || `Access to ${permission.test_type.name} Simulator`}
               </span>
             </li>
           )}
@@ -39,7 +42,7 @@ export const ProductFeatures = ({ permissions }: ProductFeaturesProps) => (
             <li className="flex items-center gap-3">
               <span className="text-[#1B2E35] text-2xl">✦</span>
               <span className="text-lg text-gray-700">
-                Access to {permission.test_type.name} Practice
+                {permission.practice_text || `Access to ${permission.test_type.name} Practice`}
               </span>
             </li>
           )}

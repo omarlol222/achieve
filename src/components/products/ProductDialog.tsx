@@ -54,6 +54,9 @@ export function ProductDialog({
           has_course: p.has_course,
           has_simulator: p.has_simulator,
           has_practice: p.has_practice,
+          course_text: p.course_text || `Access to ${p.test_type.name} Course`,
+          simulator_text: p.simulator_text || `Access to ${p.test_type.name} Simulator`,
+          practice_text: p.practice_text || `Access to ${p.test_type.name} Practice`,
         })) || [],
       });
     } else {
