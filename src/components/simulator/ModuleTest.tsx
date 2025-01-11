@@ -49,7 +49,6 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
     try {
       console.log("Submitting module progress:", moduleProgress.id);
       
-      // First update the module progress completion
       const { error: progressError } = await supabase
         .from("module_progress")
         .update({ 
@@ -62,7 +61,6 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
         throw progressError;
       }
 
-      // Get the session ID from module progress
       const { data: moduleProgressData, error: sessionError } = await supabase
         .from("module_progress")
         .select("session_id")
@@ -74,7 +72,6 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
         throw sessionError;
       }
 
-      // Update the test session to trigger score calculation
       const { error: sessionUpdateError } = await supabase
         .from("test_sessions")
         .update({ 
@@ -88,8 +85,6 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
       }
 
       console.log("Module submitted successfully");
-      
-      // Call the onComplete callback to move to next module or complete test
       onComplete();
     } catch (error: any) {
       console.error("Error in handleSubmit:", error);
@@ -105,6 +100,36 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
     try {
       console.log("Checking existing module questions");
       
+      // Get the session ID to check for previously used questions
+      const { data: moduleProgressData, error: sessionError } = await supabase
+        .from("module_progress")
+        .select("session_id")
+        .eq("id", moduleProgress.id)
+        .single();
+
+      if (sessionError) throw sessionError;
+
+      // Get all questions used in previous modules of this session
+      const { data: previousModuleProgress, error: prevModError } = await supabase
+        .from("module_progress")
+        .select(`
+          id,
+          module_answers (
+            question_id
+          )
+        `)
+        .eq("session_id", moduleProgressData.session_id)
+        .neq("id", moduleProgress.id);
+
+      if (prevModError) throw prevModError;
+
+      // Create a set of previously used question IDs
+      const usedQuestionIds = new Set(
+        previousModuleProgress
+          ?.flatMap(mp => mp.module_answers)
+          .map(ma => ma.question_id)
+      );
+
       // First, check if questions already exist for this module
       const { data: existingQuestions, error: existingError } = await supabase
         .from("module_questions")
@@ -115,8 +140,14 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
 
       if (existingQuestions && existingQuestions.length > 0) {
         console.log("Found existing questions, fetching details");
-        const questionIds = existingQuestions.map(q => q.question_id);
+        const questionIds = existingQuestions
+          .map(q => q.question_id)
+          .filter(id => !usedQuestionIds.has(id)); // Filter out previously used questions
         
+        if (questionIds.length === 0) {
+          throw new Error("No unused questions available for this module");
+        }
+
         const { data: questions, error: questionsError } = await supabase
           .from("questions")
           .select(`
@@ -138,7 +169,9 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
 
         if (questionsError) throw questionsError;
         
-        setQuestions(questions || []);
+        // Shuffle the questions
+        const shuffledQuestions = questions?.sort(() => Math.random() - 0.5) || [];
+        setQuestions(shuffledQuestions);
         setIsLoading(false);
         return;
       }
@@ -185,16 +218,17 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
             explanation,
             passage_text
           `)
-          .eq("topic_id", topic.topic_id);
+          .eq("topic_id", topic.topic_id)
+          .not('id', 'in', `(${Array.from(usedQuestionIds).join(',')})`); // Exclude previously used questions
 
         if (questionsError) throw questionsError;
 
         if (topicQuestions && topicQuestions.length > 0) {
-          const shuffled = topicQuestions.sort(() => 0.5 - Math.random());
+          // Shuffle questions for this topic
+          const shuffled = topicQuestions.sort(() => Math.random() - 0.5);
           const selected = shuffled.slice(0, topic.question_count);
           selectedQuestions.push(...selected);
           
-          // Prepare records for module_questions table
           selected.forEach(q => {
             questionRecords.push({
               module_id: moduleProgress.module.id,
@@ -209,7 +243,7 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
         toast({
           variant: "destructive",
           title: "No questions found",
-          description: "No questions available for the selected topics.",
+          description: "No unused questions available for the selected topics.",
         });
         return;
       }
@@ -221,8 +255,8 @@ export function ModuleTest({ moduleProgress, onComplete }: ModuleTestProps) {
 
       if (recordError) throw recordError;
 
-      // Shuffle final question set
-      const shuffledQuestions = selectedQuestions.sort(() => 0.5 - Math.random());
+      // Final shuffle of all selected questions
+      const shuffledQuestions = selectedQuestions.sort(() => Math.random() - 0.5);
       setQuestions(shuffledQuestions);
       setIsLoading(false);
     } catch (error: any) {
