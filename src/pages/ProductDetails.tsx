@@ -65,10 +65,21 @@ const ProductDetails = () => {
                   ))}
                 </ul>
               </div>
+
+              <div className="space-y-4">
+                <h2 className="text-5xl font-bold text-[#1B2E35] text-center">
+                  {product.price} {product.currency}
+                </h2>
+                <Button 
+                  className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-white text-xl py-6"
+                >
+                  BUY
+                </Button>
+              </div>
             </div>
 
-            {/* Right Column - Image and Price */}
-            <div className="space-y-8">
+            {/* Right Column - Image */}
+            <div>
               <Carousel className="w-full">
                 <CarouselContent>
                   {product.media?.map((media: any, index: number) => (
@@ -83,17 +94,6 @@ const ProductDetails = () => {
                 <CarouselPrevious className="left-4" />
                 <CarouselNext className="right-4" />
               </Carousel>
-
-              <div className="space-y-4">
-                <h2 className="text-5xl font-bold text-[#1B2E35] text-center">
-                  {product.price} {product.currency}
-                </h2>
-                <Button 
-                  className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-white text-xl py-6"
-                >
-                  BUY
-                </Button>
-              </div>
             </div>
           </div>
         )}
