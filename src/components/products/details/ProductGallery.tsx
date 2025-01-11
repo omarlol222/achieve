@@ -21,7 +21,7 @@ export const ProductGallery = ({ media }: ProductGalleryProps) => (
       <CarouselContent>
         {media?.map((item, index) => (
           <CarouselItem key={index}>
-            <div className="h-[300px]">
+            <div className="h-[400px]">
               <img 
                 src={item.media_url}
                 alt={`Product image ${index + 1}`}
