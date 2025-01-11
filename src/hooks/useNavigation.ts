@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const useNavigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -76,13 +77,16 @@ export const useNavigation = () => {
         description: error.message,
         variant: "destructive",
       });
+    } else {
+      setUserId(null); // Clear the user ID immediately
+      navigate("/"); // Navigate to home page immediately after sign out
     }
   };
 
   const hideNavLinks = location.pathname.includes("/simulator/results") || 
                       location.pathname.includes("/gat/simulator") || 
                       location.pathname.includes("/gat/practice") ||
-                      location.pathname.startsWith("/gat"); // Added this condition
+                      location.pathname.startsWith("/gat");
 
   const isAdmin = profile?.role === "admin";
   const hasPurchased = purchases && purchases.length > 0;
