@@ -1,19 +1,42 @@
-import { supabase } from "@/integrations/supabase/client";
-
-export const calculateSubjectScore = (
-  moduleAnswers: any[],
-  subjectId: string
-) => {
-  if (moduleAnswers.length === 0) return 0;
-
-  const correctAnswers = moduleAnswers.filter(
-    answer => answer.selected_answer === answer.question.correct_answer
-  ).length;
-
-  return Math.round((correctAnswers / moduleAnswers.length) * 100);
+type ModuleAnswer = {
+  selected_answer: number;
+  question: {
+    correct_answer: number;
+    topic?: {
+      id: string;
+      name: string;
+      subject?: {
+        id: string;
+        name: string;
+      };
+    };
+  };
 };
 
-export const calculateTopicPerformance = (moduleProgress: any[]) => {
+type ModuleProgress = {
+  module: {
+    subject?: {
+      id: string;
+      name: string;
+    };
+  };
+  module_answers?: ModuleAnswer[];
+};
+
+export const calculateSubjectScore = (subjectName: string, session: any) => {
+  const name = subjectName.toLowerCase();
+  let score = 0;
+  
+  if (name === 'math' || name.includes('quant')) {
+    score = session.quantitative_score || 0;
+  } else if (name === 'english' || name.includes('verbal')) {
+    score = session.verbal_score || 0;
+  }
+  
+  return score;
+};
+
+export const calculateTopicPerformance = (moduleProgress: ModuleProgress[]) => {
   if (!moduleProgress) return [];
 
   const topicStats: { [key: string]: { 
@@ -25,7 +48,7 @@ export const calculateTopicPerformance = (moduleProgress: any[]) => {
   } } = {};
 
   moduleProgress.forEach(progress => {
-    progress.module_answers?.forEach((answer: any) => {
+    progress.module_answers?.forEach(answer => {
       if (!answer.question.topic) return;
       
       const topicId = answer.question.topic.id;
@@ -51,23 +74,4 @@ export const calculateTopicPerformance = (moduleProgress: any[]) => {
   });
 
   return Object.values(topicStats);
-};
-
-export const updateSessionScores = async (
-  sessionId: string,
-  verbalScore: number,
-  quantitativeScore: number,
-  totalScore: number
-) => {
-  const { error } = await supabase
-    .from("test_sessions")
-    .update({
-      verbal_score: verbalScore,
-      quantitative_score: quantitativeScore,
-      total_score: totalScore,
-      completed_at: new Date().toISOString()
-    })
-    .eq("id", sessionId);
-
-  if (error) throw error;
 };

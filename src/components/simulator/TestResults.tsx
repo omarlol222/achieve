@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ScoreHeader } from "./results/ScoreHeader";
 import { TopicPerformance } from "./results/TopicPerformance";
 import { ModuleDetails } from "./results/ModuleDetails";
+import { calculateSubjectScore, calculateTopicPerformance } from "./results/ScoreCalculator";
 
 type TestResultsProps = {
   sessionId: string;
@@ -72,62 +73,6 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
   if (!session) return null;
 
-  const calculateSubjectScore = (subjectId: string) => {
-    if (!session.module_progress) return 0;
-    
-    const moduleAnswers = session.module_progress
-      .filter(progress => progress.module.subject?.id === subjectId)
-      .flatMap(progress => progress.module_answers || []);
-
-    if (moduleAnswers.length === 0) return 0;
-
-    const correctAnswers = moduleAnswers.filter(
-      answer => answer.selected_answer === answer.question.correct_answer
-    ).length;
-
-    return Math.round((correctAnswers / moduleAnswers.length) * 100);
-  };
-
-  const calculateTopicPerformance = () => {
-    if (!session.module_progress) return [];
-
-    const topicStats: { [key: string]: { 
-      name: string; 
-      correct: number; 
-      total: number;
-      subjectId: string;
-      subjectName: string;
-    } } = {};
-
-    session.module_progress.forEach(progress => {
-      progress.module_answers?.forEach(answer => {
-        if (!answer.question.topic) return;
-        
-        const topicId = answer.question.topic.id;
-        const topicName = answer.question.topic.name;
-        const subjectId = answer.question.topic.subject?.id || '';
-        const subjectName = answer.question.topic.subject?.name || 'Uncategorized';
-        
-        if (!topicStats[topicId]) {
-          topicStats[topicId] = { 
-            name: topicName, 
-            correct: 0, 
-            total: 0,
-            subjectId,
-            subjectName
-          };
-        }
-        
-        topicStats[topicId].total++;
-        if (answer.selected_answer === answer.question.correct_answer) {
-          topicStats[topicId].correct++;
-        }
-      });
-    });
-
-    return Object.values(topicStats);
-  };
-
   const subjects = [...new Set(
     session.module_progress
       ?.filter(progress => progress.module.subject)
@@ -138,25 +83,13 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
     index === self.findIndex((s) => s.id === subject.id)
   );
 
-  const subjectScores = uniqueSubjects.map(subject => {
-    const subjectName = subject.name.toLowerCase();
-    let score = 0;
-    
-    if (subjectName === 'math' || subjectName.includes('quant')) {
-      score = session.quantitative_score || 0;
-    } else if (subjectName === 'english' || subjectName.includes('verbal')) {
-      score = session.verbal_score || 0;
-    }
-    
-    return {
-      name: subject.name,
-      score: score
-    };
-  });
+  const subjectScores = uniqueSubjects.map(subject => ({
+    name: subject.name,
+    score: calculateSubjectScore(subject.name, session)
+  }));
 
   const totalScore = session.total_score || 0;
-
-  const topicPerformance = calculateTopicPerformance();
+  const topicPerformance = calculateTopicPerformance(session.module_progress || []);
 
   if (selectedModuleId) {
     return (
