@@ -868,6 +868,13 @@ export type Database = {
         }
         Returns: number
       }
+      grant_platform_access: {
+        Args: {
+          user_id_input: string
+          platform: Database["public"]["Enums"]["platform_type"]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       platform_type: "gat" | "sat" | "act"

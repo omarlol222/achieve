@@ -16,6 +16,32 @@ const SignIn = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        // Check if user is admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.role === 'admin') {
+          // Grant GAT access to admin
+          const { error: grantError } = await supabase
+            .rpc('grant_platform_access', {
+              user_id_input: session.user.id,
+              platform: 'gat' as PlatformType
+            });
+
+          if (grantError) {
+            console.error("Error granting access:", grantError);
+            toast({
+              title: "Error",
+              description: "Could not grant platform access",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+
         const { data: hasAccess, error: accessError } = await supabase
           .rpc('check_platform_access', {
             user_id_input: session.user.id,
@@ -58,6 +84,32 @@ const SignIn = () => {
           await supabase.auth.signOut();
           setError("Another session is already active. Please sign out from other devices first.");
           return;
+        }
+
+        // Check if user is admin
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.role === 'admin') {
+          // Grant GAT access to admin
+          const { error: grantError } = await supabase
+            .rpc('grant_platform_access', {
+              user_id_input: session.user.id,
+              platform: 'gat' as PlatformType
+            });
+
+          if (grantError) {
+            console.error("Error granting access:", grantError);
+            toast({
+              title: "Error",
+              description: "Could not grant platform access",
+              variant: "destructive",
+            });
+            return;
+          }
         }
 
         // Check platform access
