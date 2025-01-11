@@ -31,7 +31,7 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
       });
 
       if (verifyError) {
-        if (verifyError.message.includes('Token has expired')) {
+        if (verifyError.message.includes('expired')) {
           throw new Error('Verification code has expired. Please request a new one.');
         }
         throw verifyError;
