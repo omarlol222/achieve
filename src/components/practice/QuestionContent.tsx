@@ -1,51 +1,11 @@
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import 'katex/dist/katex.min.css';
-import { InlineMath, BlockMath } from 'react-katex';
+import { TeXComponent } from "./TeXComponent";
 
 type QuestionContentProps = {
-  question: {
-    id?: string;
-    question_text: string;
-    choice1: string;
-    choice2: string;
-    choice3: string;
-    choice4: string;
-    correct_answer?: number;
-    image_url?: string;
-    explanation?: string;
-    explanation_image_url?: string;
-    passage_text?: string;
-  };
+  question: any;
   selectedAnswer: number | null;
   showFeedback?: boolean;
-  onAnswerSelect: (answer: number) => void;
-};
-
-const processMathText = (text: string) => {
-  // Regular expression to match LaTeX expressions between $$ or $ symbols
-  const blockRegex = /\$\$(.*?)\$\$/g;
-  const inlineRegex = /\$(.*?)\$/g;
-
-  // First, handle block math ($$...$$)
-  const blockParts = text.split(blockRegex);
-  const blockResult = blockParts.map((part, index) => {
-    if (index % 2 === 1) {
-      // This is a math expression
-      return <BlockMath key={index} math={part} />;
-    }
-    // Now handle inline math ($...$) in the text parts
-    const inlineParts = part.split(inlineRegex);
-    return inlineParts.map((inlinePart, inlineIndex) => {
-      if (inlineIndex % 2 === 1) {
-        // This is an inline math expression
-        return <InlineMath key={`${index}-${inlineIndex}`} math={inlinePart} />;
-      }
-      return inlinePart;
-    });
-  });
-
-  return <>{blockResult}</>;
+  onAnswerSelect?: (answer: number) => void;
 };
 
 export function QuestionContent({
@@ -54,99 +14,111 @@ export function QuestionContent({
   showFeedback = false,
   onAnswerSelect,
 }: QuestionContentProps) {
-  const choices = [
-    question.choice1,
-    question.choice2,
-    question.choice3,
-    question.choice4,
-  ];
+  const isCorrect = showFeedback && selectedAnswer === question.correct_answer;
+  const isIncorrect = showFeedback && selectedAnswer !== question.correct_answer;
+
+  const renderComparisonTable = () => (
+    <div className="space-y-4 mb-6">
+      <div className="border rounded-lg overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className="border-b p-2 text-center w-1/2">A</th>
+              <th className="border-b p-2 text-center w-1/2">B</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="border-r p-4">
+                <div className="text-center">
+                  {question.comparison_value1}
+                </div>
+              </td>
+              <td className="p-4">
+                <div className="text-center">
+                  {question.comparison_value2}
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-6">
-        {question.passage_text && (
-          <div className="w-1/3 flex-shrink-0">
-            <div className="rounded-lg border p-4 bg-muted/20 max-h-[500px] overflow-y-auto">
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {processMathText(question.passage_text)}
-              </p>
-            </div>
+      {question.question_type === "passage" && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-4">
+          <p className="whitespace-pre-wrap">{question.passage_text}</p>
+        </div>
+      )}
+
+      {question.question_type === "comparison" && renderComparisonTable()}
+
+      <div className="space-y-4">
+        <div className="font-medium">
+          <TeXComponent>{question.question_text}</TeXComponent>
+        </div>
+
+        {question.image_url && (
+          <div className="flex justify-center">
+            <img
+              src={question.image_url}
+              alt="Question"
+              className="max-w-full h-auto rounded-lg"
+            />
           </div>
         )}
 
-        <div className="flex-grow space-y-4">
-          <div className="flex gap-6">
-            <div className="flex-grow">
-              <div className="flex items-center justify-between">
-                <p className="text-lg font-medium">
-                  {processMathText(question.question_text)}
-                </p>
-                {question.id && (
-                  <span className="text-xs text-muted-foreground">
-                    ID: {question.id}
-                  </span>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((choice) => {
+            const isSelected = selectedAnswer === choice;
+            const choiceText = question[`choice${choice}`];
+
+            return (
+              <button
+                key={choice}
+                onClick={() => onAnswerSelect?.(choice)}
+                disabled={showFeedback}
+                className={cn(
+                  "w-full text-left px-4 py-3 rounded-lg border transition-colors",
+                  isSelected && !showFeedback && "border-primary bg-primary/5",
+                  !isSelected && !showFeedback && "hover:border-primary/50",
+                  showFeedback && choice === question.correct_answer && "border-green-500 bg-green-50",
+                  showFeedback && isSelected && choice !== question.correct_answer && "border-red-500 bg-red-50"
                 )}
-              </div>
-            </div>
-            {question.image_url && (
-              <div className="rounded-lg border overflow-hidden w-1/3 flex-shrink-0">
+              >
+                <TeXComponent>{choiceText}</TeXComponent>
+              </button>
+            );
+          })}
+        </div>
+
+        {showFeedback && (
+          <div className={cn(
+            "mt-4 p-4 rounded-lg",
+            isCorrect ? "bg-green-50" : "bg-red-50"
+          )}>
+            <p className="font-medium mb-2">
+              {isCorrect ? "Correct!" : "Incorrect"}
+            </p>
+            {question.explanation && (
+              <p className="text-sm">
+                <TeXComponent>{question.explanation}</TeXComponent>
+              </p>
+            )}
+            {question.explanation_image_url && (
+              <div className="mt-4 flex justify-center">
                 <img
-                  src={question.image_url}
-                  alt="Question"
-                  className="w-full h-auto object-contain"
+                  src={question.explanation_image_url}
+                  alt="Explanation"
+                  className="max-w-full h-auto rounded-lg"
                 />
               </div>
             )}
           </div>
-
-          <div className="space-y-2">
-            {choices.map((choice, index) => {
-              const isCorrect = showFeedback && question.correct_answer === index + 1;
-              const isIncorrect =
-                showFeedback &&
-                selectedAnswer === index + 1 &&
-                selectedAnswer !== question.correct_answer;
-              const isSelected = selectedAnswer === index + 1;
-
-              return (
-                <Button
-                  key={index}
-                  onClick={() => onAnswerSelect(index + 1)}
-                  disabled={showFeedback}
-                  className={cn(
-                    "w-full justify-start text-left h-auto py-4 px-4",
-                    isSelected && !showFeedback && "bg-primary/20",
-                    isCorrect && "bg-green-50 border-green-200 hover:bg-green-50",
-                    isIncorrect && "bg-red-50 border-red-200 hover:bg-red-50",
-                    !isSelected && !showFeedback && "bg-white hover:bg-gray-50"
-                  )}
-                  variant="outline"
-                >
-                  {processMathText(choice)}
-                </Button>
-              );
-            })}
-          </div>
-
-          {showFeedback && (question.explanation || question.explanation_image_url) && (
-            <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200 space-y-4">
-              {question.explanation && (
-                <p className="text-sm text-blue-800">
-                  {processMathText(question.explanation)}
-                </p>
-              )}
-              {question.explanation_image_url && (
-                <div className="rounded-lg border overflow-hidden">
-                  <img
-                    src={question.explanation_image_url}
-                    alt="Explanation"
-                    className="w-full h-auto object-contain"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
