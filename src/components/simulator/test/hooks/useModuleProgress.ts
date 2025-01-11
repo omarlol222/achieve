@@ -66,7 +66,8 @@ export const useModuleProgress = ({
 
   const handleCompleteModule = async () => {
     if (modules && currentModuleIndex < modules.length - 1) {
-      setCurrentModuleIndex(prev => prev + 1);
+      // Fix: Directly pass the new index instead of using a function
+      setCurrentModuleIndex(currentModuleIndex + 1);
     } else {
       try {
         const { data: progressData, error: progressError } = await supabase
