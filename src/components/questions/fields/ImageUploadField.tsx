@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { UseFormReturn, Path } from "react-hook-form";
+import { UseFormReturn, Path, PathValue } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -37,7 +37,7 @@ export function ImageUploadField<T extends Record<string, any>>({
         .from("question_images")
         .getPublicUrl(filePath);
 
-      form.setValue(fieldName, publicUrl.publicUrl);
+      form.setValue(fieldName, publicUrl.publicUrl as PathValue<T, Path<T>>);
     } catch (error: any) {
       console.error("Error uploading image:", error.message);
     } finally {
