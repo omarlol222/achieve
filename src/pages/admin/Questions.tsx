@@ -1,7 +1,5 @@
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { QuestionDialog } from "@/components/questions/QuestionDialog";
 import { QuestionFilters } from "@/components/questions/QuestionFilters";
 import { QuestionList } from "@/components/questions/QuestionList";
@@ -11,64 +9,39 @@ import { QuestionHeader } from "@/components/questions/QuestionHeader";
 import { SubjectManager } from "@/components/subjects/SubjectManager";
 import { TopicManager } from "@/components/topics/TopicManager";
 import { useQuestions } from "@/hooks/useQuestions";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { useQuestionDialog } from "@/hooks/questions/useQuestionDialog";
+import { useQuestionFilters } from "@/hooks/questions/useQuestionFilters";
 
 const ITEMS_PER_PAGE = 10;
 
 const Questions = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [subjectFilter, setSubjectFilter] = useState<string>("all");
-  const [topicFilter, setTopicFilter] = useState<string>("all");
-  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [testTypeFilter, setTestTypeFilter] = useState<string>("all");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [questionToDelete, setQuestionToDelete] = useState<any>(null);
+  const {
+    filters,
+    setters,
+  } = useQuestionFilters();
+
+  const {
+    dialogOpen,
+    setDialogOpen,
+    selectedQuestion,
+    setSelectedQuestion,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    questionToDelete,
+    setQuestionToDelete,
+    handleDelete,
+  } = useQuestionDialog();
 
   const { subjects, topics, questionsData, isLoading, testTypes } = useQuestions(
-    search,
-    subjectFilter,
-    topicFilter,
-    difficultyFilter,
-    typeFilter,
-    testTypeFilter,
-    currentPage,
+    filters.search,
+    filters.subjectFilter,
+    filters.topicFilter,
+    filters.difficultyFilter,
+    filters.typeFilter,
+    filters.testTypeFilter,
+    filters.currentPage,
     ITEMS_PER_PAGE
   );
-
-  const handleDelete = async () => {
-    if (!questionToDelete) return;
-
-    try {
-      const { error } = await supabase
-        .from("questions")
-        .delete()
-        .eq("id", questionToDelete.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Question deleted successfully",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["questions"] });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error deleting question",
-        description: error.message,
-      });
-    } finally {
-      setDeleteDialogOpen(false);
-      setQuestionToDelete(null);
-    }
-  };
 
   const totalPages = Math.ceil((questionsData?.total || 0) / ITEMS_PER_PAGE);
 
@@ -91,18 +64,18 @@ const Questions = () => {
             />
 
             <QuestionFilters
-              search={search}
-              setSearch={setSearch}
-              subjectFilter={subjectFilter}
-              setSubjectFilter={setSubjectFilter}
-              topicFilter={topicFilter}
-              setTopicFilter={setTopicFilter}
-              difficultyFilter={difficultyFilter}
-              setDifficultyFilter={setDifficultyFilter}
-              typeFilter={typeFilter}
-              setTypeFilter={setTypeFilter}
-              testTypeFilter={testTypeFilter}
-              setTestTypeFilter={setTestTypeFilter}
+              search={filters.search}
+              setSearch={setters.setSearch}
+              subjectFilter={filters.subjectFilter}
+              setSubjectFilter={setters.setSubjectFilter}
+              topicFilter={filters.topicFilter}
+              setTopicFilter={setters.setTopicFilter}
+              difficultyFilter={filters.difficultyFilter}
+              setDifficultyFilter={setters.setDifficultyFilter}
+              typeFilter={filters.typeFilter}
+              setTypeFilter={setters.setTypeFilter}
+              testTypeFilter={filters.testTypeFilter}
+              setTestTypeFilter={setters.setTestTypeFilter}
               subjects={subjects || []}
               topics={topics || []}
               testTypes={testTypes || []}
@@ -122,9 +95,9 @@ const Questions = () => {
             />
 
             <QuestionPagination
-              currentPage={currentPage}
+              currentPage={filters.currentPage}
               totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              onPageChange={setters.setCurrentPage}
             />
           </TabsContent>
 

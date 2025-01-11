@@ -2,11 +2,12 @@ import { useState } from "react";
 
 export function useQuestionFilters() {
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [topicFilter, setTopicFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [testTypeFilter, setTestTypeFilter] = useState<string>("all");
 
   const resetFilters = () => {
     setSearch("");
@@ -14,6 +15,7 @@ export function useQuestionFilters() {
     setTopicFilter("all");
     setDifficultyFilter("all");
     setTypeFilter("all");
+    setTestTypeFilter("all");
     setCurrentPage(1);
   };
 
@@ -24,6 +26,7 @@ export function useQuestionFilters() {
       topicFilter,
       difficultyFilter,
       typeFilter,
+      testTypeFilter,
       currentPage,
     },
     setters: {
@@ -32,6 +35,7 @@ export function useQuestionFilters() {
       setTopicFilter,
       setDifficultyFilter,
       setTypeFilter,
+      setTestTypeFilter,
       setCurrentPage,
     },
     resetFilters,
