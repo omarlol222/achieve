@@ -36,29 +36,29 @@ const ProductDetails = () => {
     <div className="min-h-screen bg-white">
       <Navigation />
       
-      <main className="pt-8"> {/* Reduced top padding */}
+      <main className="pt-8">
         <div className="container mx-auto px-4 max-w-7xl">
           {product && (
             <>
-              <h1 className="text-5xl font-bold text-[#1B2E35] mb-12">{product.name}</h1>
+              <h1 className="text-6xl font-bold text-[#1B2E35] mb-12">{product.name}</h1>
               
               <div className="flex flex-col lg:flex-row gap-16 items-start">
                 {/* Left Column - Description */}
                 <div className="flex-1 space-y-8">
                   <div className="space-y-4">
-                    <h2 className="text-lg font-semibold text-[#1B2E35] uppercase">PRODUCT DESCRIPTION:</h2>
-                    <p className="text-gray-700 leading-relaxed">
+                    <h2 className="text-xl font-semibold text-[#1B2E35] uppercase">PRODUCT DESCRIPTION:</h2>
+                    <p className="text-lg text-gray-700 leading-relaxed">
                       {product.description}
                     </p>
                   </div>
 
                   <div className="space-y-4">
-                    <h2 className="text-lg font-semibold text-[#1B2E35] uppercase">FEATURES:</h2>
+                    <h2 className="text-xl font-semibold text-[#1B2E35] uppercase">FEATURES:</h2>
                     <ul className="space-y-3">
                       {product.permissions?.map((permission: any, index: number) => (
                         <li key={index} className="flex items-center gap-3">
-                          <span className="text-[#1B2E35] text-xl">✦</span>
-                          <span className="text-gray-700">
+                          <span className="text-[#1B2E35] text-2xl">✦</span>
+                          <span className="text-lg text-gray-700">
                             {permission.has_course && `Access to ${permission.test_type.name} Course`}
                             {permission.has_simulator && `Access to ${permission.test_type.name} Simulator`}
                           </span>
@@ -85,6 +85,8 @@ const ProductDetails = () => {
                           </CarouselItem>
                         ))}
                       </CarouselContent>
+                      <CarouselPrevious />
+                      <CarouselNext />
                       <div className="flex justify-center gap-2 mt-4">
                         {product.media?.map((_: any, index: number) => (
                           <div
@@ -97,11 +99,11 @@ const ProductDetails = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <h2 className="text-5xl font-bold text-[#1B2E35] text-center">
+                    <h2 className="text-6xl font-bold text-[#1B2E35] text-center">
                       {product.price} {product.currency}
                     </h2>
                     <Button 
-                      className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-white text-xl py-8 rounded-none"
+                      className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-white text-2xl py-8 rounded-none"
                     >
                       BUY
                     </Button>
