@@ -42,7 +42,7 @@ const Shop = () => {
               <div 
                 className="h-48 bg-cover bg-center bg-gray-100"
                 style={{ 
-                  backgroundImage: product.thumbnail_url ? `url(${product.thumbnail_url})` : 'none',
+                  backgroundImage: product.image_url ? `url(${product.image_url})` : 'none',
                 }}
               />
               <CardContent className="p-6">
