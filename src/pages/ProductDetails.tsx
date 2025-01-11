@@ -1,17 +1,11 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/ui/navigation";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Star } from "lucide-react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { ProductInfo } from "@/components/product/ProductInfo";
+import { ProductMedia } from "@/components/product/ProductMedia";
+import { ProductPurchase } from "@/components/product/ProductPurchase";
 
 interface Product {
   id: string;
@@ -105,15 +99,13 @@ const ProductDetails = () => {
         <Navigation />
         <div className="container mx-auto px-4 py-8 text-center">
           <h1 className="text-2xl font-bold text-gray-900">Product not found</h1>
-          <p className="mt-4 text-gray-600">The product you're looking for doesn't exist or has been removed.</p>
+          <p className="mt-4 text-gray-600">
+            The product you're looking for doesn't exist or has been removed.
+          </p>
         </div>
       </div>
     );
   }
-
-  const hasMedia = (product.media?.length ?? 0) > 0;
-  const showCarouselControls = hasMedia || product.image_url;
-  const multipleItems = (product.media?.length ?? 0) > 1;
 
   return (
     <div className="min-h-screen bg-white">
@@ -122,89 +114,23 @@ const ProductDetails = () => {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column - Product Info */}
-          <div className="space-y-6">
-            <h1 className="text-5xl font-bold text-[#1B2E35]">{product.name}</h1>
-            
-            <div>
-              <h2 className="text-xl font-bold text-[#1B2E35] mb-4">PRODUCT DESCRIPTION:</h2>
-              <p className="text-gray-700 leading-relaxed">{product.description}</p>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-bold text-[#1B2E35] mb-4">FEATURES:</h2>
-              <ul className="space-y-4">
-                {product.permissions.map((permission, idx) => (
-                  <li key={idx} className="flex items-center gap-3">
-                    <Star className="h-5 w-5 text-[#1B2E35]" />
-                    <span className="text-gray-700">
-                      {permission.test_type.name}
-                      {permission.has_course && " Course"}
-                      {permission.has_simulator && " + Simulator"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <ProductInfo
+            name={product.name}
+            description={product.description}
+            permissions={product.permissions}
+          />
 
           {/* Right Column - Image and Purchase */}
-          <div>
-            <div className="relative space-y-4">
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {hasMedia ? (
-                    product.media.map((media, index) => (
-                      <CarouselItem key={index}>
-                        <div className="aspect-[16/9] w-full bg-[#1B2E35] rounded-lg overflow-hidden">
-                          {media.media_type === 'video' ? (
-                            <video
-                              className="w-full h-full object-cover"
-                              controls
-                              src={media.media_url}
-                            />
-                          ) : (
-                            <img
-                              src={media.media_url}
-                              alt={`${product.name} - ${index + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          )}
-                        </div>
-                      </CarouselItem>
-                    ))
-                  ) : product.image_url ? (
-                    <CarouselItem>
-                      <div className="aspect-[16/9] w-full bg-[#1B2E35] rounded-lg overflow-hidden">
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </CarouselItem>
-                  ) : null}
-                </CarouselContent>
-                {showCarouselControls && multipleItems && (
-                  <>
-                    <CarouselPrevious />
-                    <CarouselNext />
-                  </>
-                )}
-              </Carousel>
-              
-              <div className="mt-2 space-y-2">
-                <p className="text-6xl font-bold text-[#1B2E35] text-right">
-                  {product.price} {product.currency}
-                </p>
-                
-                <Button 
-                  className="w-full bg-[#1B2E35] hover:bg-[#1B2E35]/90 text-white text-xl py-6"
-                  onClick={handlePurchase}
-                >
-                  BUY
-                </Button>
-              </div>
-            </div>
+          <div className="space-y-4">
+            <ProductMedia
+              media={product.media}
+              imageUrl={product.image_url}
+            />
+            <ProductPurchase
+              price={product.price}
+              currency={product.currency}
+              onPurchase={handlePurchase}
+            />
           </div>
         </div>
       </div>
