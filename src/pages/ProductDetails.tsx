@@ -79,13 +79,13 @@ const ProductDetails = () => {
             </div>
 
             {/* Right Column - Image */}
-            <div className="lg:w-[400px]">
+            <div className="lg:w-[400px] relative">
               <Carousel className="w-full">
                 <CarouselContent>
                   {product.media?.map((media: any, index: number) => (
                     <CarouselItem key={index}>
                       <div 
-                        className="aspect-video rounded-lg bg-cover bg-center bg-gray-100"
+                        className="h-[300px] rounded-lg bg-cover bg-center bg-gray-100"
                         style={{ backgroundImage: `url(${media.media_url})` }}
                       />
                     </CarouselItem>
