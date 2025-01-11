@@ -1,9 +1,12 @@
 import { Navigation } from "@/components/ui/navigation";
-import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ProductHeader } from "@/components/products/details/ProductHeader";
+import { ProductDescription } from "@/components/products/details/ProductDescription";
+import { ProductFeatures } from "@/components/products/details/ProductFeatures";
+import { ProductGallery } from "@/components/products/details/ProductGallery";
+import { ProductPurchase } from "@/components/products/details/ProductPurchase";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -40,74 +43,19 @@ const ProductDetails = () => {
         <div className="container mx-auto px-4 max-w-7xl">
           {product && (
             <>
-              <h1 className="text-6xl font-bold text-[#1B2E35] mb-12">{product.name}</h1>
+              <ProductHeader name={product.name} />
               
               <div className="flex flex-col lg:flex-row gap-16 items-start">
                 {/* Left Column - Description */}
                 <div className="flex-1 space-y-8">
-                  <div className="space-y-4">
-                    <h2 className="text-xl font-semibold text-[#1B2E35] uppercase">PRODUCT DESCRIPTION:</h2>
-                    <p className="text-lg text-gray-700 leading-relaxed">
-                      {product.description}
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h2 className="text-xl font-semibold text-[#1B2E35] uppercase">FEATURES:</h2>
-                    <ul className="space-y-3">
-                      {product.permissions?.map((permission: any, index: number) => (
-                        <li key={index} className="flex items-center gap-3">
-                          <span className="text-[#1B2E35] text-2xl">✦</span>
-                          <span className="text-lg text-gray-700">
-                            {permission.has_course && `Access to ${permission.test_type.name} Course`}
-                            {permission.has_simulator && `Access to ${permission.test_type.name} Simulator`}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <ProductDescription description={product.description} />
+                  <ProductFeatures permissions={product.permissions} />
                 </div>
 
                 {/* Right Column - Image and Buy Button */}
                 <div className="lg:w-[600px] space-y-8">
-                  <div className="flex items-center justify-center">
-                    <Carousel className="w-full">
-                      <CarouselContent>
-                        {product.media?.map((media: any, index: number) => (
-                          <CarouselItem key={index}>
-                            <div className="h-[300px]">
-                              <img 
-                                src={media.media_url}
-                                alt={`Product image ${index + 1}`}
-                                className="w-full h-full object-contain rounded-none"
-                              />
-                            </div>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      <CarouselPrevious />
-                      <CarouselNext />
-                      <div className="flex justify-center gap-2 mt-4">
-                        {product.media?.map((_: any, index: number) => (
-                          <div
-                            key={index}
-                            className="w-2 h-2 rounded-full bg-gray-300"
-                          />
-                        ))}
-                      </div>
-                    </Carousel>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h2 className="text-6xl font-bold text-[#1B2E35] text-center">
-                      {product.price} {product.currency}
-                    </h2>
-                    <Button 
-                      className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-white text-2xl py-8 rounded-none"
-                    >
-                      BUY
-                    </Button>
-                  </div>
+                  <ProductGallery media={product.media} />
+                  <ProductPurchase price={product.price} currency={product.currency} />
                 </div>
               </div>
             </>
