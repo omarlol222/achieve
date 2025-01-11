@@ -18,7 +18,16 @@ const ProductDetails = () => {
         .from('products')
         .select(`
           *,
-          media:product_media(media_url, media_type)
+          media:product_media(media_url, media_type),
+          permissions:product_permissions(
+            has_course,
+            has_simulator,
+            has_practice,
+            course_text,
+            simulator_text,
+            practice_text,
+            test_type:test_types(name)
+          )
         `)
         .eq('id', id)
         .eq('status', 'active')
@@ -44,7 +53,10 @@ const ProductDetails = () => {
                 {/* Left Column - Description */}
                 <div className="flex-1 space-y-8">
                   <ProductDescription description={product.description} />
-                  <ProductFeatures customFeatures={product.custom_features || []} />
+                  <ProductFeatures 
+                    permissions={product.permissions} 
+                    customFeatures={product.custom_features || []}
+                  />
                 </div>
 
                 {/* Right Column - Image and Buy Button */}
