@@ -204,6 +204,36 @@ export type Database = {
           },
         ]
       }
+      platform_access: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          granted_at: string | null
+          id: string
+          platform: Database["public"]["Enums"]["platform_type"]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          platform: Database["public"]["Enums"]["platform_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          platform?: Database["public"]["Enums"]["platform_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       product_media: {
         Row: {
           created_at: string | null
@@ -812,6 +842,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_platform_access: {
+        Args: {
+          user_id: string
+          platform: Database["public"]["Enums"]["platform_type"]
+        }
+        Returns: boolean
+      }
       check_test_type_access: {
         Args: {
           user_id: string
@@ -833,6 +870,7 @@ export type Database = {
       }
     }
     Enums: {
+      platform_type: "gat" | "sat" | "act"
       product_status: "active" | "inactive"
       question_difficulty: "Easy" | "Moderate" | "Hard"
     }
