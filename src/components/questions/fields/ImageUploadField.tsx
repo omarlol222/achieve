@@ -41,7 +41,9 @@ export function ImageUploadField<T extends Record<string, any>>({
 
         const { data: publicUrl } = supabase.storage
           .from("question_images")
-          .getPublicUrldedUrls.push(publicUrl.publicUrl);
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(publicUrl.publicUrl);
       }
 
       // If multiple is true, append to existing URLs, otherwise just set the single URL
