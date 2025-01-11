@@ -2,10 +2,9 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sparkles } from "lucide-react";
 
 interface Product {
   id: string;
@@ -68,7 +67,6 @@ const ProductDetails = () => {
       return;
     }
 
-    // For now, just show a toast. We'll implement actual purchase later
     toast({
       title: "Coming soon!",
       description: "Purchase functionality will be implemented soon.",
@@ -105,65 +103,60 @@ const ProductDetails = () => {
     <div className="min-h-screen bg-white">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-16 max-w-4xl">
-        <Card className="overflow-hidden">
-          {product.image_url && (
-            <div className="w-full h-64 bg-gray-100">
-              <img
-                src={product.image_url}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-          
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold text-[#1B2E35]">
-              {product.name}
-            </CardTitle>
-            <div className="flex flex-wrap gap-2 mt-4">
-              {product.permissions.map((permission, idx) => (
-                <Badge key={idx} variant="secondary">
-                  {permission.test_type.name}
-                  {permission.has_course && " Course"}
-                  {permission.has_simulator && " + Simulator"}
-                </Badge>
-              ))}
-            </div>
-          </CardHeader>
-
-          <CardContent className="space-y-6">
+      <div className="container mx-auto px-4 py-16 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+          {/* Left Column - Product Info */}
+          <div className="space-y-8">
+            <h1 className="text-4xl font-bold text-[#1B2E35]">{product.name}</h1>
+            
             <div>
-              <h3 className="text-xl font-semibold mb-2">Description</h3>
-              <p className="text-gray-600 whitespace-pre-wrap">{product.description}</p>
+              <h2 className="text-xl font-bold text-[#1B2E35] mb-4">PRODUCT DESCRIPTION:</h2>
+              <p className="text-gray-700 leading-relaxed">{product.description}</p>
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold mb-2">Features</h3>
-              <ul className="list-disc list-inside space-y-2 text-gray-600">
+              <h2 className="text-xl font-bold text-[#1B2E35] mb-4">FEATURES:</h2>
+              <ul className="space-y-4">
                 {product.permissions.map((permission, idx) => (
-                  <li key={idx}>
-                    Access to {permission.test_type.name}
-                    {permission.has_course && " Course Materials"}
-                    {permission.has_simulator && " and Practice Simulator"}
+                  <li key={idx} className="flex items-center gap-3">
+                    <Sparkles className="h-5 w-5 text-[#1B2E35]" />
+                    <span className="text-gray-700">
+                      {permission.test_type.name}
+                      {permission.has_course && " Course"}
+                      {permission.has_simulator && " + Simulator"}
+                    </span>
                   </li>
                 ))}
               </ul>
             </div>
-          </CardContent>
+          </div>
 
-          <CardFooter className="flex flex-col gap-4 bg-gray-50 mt-6">
-            <p className="text-4xl font-bold text-[#1B2E35]">
-              {product.price} {product.currency}
-            </p>
-            <Button 
-              className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-lg py-6"
-              onClick={handlePurchase}
-            >
-              Purchase Now
-            </Button>
-          </CardFooter>
-        </Card>
+          {/* Right Column - Image and Purchase */}
+          <div className="space-y-8">
+            {product.image_url && (
+              <div className="aspect-video w-full bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            <div className="text-center space-y-6">
+              <p className="text-5xl font-bold text-[#1B2E35]">
+                {product.price} {product.currency}
+              </p>
+              
+              <Button 
+                className="w-full bg-[#1B2E35] hover:bg-[#2d3f48] text-xl py-6"
+                onClick={handlePurchase}
+              >
+                BUY
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
