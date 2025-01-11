@@ -1,8 +1,9 @@
+import { memo } from "react";
 import { LearningCard } from "./LearningCard";
 import { BookOpen, PenTool, MonitorPlay } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export const LearningGrid = () => {
+export const LearningGrid = memo(() => {
   const navigate = useNavigate();
 
   const handlePracticeClick = () => navigate("/gat/practice");
@@ -23,4 +24,6 @@ export const LearningGrid = () => {
       />
     </div>
   );
-};
+});
+
+LearningGrid.displayName = "LearningGrid";
