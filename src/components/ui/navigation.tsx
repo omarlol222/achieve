@@ -16,7 +16,8 @@ export const Navigation = () => {
   const location = useLocation();
   const isGatRoute = location.pathname === '/gat';
   const isSimulatorRoute = location.pathname === '/simulator';
-  const hideNavLinks = isGatRoute || isSimulatorRoute;
+  const isSimulatorResults = location.pathname.includes('/gat/simulator/results/');
+  const hideNavLinks = isGatRoute || isSimulatorRoute || isSimulatorResults;
 
   const { data: session } = useQuery({
     queryKey: ["session"],
