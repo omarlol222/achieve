@@ -5,8 +5,6 @@ import { SignInForm } from "@/components/auth/SignInForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 
-type PlatformType = 'gat' | 'sat' | 'act';
-
 const SignIn = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -16,52 +14,7 @@ const SignIn = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile?.role === 'admin') {
-          // Grant GAT access to admin
-          const { error: grantError } = await supabase
-            .rpc('grant_platform_access', {
-              user_id_input: session.user.id,
-              platform: 'gat' as PlatformType
-            });
-
-          if (grantError) {
-            console.error("Error granting access:", grantError);
-            toast({
-              title: "Error",
-              description: "Could not grant platform access",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          navigate("/admin");
-          return;
-        }
-
-        // For non-admin users, check platform access
-        const { data: hasAccess, error: accessError } = await supabase
-          .rpc('check_platform_access', {
-            user_id_input: session.user.id,
-            platform: 'gat' as PlatformType
-          });
-
-        if (accessError) {
-          console.error("Error checking access:", accessError);
-          return;
-        }
-
-        if (hasAccess) {
-          navigate("/gat");
-        } else {
-          navigate("/shop");
-        }
+        navigate("/gat");
       }
     };
     checkSession();
@@ -90,52 +43,7 @@ const SignIn = () => {
           return;
         }
 
-        // Check if user is admin
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile?.role === 'admin') {
-          // Grant GAT access to admin
-          const { error: grantError } = await supabase
-            .rpc('grant_platform_access', {
-              user_id_input: session.user.id,
-              platform: 'gat' as PlatformType
-            });
-
-          if (grantError) {
-            console.error("Error granting access:", grantError);
-            toast({
-              title: "Error",
-              description: "Could not grant platform access",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          navigate("/admin");
-          return;
-        }
-
-        // For non-admin users, check platform access
-        const { data: hasAccess, error: accessError } = await supabase
-          .rpc('check_platform_access', {
-            user_id_input: session.user.id,
-            platform: 'gat' as PlatformType
-          });
-
-        if (accessError) {
-          console.error("Error checking access:", accessError);
-          return;
-        }
-
-        if (hasAccess) {
-          navigate("/gat");
-        } else {
-          navigate("/shop");
-        }
+        navigate("/gat");
       }
     });
 

@@ -9,7 +9,7 @@ import { useNavigation } from "@/hooks/useNavigation";
 export function Navigation({ hideNavLinks }: { hideNavLinks?: boolean }) {
   const location = useLocation();
   const isGatPage = location.pathname.startsWith('/gat');
-  const { isAdmin, hasGatAccess, handleSignOut } = useNavigation();
+  const { isAdmin, hasPurchased, handleSignOut } = useNavigation();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -30,7 +30,7 @@ export function Navigation({ hideNavLinks }: { hideNavLinks?: boolean }) {
               </Button>
               <UserMenu 
                 isAdmin={isAdmin} 
-                hasPurchased={hasGatAccess} 
+                hasPurchased={hasPurchased} 
                 hideNavLinks={hideNavLinks || false} 
                 handleSignOut={handleSignOut}
               />
@@ -38,11 +38,11 @@ export function Navigation({ hideNavLinks }: { hideNavLinks?: boolean }) {
           ) : (
             <>
               <Button variant="ghost" asChild>
-                <Link to="/dashboard">Dashboard</Link>
+                <Link to="/gat">Dashboard</Link>
               </Button>
               <UserMenu 
                 isAdmin={isAdmin} 
-                hasPurchased={hasGatAccess} 
+                hasPurchased={hasPurchased} 
                 hideNavLinks={hideNavLinks || false} 
                 handleSignOut={handleSignOut}
               />

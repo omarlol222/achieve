@@ -1,13 +1,56 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProtectedGatRoute } from "@/components/auth/ProtectedGatRoute";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LearningSection } from "@/components/gat/LearningSection";
 import { ProgressSection } from "@/components/gat/ProgressSection";
-import { useAuth } from "@/hooks/useAuth";
+import { LearningSection } from "@/components/gat/LearningSection";
+import { Navigation } from "@/components/ui/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
-const GAT = () => {
-  const { user } = useAuth();
+export default function GAT() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Check session and set user ID
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Session error:", error);
+        toast({
+          title: "Authentication Error",
+          description: "Please sign in again.",
+          variant: "destructive",
+        });
+        navigate("/signin");
+        return;
+      }
+
+      if (!session) {
+        navigate("/signin");
+        return;
+      }
+
+      setUserId(session.user.id);
+    };
+
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        navigate("/signin");
+      } else if (session) {
+        setUserId(session.user.id);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast]);
 
   // Fetch subjects with error handling
   const { data: subjects } = useQuery({
@@ -23,25 +66,25 @@ const GAT = () => {
       }
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!userId,
   });
 
   // Fetch user progress with error handling
   const { data: progress } = useQuery({
-    queryKey: ["user-progress", user?.id],
+    queryKey: ["user-progress", userId],
     queryFn: async () => {
-      if (!user?.id) throw new Error("No user ID");
+      if (!userId) throw new Error("No user ID");
       const { data, error } = await supabase
         .from("user_progress")
         .select("*")
-        .eq("user_id", user.id);
+        .eq("user_id", userId);
       if (error) {
         console.error("Progress fetch error:", error);
         throw error;
       }
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!userId,
   });
 
   const userProgress = subjects?.map(subject => ({
@@ -65,31 +108,20 @@ const GAT = () => {
     };
   };
 
+  if (!userId) {
+    return null;
+  }
+
   return (
-    <ProtectedGatRoute>
-      <div className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-8">GAT Platform</h1>
-        
-        <Tabs defaultValue="progress" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="progress">My Progress</TabsTrigger>
-            <TabsTrigger value="learning">Learning</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="progress">
-            <ProgressSection 
-              subjects={userProgress}
-              calculateTopicProgress={calculateTopicProgress}
-            />
-          </TabsContent>
-
-          <TabsContent value="learning">
-            <LearningSection />
-          </TabsContent>
-        </Tabs>
+    <div className="min-h-screen bg-white">
+      <Navigation />
+      <div className="container py-8 space-y-8">
+        <ProgressSection
+          subjects={userProgress}
+          calculateTopicProgress={calculateTopicProgress}
+        />
+        <LearningSection />
       </div>
-    </ProtectedGatRoute>
+    </div>
   );
-};
-
-export default GAT;
+}

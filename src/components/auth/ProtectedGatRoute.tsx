@@ -2,12 +2,10 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { useNavigation } from "@/hooks/useNavigation";
 
 export const ProtectedGatRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { hasGatAccess } = useNavigation();
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -23,19 +21,25 @@ export const ProtectedGatRoute = ({ children }: { children: React.ReactNode }) =
         return;
       }
 
-      if (!hasGatAccess) {
+      const { data: purchases } = await supabase
+        .from("purchases")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("status", "completed")
+        .limit(1);
+
+      if (!purchases || purchases.length === 0) {
         toast({
-          title: "Access Required",
-          description: "You don't have access to GAT. Please purchase access from the shop.",
+          title: "Purchase Required",
+          description: "Please purchase access to use GAT practice.",
           variant: "destructive",
         });
         navigate("/shop");
-        return;
       }
     };
 
     checkAccess();
-  }, [navigate, toast, hasGatAccess]);
+  }, [navigate, toast]);
 
   return <>{children}</>;
 };

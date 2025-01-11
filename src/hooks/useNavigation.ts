@@ -4,8 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-type PlatformType = 'gat' | 'sat' | 'act';
-
 export const useNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -47,24 +45,23 @@ export const useNavigation = () => {
     enabled: !!userId,
   });
 
-  const { data: platformAccess } = useQuery({
-    queryKey: ["platform-access", userId],
+  const { data: purchases } = useQuery({
+    queryKey: ["purchases", userId],
     queryFn: async () => {
       if (!userId) return null;
       const { data, error } = await supabase
-        .rpc('check_platform_access', {
-          user_id_input: userId,
-          platform: 'gat' as PlatformType
-        });
+        .from("purchases")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("status", "completed");
 
       if (error) {
-        console.error("Platform access check error:", error);
         toast({
-          title: "Error checking platform access",
+          title: "Error fetching purchases",
           description: error.message,
           variant: "destructive",
         });
-        return false;
+        return null;
       }
 
       return data;
@@ -82,8 +79,8 @@ export const useNavigation = () => {
           variant: "destructive",
         });
       } else {
-        setUserId(null);
-        navigate("/");
+        setUserId(null); // Clear the user ID immediately
+        navigate("/"); // Navigate to home page immediately after sign out
       }
     } catch (error) {
       toast({
@@ -100,12 +97,12 @@ export const useNavigation = () => {
                       location.pathname.startsWith("/gat");
 
   const isAdmin = profile?.role === "admin";
-  const hasGatAccess = platformAccess === true;
+  const hasPurchased = purchases && purchases.length > 0;
 
   return {
     userId,
     isAdmin,
-    hasGatAccess,
+    hasPurchased,
     hideNavLinks,
     handleSignOut,
   };
