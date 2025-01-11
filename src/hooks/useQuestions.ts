@@ -48,7 +48,7 @@ export function useQuestions(
       };
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    keepPreviousData: true, // Keep previous data while fetching new data
+    placeholderData: (previousData) => previousData, // This replaces keepPreviousData
   });
 
   return {
