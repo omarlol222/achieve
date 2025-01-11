@@ -12,6 +12,7 @@ import { SubjectManager } from "@/components/subjects/SubjectManager";
 import { TopicManager } from "@/components/topics/TopicManager";
 import { useQuestions } from "@/hooks/useQuestions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -72,84 +73,86 @@ const Questions = () => {
   const totalPages = Math.ceil((questionsData?.total || 0) / ITEMS_PER_PAGE);
 
   return (
-    <div>
-      <Tabs defaultValue="questions">
-        <TabsList>
-          <TabsTrigger value="questions">Questions</TabsTrigger>
-          <TabsTrigger value="subjects">Subjects</TabsTrigger>
-          <TabsTrigger value="topics">Topics</TabsTrigger>
-        </TabsList>
+    <ErrorBoundary>
+      <div>
+        <Tabs defaultValue="questions">
+          <TabsList>
+            <TabsTrigger value="questions">Questions</TabsTrigger>
+            <TabsTrigger value="subjects">Subjects</TabsTrigger>
+            <TabsTrigger value="topics">Topics</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="questions" className="mt-6">
-          <QuestionHeader
-            onAddClick={() => {
-              setSelectedQuestion(null);
-              setDialogOpen(true);
-            }}
-          />
+          <TabsContent value="questions" className="mt-6">
+            <QuestionHeader
+              onAddClick={() => {
+                setSelectedQuestion(null);
+                setDialogOpen(true);
+              }}
+            />
 
-          <QuestionFilters
-            search={search}
-            setSearch={setSearch}
-            subjectFilter={subjectFilter}
-            setSubjectFilter={setSubjectFilter}
-            topicFilter={topicFilter}
-            setTopicFilter={setTopicFilter}
-            difficultyFilter={difficultyFilter}
-            setDifficultyFilter={setDifficultyFilter}
-            typeFilter={typeFilter}
-            setTypeFilter={setTypeFilter}
-            testTypeFilter={testTypeFilter}
-            setTestTypeFilter={setTestTypeFilter}
-            subjects={subjects || []}
-            topics={topics || []}
-            testTypes={testTypes || []}
-          />
+            <QuestionFilters
+              search={search}
+              setSearch={setSearch}
+              subjectFilter={subjectFilter}
+              setSubjectFilter={setSubjectFilter}
+              topicFilter={topicFilter}
+              setTopicFilter={setTopicFilter}
+              difficultyFilter={difficultyFilter}
+              setDifficultyFilter={setDifficultyFilter}
+              typeFilter={typeFilter}
+              setTypeFilter={setTypeFilter}
+              testTypeFilter={testTypeFilter}
+              setTestTypeFilter={setTestTypeFilter}
+              subjects={subjects || []}
+              topics={topics || []}
+              testTypes={testTypes || []}
+            />
 
-          <QuestionList
-            questions={questionsData?.questions || []}
-            isLoading={isLoading}
-            onEdit={(question) => {
-              setSelectedQuestion(question);
-              setDialogOpen(true);
-            }}
-            onDelete={(question) => {
-              setQuestionToDelete(question);
-              setDeleteDialogOpen(true);
-            }}
-          />
+            <QuestionList
+              questions={questionsData?.questions || []}
+              isLoading={isLoading}
+              onEdit={(question) => {
+                setSelectedQuestion(question);
+                setDialogOpen(true);
+              }}
+              onDelete={(question) => {
+                setQuestionToDelete(question);
+                setDeleteDialogOpen(true);
+              }}
+            />
 
-          <QuestionPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
-        </TabsContent>
+            <QuestionPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </TabsContent>
 
-        <TabsContent value="subjects" className="mt-6">
-          <SubjectManager />
-        </TabsContent>
+          <TabsContent value="subjects" className="mt-6">
+            <SubjectManager />
+          </TabsContent>
 
-        <TabsContent value="topics" className="mt-6">
-          <TopicManager />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="topics" className="mt-6">
+            <TopicManager />
+          </TabsContent>
+        </Tabs>
 
-      <QuestionDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        initialData={selectedQuestion}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ["questions"] });
-        }}
-      />
+        <QuestionDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          initialData={selectedQuestion}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["questions"] });
+          }}
+        />
 
-      <DeleteQuestionDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleDelete}
-      />
-    </div>
+        <DeleteQuestionDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onConfirm={handleDelete}
+        />
+      </div>
+    </ErrorBoundary>
   );
 };
 

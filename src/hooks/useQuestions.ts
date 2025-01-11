@@ -16,14 +16,14 @@ export function useQuestions(
 
   const { data: questionsData, isLoading } = useQuery({
     queryKey: [
-      "questions", 
-      search, 
-      subjectFilter, 
-      topicFilter, 
-      difficultyFilter, 
-      typeFilter, 
-      testTypeFilter, 
-      currentPage
+      "questions",
+      search,
+      subjectFilter,
+      topicFilter,
+      difficultyFilter,
+      typeFilter,
+      testTypeFilter,
+      currentPage,
     ],
     queryFn: async () => {
       const queryParams = {
@@ -35,7 +35,7 @@ export function useQuestions(
         testTypeFilter,
         currentPage,
         itemsPerPage,
-        topics: topics || []
+        topics: topics || [],
       };
 
       const { data, error, count } = await buildQuestionsQuery(queryParams);
@@ -47,6 +47,8 @@ export function useQuestions(
         total: count || 0,
       };
     },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    keepPreviousData: true, // Keep previous data while fetching new data
   });
 
   return {
