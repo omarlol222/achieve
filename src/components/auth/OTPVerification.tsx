@@ -132,13 +132,13 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
         <div className="flex flex-col space-y-2">
           <Label htmlFor="otp">Verification Code</Label>
           <InputOTP
+            maxLength={6}
             value={otp}
             onChange={setOtp}
-            maxLength={6}
             render={({ slots }) => (
               <InputOTPGroup>
-                {slots.map((slot, idx) => (
-                  <InputOTPSlot key={idx} {...slot} index={idx} />
+                {slots.map((slot, index) => (
+                  <InputOTPSlot key={index} {...slot} />
                 ))}
               </InputOTPGroup>
             )}
@@ -155,7 +155,7 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
             onClick={onBack}
             className="text-sm text-gray-600 hover:text-gray-900"
           >
-            Back to sign in
+            Back to email input
           </button>
         </div>
       </form>
