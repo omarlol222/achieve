@@ -7,6 +7,14 @@ import ProductDetails from "@/pages/ProductDetails";
 import Index from "@/pages/Index";
 import GAT from "@/pages/GAT";
 import SignIn from "@/pages/SignIn";
+import About from "@/pages/About";
+import FAQ from "@/pages/FAQ";
+import AdminLayout from "@/components/layout/AdminLayout";
+import Dashboard from "@/pages/admin/Dashboard";
+import Questions from "@/pages/admin/Questions";
+import Tests from "@/pages/admin/Tests";
+import Users from "@/pages/admin/Users";
+import Payments from "@/pages/admin/Payments";
 import { ProtectedGatRoute } from "@/components/auth/ProtectedGatRoute";
 import Practice from "@/pages/practice/Practice";
 import PracticeSetup from "@/pages/practice/PracticeSetup";
@@ -23,10 +31,22 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <BrowserRouter>
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/products/:id" element={<ProductDetails />} />
             <Route path="/signin" element={<SignIn />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="questions" element={<Questions />} />
+              <Route path="tests" element={<Tests />} />
+              <Route path="users" element={<Users />} />
+              <Route path="payments" element={<Payments />} />
+            </Route>
             
             {/* GAT Routes */}
             <Route path="/gat" element={
