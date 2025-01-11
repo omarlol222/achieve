@@ -22,8 +22,9 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
+    
     try {
-      setError(null);
       const { error: verifyError } = await supabase.auth.verifyOtp({
         email,
         token: otp,
@@ -34,10 +35,11 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
         if (verifyError.message.includes('expired') || verifyError.message.includes('invalid')) {
           toast({
             variant: "destructive",
-            title: "Code Expired",
-            description: "Please go back and request a new code.",
+            title: "Invalid Code",
+            description: "The verification code has expired or is invalid. Please request a new one.",
           });
-          throw new Error('Verification code has expired or is invalid. Please request a new one.');
+          onBack();
+          return;
         }
         throw verifyError;
       }
