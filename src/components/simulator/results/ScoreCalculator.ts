@@ -25,15 +25,15 @@ type ModuleProgress = {
 
 export const calculateSubjectScore = (subjectName: string, session: any) => {
   const name = subjectName.toLowerCase();
-  let score = 0;
   
+  // Return the scores directly from the session object
   if (name === 'math' || name.includes('quant')) {
-    score = session.quantitative_score || 0;
+    return session.quantitative_score || 0;
   } else if (name === 'english' || name.includes('verbal')) {
-    score = session.verbal_score || 0;
+    return session.verbal_score || 0;
   }
   
-  return score;
+  return 0;
 };
 
 export const calculateTopicPerformance = (moduleProgress: ModuleProgress[]) => {
