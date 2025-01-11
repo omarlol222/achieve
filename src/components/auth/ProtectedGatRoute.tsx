@@ -26,7 +26,7 @@ export const ProtectedGatRoute = ({ children }: { children: React.ReactNode }) =
       if (!hasGatAccess) {
         toast({
           title: "Access Required",
-          description: "You don't have access to GAT practice. Please purchase access from the shop.",
+          description: "You don't have access to GAT. Please purchase access from the shop.",
           variant: "destructive",
         });
         navigate("/shop");

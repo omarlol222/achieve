@@ -14,7 +14,22 @@ const SignIn = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/gat");
+        const { data: hasAccess, error: accessError } = await supabase
+          .rpc('check_platform_access', {
+            user_id: session.user.id,
+            platform: 'gat'
+          });
+
+        if (accessError) {
+          console.error("Error checking access:", accessError);
+          return;
+        }
+
+        if (hasAccess) {
+          navigate("/gat");
+        } else {
+          navigate("/shop");
+        }
       }
     };
     checkSession();
@@ -43,7 +58,23 @@ const SignIn = () => {
           return;
         }
 
-        navigate("/gat");
+        // Check platform access
+        const { data: hasAccess, error: accessError } = await supabase
+          .rpc('check_platform_access', {
+            user_id: session.user.id,
+            platform: 'gat'
+          });
+
+        if (accessError) {
+          console.error("Error checking access:", accessError);
+          return;
+        }
+
+        if (hasAccess) {
+          navigate("/gat");
+        } else {
+          navigate("/shop");
+        }
       }
     });
 

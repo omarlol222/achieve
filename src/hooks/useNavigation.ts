@@ -45,33 +45,23 @@ export const useNavigation = () => {
     enabled: !!userId,
   });
 
-  const { data: userAccess } = useQuery({
-    queryKey: ["user-access", userId],
+  const { data: platformAccess } = useQuery({
+    queryKey: ["platform-access", userId],
     queryFn: async () => {
       if (!userId) return null;
       const { data, error } = await supabase
-        .from("user_product_access")
-        .select(`
-          product:products (
-            id,
-            name,
-            product_permissions (
-              has_course,
-              has_simulator,
-              has_practice
-            )
-          )
-        `)
-        .eq("user_id", userId)
-        .is("expires_at", null);
+        .rpc('check_platform_access', {
+          user_id: userId,
+          platform: 'gat'
+        });
 
       if (error) {
         toast({
-          title: "Error fetching user access",
+          title: "Error checking platform access",
           description: error.message,
           variant: "destructive",
         });
-        return null;
+        return false;
       }
 
       return data;
@@ -107,7 +97,7 @@ export const useNavigation = () => {
                       location.pathname.startsWith("/gat");
 
   const isAdmin = profile?.role === "admin";
-  const hasGatAccess = userAccess && userAccess.length > 0;
+  const hasGatAccess = platformAccess === true;
 
   return {
     userId,
