@@ -48,14 +48,14 @@ function App() {
               <Route path="payments" element={<Payments />} />
             </Route>
             
-            {/* GAT Routes */}
+            {/* Protected GAT Routes */}
             <Route path="/gat" element={
               <ProtectedGatRoute>
                 <GAT />
               </ProtectedGatRoute>
             } />
             
-            {/* Practice Routes */}
+            {/* Protected Practice Routes */}
             <Route path="/gat/practice" element={
               <ProtectedGatRoute>
                 <Practice />
@@ -72,7 +72,7 @@ function App() {
               </ProtectedGatRoute>
             } />
             
-            {/* Simulator Routes */}
+            {/* Protected Simulator Routes */}
             <Route path="/gat/simulator" element={
               <ProtectedGatRoute>
                 <Simulator />
