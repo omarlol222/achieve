@@ -204,6 +204,119 @@ export type Database = {
           },
         ]
       }
+      product_media: {
+        Row: {
+          created_at: string | null
+          id: string
+          media_type: string
+          media_url: string
+          product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          media_type: string
+          media_url: string
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          media_type?: string
+          media_url?: string
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_media_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_permissions: {
+        Row: {
+          created_at: string | null
+          has_course: boolean | null
+          has_simulator: boolean | null
+          id: string
+          product_id: string | null
+          test_type_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          has_course?: boolean | null
+          has_simulator?: boolean | null
+          id?: string
+          product_id?: string | null
+          test_type_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          has_course?: boolean | null
+          has_simulator?: boolean | null
+          id?: string
+          product_id?: string | null
+          test_type_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_permissions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_permissions_test_type_id_fkey"
+            columns: ["test_type_id"]
+            isOneToOne: false
+            referencedRelation: "test_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          status: Database["public"]["Enums"]["product_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          status?: Database["public"]["Enums"]["product_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          status?: Database["public"]["Enums"]["product_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -579,6 +692,44 @@ export type Database = {
           },
         ]
       }
+      user_product_access: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          granted_at: string | null
+          id: string
+          product_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          product_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          product_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_product_access_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_progress: {
         Row: {
           created_at: string | null
@@ -628,6 +779,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_feature_access: {
+        Args: {
+          user_id: string
+          feature_name: string
+        }
+        Returns: boolean
+      }
+      check_test_type_access: {
+        Args: {
+          user_id: string
+          test_type_id: string
+        }
+        Returns: boolean
+      }
       delete_user: {
         Args: {
           user_id: string
@@ -642,6 +807,7 @@ export type Database = {
       }
     }
     Enums: {
+      product_status: "active" | "inactive"
       question_difficulty: "Easy" | "Moderate" | "Hard"
     }
     CompositeTypes: {
