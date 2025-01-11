@@ -38,6 +38,9 @@ export function ProductList({
               </span>
             </TableCell>
             <TableCell>
+              {product.custom_features?.map((feature: string, index: number) => (
+                <div key={index} className="text-sm">{feature}</div>
+              ))}
               {product.permissions?.map((permission: any) => (
                 <div key={permission.test_type.id} className="text-sm">
                   {permission.test_type.name}:

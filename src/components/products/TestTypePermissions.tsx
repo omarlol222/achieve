@@ -6,9 +6,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
-  FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ProductFormData } from "./types";
 
@@ -55,143 +53,59 @@ export function TestTypePermissions({
                 )}
               />
 
-              <div className="flex flex-col gap-2">
-                <FormField
-                  control={form.control}
-                  name={`permissions.${fieldArrayIndex}.has_course`}
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={(checked) => {
-                            field.onChange(checked);
-                            if (!checked) {
-                              form.setValue(
-                                `permissions.${fieldArrayIndex}.course_text`,
-                                ""
-                              );
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        Course Access
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-
-                {permission?.has_course && (
-                  <FormField
-                    control={form.control}
-                    name={`permissions.${fieldArrayIndex}.course_text`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder={`Access to ${testType.name} Course`}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <FormField
+                control={form.control}
+                name={`permissions.${fieldArrayIndex}.has_course`}
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      Course Access
+                    </FormLabel>
+                  </FormItem>
                 )}
-              </div>
+              />
 
-              <div className="flex flex-col gap-2">
-                <FormField
-                  control={form.control}
-                  name={`permissions.${fieldArrayIndex}.has_simulator`}
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={(checked) => {
-                            field.onChange(checked);
-                            if (!checked) {
-                              form.setValue(
-                                `permissions.${fieldArrayIndex}.simulator_text`,
-                                ""
-                              );
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        Simulator Access
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-
-                {permission?.has_simulator && (
-                  <FormField
-                    control={form.control}
-                    name={`permissions.${fieldArrayIndex}.simulator_text`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder={`Access to ${testType.name} Simulator`}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <FormField
+                control={form.control}
+                name={`permissions.${fieldArrayIndex}.has_simulator`}
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      Simulator Access
+                    </FormLabel>
+                  </FormItem>
                 )}
-              </div>
+              />
 
-              <div className="flex flex-col gap-2">
-                <FormField
-                  control={form.control}
-                  name={`permissions.${fieldArrayIndex}.has_practice`}
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={(checked) => {
-                            field.onChange(checked);
-                            if (!checked) {
-                              form.setValue(
-                                `permissions.${fieldArrayIndex}.practice_text`,
-                                ""
-                              );
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        Practice Access
-                      </FormLabel>
-                    </FormItem>
-                  )}
-                />
-
-                {permission?.has_practice && (
-                  <FormField
-                    control={form.control}
-                    name={`permissions.${fieldArrayIndex}.practice_text`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder={`Access to ${testType.name} Practice`}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <FormField
+                control={form.control}
+                name={`permissions.${fieldArrayIndex}.has_practice`}
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      Practice Access
+                    </FormLabel>
+                  </FormItem>
                 )}
-              </div>
+              />
             </div>
           </div>
         );
