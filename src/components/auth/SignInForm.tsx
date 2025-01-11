@@ -1,13 +1,15 @@
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 type SignInFormProps = {
   siteUrl: string;
 };
 
 export const SignInForm = ({ siteUrl }: SignInFormProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-4">
       <Auth
@@ -38,9 +40,12 @@ export const SignInForm = ({ siteUrl }: SignInFormProps) => {
           </Link>
         </p>
         <p className="text-sm text-gray-600">
-          <Link to="/password-reset" className="font-medium text-black hover:text-gray-800">
+          <button
+            onClick={() => navigate("/password-reset")}
+            className="font-medium text-black hover:text-gray-800"
+          >
             Forgot password?
-          </Link>
+          </button>
         </p>
       </div>
     </div>
