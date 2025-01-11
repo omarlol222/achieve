@@ -149,7 +149,7 @@ const ProductDetails = () => {
 
           {/* Right Column - Image and Purchase */}
           <div>
-            <div className="relative">
+            <div className="relative space-y-6">
               <Carousel className="w-full">
                 <CarouselContent>
                   {hasMedia ? (
@@ -192,7 +192,7 @@ const ProductDetails = () => {
                 )}
               </Carousel>
               
-              <div className="mt-8 space-y-4">
+              <div className="mt-4 space-y-3">
                 <p className="text-6xl font-bold text-[#1B2E35] text-right">
                   {product.price} {product.currency}
                 </p>
