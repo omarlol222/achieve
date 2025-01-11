@@ -138,10 +138,21 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
     index === self.findIndex((s) => s.id === subject.id)
   );
 
-  const subjectScores = uniqueSubjects.map(subject => ({
-    name: subject.name,
-    score: session[subject.name.toLowerCase() === 'math' ? 'quantitative_score' : 'verbal_score'] || 0
-  }));
+  const subjectScores = uniqueSubjects.map(subject => {
+    const subjectName = subject.name.toLowerCase();
+    let score = 0;
+    
+    if (subjectName === 'math' || subjectName.includes('quant')) {
+      score = session.quantitative_score || 0;
+    } else if (subjectName === 'english' || subjectName.includes('verbal')) {
+      score = session.verbal_score || 0;
+    }
+    
+    return {
+      name: subject.name,
+      score: score
+    };
+  });
 
   const totalScore = session.total_score || 0;
 
