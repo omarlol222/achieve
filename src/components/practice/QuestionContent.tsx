@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { TeXComponent } from "./TeXComponent";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type QuestionContentProps = {
   question: any;
@@ -49,9 +50,11 @@ export function QuestionContent({
   return (
     <div className="space-y-6">
       {question.question_type === "passage" && (
-        <div className="bg-gray-50 p-4 rounded-lg mb-4">
-          <p className="whitespace-pre-wrap">{question.passage_text}</p>
-        </div>
+        <ScrollArea className="h-[200px] rounded-lg">
+          <div className="bg-gray-50 p-4">
+            <p className="whitespace-pre-wrap">{question.passage_text}</p>
+          </div>
+        </ScrollArea>
       )}
 
       {question.question_type === "comparison" && renderComparisonTable()}
