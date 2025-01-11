@@ -20,8 +20,10 @@ interface Product {
   price: number;
   currency: string;
   image_url: string | null;
-  media_urls: string[];
-  media_types: ('image' | 'video')[];
+  media: {
+    media_url: string;
+    media_type: 'image' | 'video';
+  }[];
   permissions: {
     has_course: boolean;
     has_simulator: boolean;
@@ -42,6 +44,7 @@ const ProductDetails = () => {
         .from("products")
         .select(`
           *,
+          media:product_media(media_url, media_type),
           permissions:product_permissions(
             has_course,
             has_simulator,
@@ -61,21 +64,7 @@ const ProductDetails = () => {
         return null;
       }
 
-      // For now, we'll just use image_url for the carousel
-      // In the future, you might want to create a separate product_media table
-      const mediaUrls = [];
-      const mediaTypes = [];
-      
-      if (data.image_url) {
-        mediaUrls.push(data.image_url);
-        mediaTypes.push('image');
-      }
-
-      return {
-        ...data,
-        media_urls: mediaUrls,
-        media_types: mediaTypes,
-      } as Product;
+      return data as Product;
     },
   });
 
@@ -159,28 +148,44 @@ const ProductDetails = () => {
             <div className="relative">
               <Carousel className="w-full">
                 <CarouselContent>
-                  {product.media_urls.map((url, index) => (
-                    <CarouselItem key={index}>
+                  {product.media.length > 0 ? (
+                    product.media.map((media, index) => (
+                      <CarouselItem key={index}>
+                        <div className="aspect-[16/9] w-full bg-[#1B2E35] rounded-lg overflow-hidden">
+                          {media.media_type === 'video' ? (
+                            <video
+                              className="w-full h-full object-cover"
+                              controls
+                              src={media.media_url}
+                            />
+                          ) : (
+                            <img
+                              src={media.media_url}
+                              alt={`${product.name} - ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+                      </CarouselItem>
+                    ))
+                  ) : product.image_url ? (
+                    <CarouselItem>
                       <div className="aspect-[16/9] w-full bg-[#1B2E35] rounded-lg overflow-hidden">
-                        {product.media_types[index] === 'video' ? (
-                          <video
-                            className="w-full h-full object-cover"
-                            controls
-                            src={url}
-                          />
-                        ) : (
-                          <img
-                            src={url}
-                            alt={`${product.name} - ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                     </CarouselItem>
-                  ))}
+                  ) : null}
                 </CarouselContent>
-                <CarouselPrevious />
-                <CarouselNext />
+                {(product.media.length > 1 || (product.media.length === 0 && product.image_url)) && (
+                  <>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </>
+                )}
               </Carousel>
               
               <div className="mt-8 space-y-4">
