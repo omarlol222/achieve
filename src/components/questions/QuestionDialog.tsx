@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,11 +7,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Form } from "@/components/ui/form";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { QuestionFormFields } from "./QuestionFormFields";
 import { QuestionPreviewDialog } from "./QuestionPreviewDialog";
-import { QuestionFormData } from "@/types/question";
+import { useQuestionForm } from "./dialog/useQuestionForm";
+import { useQuestionData } from "./dialog/useQuestionData";
+import { useQuestionSubmit } from "./dialog/useQuestionSubmit";
 
 type QuestionDialogProps = {
   open: boolean;
@@ -28,136 +26,10 @@ export function QuestionDialog({
   initialData,
   onSuccess,
 }: QuestionDialogProps) {
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-
-  const form = useForm<QuestionFormData>({
-    defaultValues: {
-      question_text: initialData?.question_text || "",
-      choice1: initialData?.choice1 || "",
-      choice2: initialData?.choice2 || "",
-      choice3: initialData?.choice3 || "",
-      choice4: initialData?.choice4 || "",
-      correct_answer: initialData?.correct_answer ? String(initialData.correct_answer) : "1",
-      difficulty: initialData?.difficulty || "Easy",
-      topic_id: initialData?.topic_id || "",
-      explanation: initialData?.explanation || "",
-      question_type: initialData?.question_type || "normal",
-      passage_text: initialData?.passage_text || "",
-      test_type_id: initialData?.test_type_id || "",
-      image_url: initialData?.image_url || "",
-      explanation_image_url: initialData?.explanation_image_url || "",
-      comparison_value1: initialData?.comparison_value1 || "",
-      comparison_value2: initialData?.comparison_value2 || "",
-    },
-  });
-
-  // Reset form when initialData changes
-  useEffect(() => {
-    if (initialData) {
-      form.reset({
-        question_text: initialData.question_text || "",
-        choice1: initialData.choice1 || "",
-        choice2: initialData.choice2 || "",
-        choice3: initialData.choice3 || "",
-        choice4: initialData.choice4 || "",
-        correct_answer: initialData.correct_answer ? String(initialData.correct_answer) : "1",
-        difficulty: initialData.difficulty || "Easy",
-        topic_id: initialData.topic_id || "",
-        explanation: initialData.explanation || "",
-        question_type: initialData.question_type || "normal",
-        passage_text: initialData.passage_text || "",
-        test_type_id: initialData.test_type_id || "",
-        image_url: initialData.image_url || "",
-        explanation_image_url: initialData.explanation_image_url || "",
-        comparison_value1: initialData.comparison_value1 || "",
-        comparison_value2: initialData.comparison_value2 || "",
-      });
-    }
-  }, [initialData, form]);
-
-  const { data: subjects } = useQuery({
-    queryKey: ["subjects"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: topics } = useQuery({
-    queryKey: ["topics"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("topics")
-        .select("*, subject:subjects(name)")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: testTypes } = useQuery({
-    queryKey: ["testTypes"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("test_types")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const onSubmit = async (data: QuestionFormData) => {
-    try {
-      setIsSubmitting(true);
-      const questionData = {
-        ...data,
-        correct_answer: parseInt(data.correct_answer),
-        topic_id: data.topic_id || null,
-        test_type_id: data.test_type_id || null,
-        explanation: data.explanation || null,
-        passage_text: data.passage_text || null,
-        image_url: data.image_url || null,
-        explanation_image_url: data.explanation_image_url || null,
-        comparison_value1: data.comparison_value1 || null,
-        comparison_value2: data.comparison_value2 || null,
-      };
-
-      if (initialData?.id) {
-        const { error } = await supabase
-          .from("questions")
-          .update(questionData)
-          .eq("id", initialData.id);
-        if (error) throw error;
-        toast({
-          title: "Question updated successfully",
-        });
-      } else {
-        const { error } = await supabase.from("questions").insert(questionData);
-        if (error) throw error;
-        toast({
-          title: "Question created successfully",
-        });
-      }
-
-      onSuccess();
-      onOpenChange(false);
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const form = useQuestionForm(initialData);
+  const { subjects, topics, testTypes } = useQuestionData();
+  const { handleSubmit, isSubmitting } = useQuestionSubmit(onSuccess, onOpenChange);
 
   return (
     <>
@@ -169,7 +41,7 @@ export function QuestionDialog({
             </DialogTitle>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit((data) => handleSubmit(data, initialData))} className="space-y-4">
               <QuestionFormFields 
                 form={form} 
                 topics={topics || []} 
