@@ -23,9 +23,9 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
         email,
         token: otp,
         type: 'recovery'
@@ -44,11 +44,13 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
         throw verifyError;
       }
 
-      setIsVerified(true);
-      toast({
-        title: "Success",
-        description: "Code verified successfully. Please enter your new password.",
-      });
+      if (data?.user) {
+        setIsVerified(true);
+        toast({
+          title: "Success",
+          description: "Code verified successfully. Please enter your new password.",
+        });
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
