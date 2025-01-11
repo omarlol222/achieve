@@ -24,7 +24,7 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
     setIsLoading(true);
     try {
       setError(null);
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      const { error: verifyError } = await supabase.auth.verifyOtp({
         email,
         token: otp,
         type: 'recovery'
