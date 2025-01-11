@@ -26,7 +26,7 @@ export function useQuestions(
       currentPage
     ],
     queryFn: async () => {
-      const { data, error, count } = await buildQuestionsQuery(
+      const queryParams = {
         search,
         subjectFilter,
         topicFilter,
@@ -35,8 +35,10 @@ export function useQuestions(
         testTypeFilter,
         currentPage,
         itemsPerPage,
-        topics || []
-      );
+        topics: topics || []
+      };
+
+      const { data, error, count } = await buildQuestionsQuery(queryParams);
 
       if (error) throw error;
 
