@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "next-themes";
-import { Shop } from "@/pages/Shop";
-import { ProductDetails } from "@/pages/ProductDetails";
+import Shop from "@/pages/Shop";
+import ProductDetails from "@/pages/ProductDetails";
 
 const queryClient = new QueryClient();
 
