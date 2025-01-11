@@ -1,0 +1,13 @@
+export type ProductFormData = {
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  thumbnail_url: string;
+  detail_images: string[];
+  permissions: {
+    test_type_id: string;
+    has_course: boolean;
+    has_simulator: boolean;
+  }[];
+};
