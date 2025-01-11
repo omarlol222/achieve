@@ -20,7 +20,7 @@ export function QuestionContentFields({ form }: QuestionContentFieldsProps) {
       
       <QuestionTextField form={form} questionType={questionType} />
 
-      {(questionType === "normal" || questionType === "analogy") && (
+      {(questionType === "normal" || questionType === "analogy" || questionType === "comparison") && (
         <>
           <ImageUploadField
             form={form}
