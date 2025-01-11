@@ -29,13 +29,14 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
     setIsLoading(true);
     try {
       setError(null);
-      const { error: verifyError } = await supabase.auth.verifyOtp({
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
         email,
         token: otp,
-        type: 'email'
+        type: 'recovery'
       });
       
       if (verifyError) throw verifyError;
+      if (!data.session) throw new Error('No session created');
 
       setIsVerified(true);
       toast({
@@ -60,11 +61,11 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
 
       if (updateError) throw updateError;
 
-      onSuccess();
       toast({
         title: "Password updated",
         description: "Your password has been successfully reset.",
       });
+      onSuccess();
     } catch (err: any) {
       setError(err.message);
     } finally {

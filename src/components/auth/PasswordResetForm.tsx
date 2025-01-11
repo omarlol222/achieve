@@ -20,11 +20,8 @@ export const PasswordResetForm = ({ onResetSuccess }: PasswordResetFormProps) =>
     setIsLoading(true);
     try {
       setError(null);
-      const { error } = await supabase.auth.signInWithOtp({
-        email: resetEmail,
-        options: {
-          shouldCreateUser: false,
-        },
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: window.location.origin + '/password-reset'
       });
       
       if (error) throw error;
