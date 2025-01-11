@@ -40,7 +40,12 @@ const Dashboard = () => {
           platform: 'gat'
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Platform access check error:', error);
+        return false;
+      }
+      
+      console.log('Platform access result:', data);
       return data;
     },
   });
@@ -50,11 +55,18 @@ const Dashboard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("test_types")
-        .select("*");
+        .select("*")
+        .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Test types fetch error:', error);
+        throw error;
+      }
+      
+      console.log('Test types result:', data);
       return data;
     },
+    enabled: !!platformAccess, // Only fetch test types if user has platform access
   });
 
   if (isLoadingProfile || isLoadingAccess || isLoadingTestTypes) {
