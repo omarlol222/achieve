@@ -11,10 +11,13 @@ import { TopicManager } from "@/components/topics/TopicManager";
 import { useQuestions } from "@/hooks/useQuestions";
 import { useQuestionDialog } from "@/hooks/questions/useQuestionDialog";
 import { useQuestionFilters } from "@/hooks/questions/useQuestionFilters";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ITEMS_PER_PAGE = 10;
 
 const Questions = () => {
+  const queryClient = useQueryClient();
+  
   const {
     filters,
     setters,

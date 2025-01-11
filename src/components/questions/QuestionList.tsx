@@ -3,6 +3,7 @@ import { QuestionListRow } from "./list/QuestionListRow";
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
