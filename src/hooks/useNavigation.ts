@@ -81,7 +81,8 @@ export const useNavigation = () => {
 
   const hideNavLinks = location.pathname.includes("/simulator/results") || 
                       location.pathname.includes("/gat/simulator") || 
-                      location.pathname.includes("/gat/practice");
+                      location.pathname.includes("/gat/practice") ||
+                      location.pathname.startsWith("/gat"); // Added this condition
 
   const isAdmin = profile?.role === "admin";
   const hasPurchased = purchases && purchases.length > 0;
