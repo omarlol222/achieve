@@ -21,27 +21,8 @@ export const ProtectedGatRoute = ({ children }: { children: React.ReactNode }) =
         return;
       }
 
-      const { data: userAccess } = await supabase
-        .from("user_product_access")
-        .select(`
-          product:products(
-            permissions:product_permissions(
-              test_type:test_types(name)
-            )
-          )
-        `)
-        .eq("user_id", session.user.id)
-        .gte("expires_at", new Date().toISOString())
-        .limit(1);
-
-      if (!userAccess || userAccess.length === 0 || !userAccess[0].product?.permissions?.some(p => p.test_type.name.toLowerCase().includes('gat'))) {
-        toast({
-          title: "Purchase Required",
-          description: "Please purchase access to use GAT practice.",
-          variant: "destructive",
-        });
-        navigate("/shop");
-      }
+      // All authenticated users now have access
+      return;
     };
 
     checkAccess();
