@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ShoppingCart } from "lucide-react";
 import { Navigation } from "@/components/ui/navigation";
@@ -26,24 +24,7 @@ interface Product {
 }
 
 const Shop = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Check authentication
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Authentication required",
-          description: "Please sign in to access the shop",
-          variant: "destructive",
-        });
-        navigate("/signin");
-      }
-    };
-    checkAuth();
-  }, [navigate, toast]);
 
   // Fetch products with their permissions
   const { data: products, isLoading } = useQuery({
@@ -75,6 +56,16 @@ const Shop = () => {
   });
 
   const handlePurchase = async (productId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to make a purchase",
+      });
+      return;
+    }
+
     // For now, just show a toast. We'll implement actual purchase later
     toast({
       title: "Coming soon!",
