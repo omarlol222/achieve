@@ -2,14 +2,12 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { PasswordResetForm } from "./PasswordResetForm";
 
 type SignInFormProps = {
   siteUrl: string;
-  onResetSuccess: () => void;
 };
 
-export const SignInForm = ({ siteUrl, onResetSuccess }: SignInFormProps) => {
+export const SignInForm = ({ siteUrl }: SignInFormProps) => {
   return (
     <div className="space-y-4">
       <Auth
@@ -32,12 +30,15 @@ export const SignInForm = ({ siteUrl, onResetSuccess }: SignInFormProps) => {
       />
 
       <div className="mt-4 text-center space-y-4">
-        <PasswordResetForm onResetSuccess={onResetSuccess} />
-
         <p className="text-sm text-gray-600">
           Don't have an account?{" "}
           <Link to="/signup" className="font-medium text-black hover:text-gray-800">
             Sign up
+          </Link>
+        </p>
+        <p className="text-sm text-gray-600">
+          <Link to="/password-reset" className="font-medium text-black hover:text-gray-800">
+            Forgot password?
           </Link>
         </p>
       </div>
