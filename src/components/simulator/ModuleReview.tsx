@@ -1,10 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { formatDistanceStrict } from "date-fns";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScoreCard } from "./review/ScoreCard";
 import { AnswerCard } from "./review/AnswerCard";
+import { useModuleReviewData } from "./results/hooks/useModuleReviewData";
 
 type ModuleReviewProps = {
   moduleProgressId: string;
@@ -12,63 +11,9 @@ type ModuleReviewProps = {
 };
 
 export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps) {
-  const { data: moduleProgress, isLoading: isLoadingProgress, error: progressError } = useQuery({
-    queryKey: ["module-progress", moduleProgressId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("module_progress")
-        .select(`
-          *,
-          module:test_modules (
-            name,
-            time_limit,
-            subject:subjects (
-              name
-            )
-          )
-        `)
-        .eq("id", moduleProgressId)
-        .maybeSingle();
+  const { moduleProgress, answers, isLoading, error } = useModuleReviewData(moduleProgressId);
 
-      if (error) throw error;
-      if (!data) throw new Error("Module progress not found");
-      return data;
-    },
-  });
-
-  const { data: answers, isLoading: isLoadingAnswers, error: answersError } = useQuery({
-    queryKey: ["module-answers", moduleProgressId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("module_answers")
-        .select(`
-          *,
-          question:questions (
-            id,
-            question_text,
-            correct_answer,
-            choice1,
-            choice2,
-            choice3,
-            choice4,
-            explanation,
-            explanation_image_url,
-            image_url,
-            topic:topics (
-              id,
-              name
-            )
-          )
-        `)
-        .eq("module_progress_id", moduleProgressId);
-
-      if (error) throw error;
-      if (!data || data.length === 0) throw new Error("No answers found for this module");
-      return data;
-    },
-  });
-
-  if (isLoadingProgress || isLoadingAnswers) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <p>Loading review...</p>
@@ -76,11 +21,11 @@ export function ModuleReview({ moduleProgressId, onContinue }: ModuleReviewProps
     );
   }
 
-  if (progressError || answersError) {
+  if (error) {
     return (
       <Alert variant="destructive" className="my-4">
         <AlertDescription>
-          {progressError?.message || answersError?.message || "Error loading review"}
+          {error.message || "Error loading review"}
         </AlertDescription>
       </Alert>
     );
