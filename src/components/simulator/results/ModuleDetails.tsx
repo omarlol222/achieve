@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -31,17 +32,17 @@ type ModuleDetailsProps = {
 
 export function ModuleDetails({ modules, onModuleSelect }: ModuleDetailsProps) {
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Module Details</h2>
-      <div className="border rounded-lg">
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Module Details</h2>
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-[40%]">Module Name</TableHead>
-              <TableHead className="w-[20%]">Type</TableHead>
+            <TableRow>
+              <TableHead>Module Name</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead className="text-right">Questions</TableHead>
               <TableHead className="text-right">Correct</TableHead>
-              <TableHead className="text-right w-[15%]">Actions</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -62,7 +63,6 @@ export function ModuleDetails({ modules, onModuleSelect }: ModuleDetailsProps) {
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={() => onModuleSelect(progress.id)}
                     >
                       See questions

@@ -34,37 +34,39 @@ export function TopicPerformance({ topics }: TopicPerformanceProps) {
   }, {} as { [key: string]: { name: string; topics: TopicStats[] } });
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-2xl font-bold">Topic Performance</h2>
-      {Object.entries(topicsBySubject).map(([subjectId, subject]) => (
-        <div key={subjectId} className="space-y-3">
-          <h3 className="text-xl font-semibold">{subject.name}</h3>
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-[50%]">Topic</TableHead>
-                  <TableHead className="text-right">Correct</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Percentage</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {subject.topics.map((topic, index) => (
-                  <TableRow key={`${topic.name}-${index}`}>
-                    <TableCell className="font-medium">{topic.name}</TableCell>
-                    <TableCell className="text-right">{topic.correct}</TableCell>
-                    <TableCell className="text-right">{topic.total}</TableCell>
-                    <TableCell className="text-right">
-                      {Math.round((topic.correct / topic.total) * 100)}%
-                    </TableCell>
+    <div>
+      <h2 className="text-2xl font-bold mb-4">Topic Performance</h2>
+      <div className="space-y-8">
+        {Object.entries(topicsBySubject).map(([subjectId, subject]) => (
+          <div key={subjectId}>
+            <h3 className="text-xl font-semibold mb-3">{subject.name}</h3>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Topic</TableHead>
+                    <TableHead className="text-right">Correct</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                    <TableHead className="text-right">Percentage</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {subject.topics.map((topic) => (
+                    <TableRow key={topic.name}>
+                      <TableCell className="font-medium">{topic.name}</TableCell>
+                      <TableCell className="text-right">{topic.correct}</TableCell>
+                      <TableCell className="text-right">{topic.total}</TableCell>
+                      <TableCell className="text-right">
+                        {Math.round((topic.correct / topic.total) * 100)}%
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
