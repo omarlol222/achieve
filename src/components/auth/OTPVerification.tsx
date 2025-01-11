@@ -34,9 +34,13 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
         token: otp,
         type: 'recovery'
       });
-      
-      if (verifyError) throw verifyError;
-      if (!data.session) throw new Error('No session created');
+
+      if (verifyError) {
+        if (verifyError.message.includes('Token has expired')) {
+          throw new Error('Verification code has expired. Please request a new one.');
+        }
+        throw verifyError;
+      }
 
       setIsVerified(true);
       toast({
@@ -45,6 +49,13 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
       });
     } catch (err: any) {
       setError(err.message);
+      if (err.message.includes('expired')) {
+        toast({
+          variant: "destructive",
+          title: "Code Expired",
+          description: "Please go back and request a new code.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -138,8 +149,8 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
             onChange={setOtp}
             render={({ slots }) => (
               <InputOTPGroup>
-                {Array.from({ length: 6 }, (_, i) => (
-                  <InputOTPSlot key={i} {...slots[i]} index={i} />
+                {slots.map((slot, index) => (
+                  <InputOTPSlot key={index} {...slot} index={index} />
                 ))}
               </InputOTPGroup>
             )}
