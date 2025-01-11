@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, FieldValues, Path, PathValue } from "react-hook-form";
 import { FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export function TestTypePermissions<T extends Record<string, any>>({ 
+export function TestTypePermissions<T extends FieldValues>({ 
   form 
 }: { 
   form: UseFormReturn<T>
@@ -27,12 +27,12 @@ export function TestTypePermissions<T extends Record<string, any>>({
       <h3 className="font-medium">Test Type Permissions</h3>
       
       {testTypes?.map((testType) => {
-        const permissionIndex = form.getValues().permissions?.findIndex(
+        const permissionIndex = (form.getValues().permissions as any[])?.findIndex(
           (p: any) => p.test_type_id === testType.id
         ) ?? -1;
 
         const fieldName = permissionIndex === -1
-          ? `permissions.${form.getValues().permissions?.length ?? 0}`
+          ? `permissions.${(form.getValues().permissions as any[])?.length ?? 0}`
           : `permissions.${permissionIndex}`;
 
         return (
@@ -42,8 +42,8 @@ export function TestTypePermissions<T extends Record<string, any>>({
             <div className="flex gap-4">
               <FormField
                 control={form.control}
-                name={`${fieldName}.test_type_id`}
-                defaultValue={testType.id}
+                name={`${fieldName}.test_type_id` as Path<T>}
+                defaultValue={testType.id as PathValue<T, Path<T>>}
                 render={({ field }) => (
                   <input type="hidden" {...field} />
                 )}
@@ -51,7 +51,7 @@ export function TestTypePermissions<T extends Record<string, any>>({
 
               <FormField
                 control={form.control}
-                name={`${fieldName}.has_course`}
+                name={`${fieldName}.has_course` as Path<T>}
                 render={({ field }) => (
                   <FormItem className="flex items-center space-x-2">
                     <Checkbox
@@ -67,7 +67,7 @@ export function TestTypePermissions<T extends Record<string, any>>({
 
               <FormField
                 control={form.control}
-                name={`${fieldName}.has_simulator`}
+                name={`${fieldName}.has_simulator` as Path<T>}
                 render={({ field }) => (
                   <FormItem className="flex items-center space-x-2">
                     <Checkbox
