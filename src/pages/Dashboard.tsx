@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Settings, BookOpen } from "lucide-react";
 import { UserSettings } from "@/components/dashboard/UserSettings";
 import { TestTypeCard } from "@/components/dashboard/TestTypeCard";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ["profile"],
@@ -23,7 +25,15 @@ const Dashboard = () => {
         .eq("id", session.user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Profile fetch error:', error);
+        toast({
+          title: "Error fetching profile",
+          description: error.message,
+          variant: "destructive",
+        });
+        return null;
+      }
       return data;
     },
   });
@@ -32,16 +42,24 @@ const Dashboard = () => {
     queryKey: ["platform-access"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return false;
+      if (!session?.user) {
+        console.log('No session found');
+        return false;
+      }
 
       const { data, error } = await supabase
         .rpc('check_platform_access', {
-          user_id: session.user.id,
+          user_id_input: session.user.id,
           platform: 'gat'
         });
 
       if (error) {
         console.error('Platform access check error:', error);
+        toast({
+          title: "Error checking platform access",
+          description: error.message,
+          variant: "destructive",
+        });
         return false;
       }
       
@@ -60,13 +78,18 @@ const Dashboard = () => {
 
       if (error) {
         console.error('Test types fetch error:', error);
-        throw error;
+        toast({
+          title: "Error fetching test types",
+          description: error.message,
+          variant: "destructive",
+        });
+        return [];
       }
       
       console.log('Test types result:', data);
       return data;
     },
-    enabled: platformAccess === true, // Only fetch test types if user has platform access
+    enabled: platformAccess === true,
   });
 
   if (isLoadingProfile || isLoadingAccess || (platformAccess && isLoadingTestTypes)) {

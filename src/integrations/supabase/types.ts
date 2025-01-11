@@ -844,7 +844,7 @@ export type Database = {
       }
       check_platform_access: {
         Args: {
-          user_id: string
+          user_id_input: string
           platform: Database["public"]["Enums"]["platform_type"]
         }
         Returns: boolean
