@@ -1,5 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type ModuleProgress = {
   id: string;
@@ -26,40 +34,45 @@ export function ModuleDetails({ modules, onModuleSelect }: ModuleDetailsProps) {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Module Details</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {modules?.map((progress) => {
-          const totalQuestions = progress.module_answers?.length || 0;
-          const correctAnswers = progress.module_answers?.filter(
-            (answer) => answer.selected_answer === answer.question.correct_answer
-          ).length || 0;
-          
-          return (
-            <Card key={progress.id} className="p-6 space-y-4">
-              <h3 className="text-lg font-semibold">
-                {progress.module.name}
-                <span className="text-sm text-gray-500 block">
-                  {progress.module.test_type?.name}
-                </span>
-              </h3>
-              <div className="space-y-2">
-                <p>
-                  <span className="font-medium">TOTAL QUESTIONS: </span>
-                  {totalQuestions}
-                </p>
-                <p>
-                  <span className="font-medium">CORRECT: </span>
-                  {correctAnswers}
-                </p>
-              </div>
-              <Button
-                className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-                onClick={() => onModuleSelect(progress.id)}
-              >
-                See questions
-              </Button>
-            </Card>
-          );
-        })}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Module Name</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead className="text-right">Questions</TableHead>
+              <TableHead className="text-right">Correct</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {modules?.map((progress) => {
+              const totalQuestions = progress.module_answers?.length || 0;
+              const correctAnswers = progress.module_answers?.filter(
+                (answer) => answer.selected_answer === answer.question.correct_answer
+              ).length || 0;
+              
+              return (
+                <TableRow key={progress.id}>
+                  <TableCell className="font-medium">
+                    {progress.module.name}
+                  </TableCell>
+                  <TableCell>{progress.module.test_type?.name}</TableCell>
+                  <TableCell className="text-right">{totalQuestions}</TableCell>
+                  <TableCell className="text-right">{correctAnswers}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      onClick={() => onModuleSelect(progress.id)}
+                    >
+                      See questions
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
