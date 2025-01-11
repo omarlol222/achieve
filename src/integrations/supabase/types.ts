@@ -241,30 +241,39 @@ export type Database = {
       }
       product_permissions: {
         Row: {
+          course_text: string | null
           created_at: string | null
           has_course: boolean | null
           has_practice: boolean | null
           has_simulator: boolean | null
           id: string
+          practice_text: string | null
           product_id: string | null
+          simulator_text: string | null
           test_type_id: string | null
         }
         Insert: {
+          course_text?: string | null
           created_at?: string | null
           has_course?: boolean | null
           has_practice?: boolean | null
           has_simulator?: boolean | null
           id?: string
+          practice_text?: string | null
           product_id?: string | null
+          simulator_text?: string | null
           test_type_id?: string | null
         }
         Update: {
+          course_text?: string | null
           created_at?: string | null
           has_course?: boolean | null
           has_practice?: boolean | null
           has_simulator?: boolean | null
           id?: string
+          practice_text?: string | null
           product_id?: string | null
+          simulator_text?: string | null
           test_type_id?: string | null
         }
         Relationships: [
