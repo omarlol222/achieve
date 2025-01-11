@@ -634,6 +634,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_concurrent_sessions: {
+        Args: {
+          user_id_input: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       question_difficulty: "Easy" | "Moderate" | "Hard"

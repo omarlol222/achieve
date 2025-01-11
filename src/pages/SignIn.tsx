@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ const SignIn = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN") {
         // Check for existing sessions
-        const { data: existingSessions, error: sessionsError } = await supabase.rpc('get_concurrent_sessions', {
+        const { data, error: sessionsError } = await supabase.rpc('get_concurrent_sessions', {
           user_id_input: session?.user.id
         });
 
@@ -36,7 +36,7 @@ const SignIn = () => {
           return;
         }
 
-        if (existingSessions && existingSessions > 1) {
+        if (data && data > 1) {
           // Sign out if there's already an active session
           await supabase.auth.signOut();
           setError("Another session is already active. Please sign out from other devices first.");
