@@ -143,7 +143,7 @@ const ProductDetails = () => {
               </div>
             )}
 
-            <div className="text-center space-y-6">
+            <div className="flex flex-col items-center space-y-6">
               <p className="text-6xl font-bold text-[#1B2E35]">
                 {product.price} {product.currency}
               </p>
