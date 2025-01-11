@@ -7,6 +7,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -19,9 +20,13 @@ type OTPVerificationProps = {
 export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationProps) => {
   const [error, setError] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       setError(null);
       const { data, error } = await supabase.auth.verifyOtp({
@@ -32,17 +37,79 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
       
       if (error) throw error;
 
-      if (data.session) {
-        onSuccess();
-        toast({
-          title: "Success",
-          description: "You have been signed in successfully.",
-        });
-      }
+      setIsVerified(true);
+      toast({
+        title: "Success",
+        description: "Code verified successfully. Please enter your new password.",
+      });
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      setError(null);
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      onSuccess();
+      toast({
+        title: "Password updated",
+        description: "Your password has been successfully reset.",
+      });
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isVerified) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+            Set New Password
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Enter your new password below
+          </p>
+        </div>
+
+        <form onSubmit={handlePasswordReset} className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <div>
+            <Label htmlFor="new-password">New Password</Label>
+            <Input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Enter your new password"
+              required
+              className="mt-1"
+              minLength={6}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Updating..." : "Update Password"}
+          </Button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -78,8 +145,8 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
           />
         </div>
 
-        <Button type="submit" className="w-full">
-          Verify Code
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Verifying..." : "Verify Code"}
         </Button>
 
         <div className="text-center">
