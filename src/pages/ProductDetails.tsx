@@ -4,7 +4,7 @@ import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Sparkles } from "lucide-react";
+import { Star } from "lucide-react";
 
 interface Product {
   id: string;
@@ -119,7 +119,7 @@ const ProductDetails = () => {
               <ul className="space-y-4">
                 {product.permissions.map((permission, idx) => (
                   <li key={idx} className="flex items-center gap-3">
-                    <Sparkles className="h-5 w-5 text-[#1B2E35]" />
+                    <Star className="h-5 w-5 text-[#1B2E35]" />
                     <span className="text-gray-700">
                       {permission.test_type.name}
                       {permission.has_course && " Course"}
