@@ -3,45 +3,70 @@ import { UseFormReturn, Path, PathValue } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Image } from "lucide-react";
+import { Image, X } from "lucide-react";
 
 type ImageUploadFieldProps<T extends Record<string, any>> = {
   form: UseFormReturn<T>;
   fieldName: Path<T>;
   label: string;
+  multiple?: boolean;
 };
 
 export function ImageUploadField<T extends Record<string, any>>({
   form,
   fieldName,
   label,
+  multiple = false,
 }: ImageUploadFieldProps<T>) {
   const [isUploading, setIsUploading] = useState(false);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
     try {
       setIsUploading(true);
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${crypto.randomUUID()}.${fileExt}`;
+      const uploadedUrls: string[] = [];
 
-      const { error: uploadError } = await supabase.storage
-        .from("question_images")
-        .upload(filePath, file);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExt = file.name.split(".").pop();
+        const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from("question_images")
+          .upload(filePath, file);
 
-      const { data: publicUrl } = supabase.storage
-        .from("question_images")
-        .getPublicUrl(filePath);
+        if (uploadError) throw uploadError;
 
-      form.setValue(fieldName, publicUrl.publicUrl as PathValue<T, Path<T>>);
+        const { data: publicUrl } = supabase.storage
+          .from("question_images")
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(publicUrl.publicUrl);
+      }
+
+      // If multiple is true, append to existing URLs, otherwise just set the single URL
+      if (multiple) {
+        const currentUrls = (form.getValues(fieldName) as string[]) || [];
+        form.setValue(fieldName, [...currentUrls, ...uploadedUrls] as PathValue<T, Path<T>>);
+      } else {
+        form.setValue(fieldName, uploadedUrls[0] as PathValue<T, Path<T>>);
+      }
     } catch (error: any) {
       console.error("Error uploading image:", error.message);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const removeImage = (urlToRemove: string) => {
+    if (multiple) {
+      const currentUrls = (form.getValues(fieldName) as string[]) || [];
+      const updatedUrls = currentUrls.filter(url => url !== urlToRemove);
+      form.setValue(fieldName, updatedUrls as PathValue<T, Path<T>>);
+    } else {
+      form.setValue(fieldName, "" as PathValue<T, Path<T>>);
     }
   };
 
@@ -67,16 +92,51 @@ export function ImageUploadField<T extends Record<string, any>>({
               id={fieldName}
               type="file"
               accept="image/*"
+              multiple={multiple}
               className="hidden"
               onChange={handleImageUpload}
             />
-            {field.value && (
-              <img
-                src={field.value}
-                alt="Uploaded"
-                className="max-w-full h-auto rounded-md"
-              />
-            )}
+            <div className="grid grid-cols-2 gap-4">
+              {multiple ? (
+                ((field.value || []) as string[]).map((url, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={url}
+                      alt={`Uploaded ${index + 1}`}
+                      className="max-w-full h-auto rounded-md"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={() => removeImage(url)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                field.value && (
+                  <div className="relative">
+                    <img
+                      src={field.value}
+                      alt="Uploaded"
+                      className="max-w-full h-auto rounded-md"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2"
+                      onClick={() => removeImage(field.value)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )
+              )}
+            </div>
           </div>
           <FormMessage />
         </FormItem>
