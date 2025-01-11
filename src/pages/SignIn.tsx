@@ -40,8 +40,12 @@ const SignIn = () => {
             });
             return;
           }
+
+          navigate("/admin");
+          return;
         }
 
+        // For non-admin users, check platform access
         const { data: hasAccess, error: accessError } = await supabase
           .rpc('check_platform_access', {
             user_id_input: session.user.id,
@@ -110,9 +114,12 @@ const SignIn = () => {
             });
             return;
           }
+
+          navigate("/admin");
+          return;
         }
 
-        // Check platform access
+        // For non-admin users, check platform access
         const { data: hasAccess, error: accessError } = await supabase
           .rpc('check_platform_access', {
             user_id_input: session.user.id,
