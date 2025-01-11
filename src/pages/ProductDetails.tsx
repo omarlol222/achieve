@@ -85,7 +85,7 @@ const ProductDetails = () => {
                   {product.media?.map((media: any, index: number) => (
                     <CarouselItem key={index}>
                       <div 
-                        className="h-[300px] rounded-lg bg-cover bg-center bg-gray-100"
+                        className="h-[300px] w-full rounded-lg bg-cover bg-center bg-no-repeat"
                         style={{ backgroundImage: `url(${media.media_url})` }}
                       />
                     </CarouselItem>
