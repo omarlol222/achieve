@@ -22,6 +22,7 @@ export function useProductSubmit(onClose: () => void) {
             currency: data.currency,
             image_url: data.thumbnail_url,
             test_type_id: data.test_type_id,
+            custom_features: data.custom_features, // Add this line to include custom_features in update
           })
           .eq("id", productId);
 
@@ -41,6 +42,7 @@ export function useProductSubmit(onClose: () => void) {
             currency: data.currency,
             image_url: data.thumbnail_url,
             test_type_id: data.test_type_id,
+            custom_features: data.custom_features,
           })
           .select()
           .single();
