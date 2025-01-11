@@ -16,7 +16,7 @@ const SignIn = () => {
       if (session) {
         const { data: hasAccess, error: accessError } = await supabase
           .rpc('check_platform_access', {
-            user_id: session.user.id,
+            user_id_input: session.user.id,
             platform: 'gat'
           });
 
@@ -61,7 +61,7 @@ const SignIn = () => {
         // Check platform access
         const { data: hasAccess, error: accessError } = await supabase
           .rpc('check_platform_access', {
-            user_id: session.user.id,
+            user_id_input: session.user.id,
             platform: 'gat'
           });
 

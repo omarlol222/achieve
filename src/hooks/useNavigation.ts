@@ -51,7 +51,7 @@ export const useNavigation = () => {
       if (!userId) return null;
       const { data, error } = await supabase
         .rpc('check_platform_access', {
-          user_id: userId,
+          user_id_input: userId,
           platform: 'gat'
         });
 
