@@ -7,7 +7,8 @@ import {
   Users, 
   HelpCircle,
   CreditCard,
-  ClipboardList
+  ClipboardList,
+  Package
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +66,7 @@ const AdminLayout = () => {
     { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
     { path: "/admin/questions", icon: HelpCircle, label: "Questions" },
     { path: "/admin/tests", icon: ClipboardList, label: "Tests" },
+    { path: "/admin/products", icon: Package, label: "Products" },
     { path: "/admin/users", icon: Users, label: "Users" },
     { path: "/admin/payments", icon: CreditCard, label: "Payments" },
   ];
