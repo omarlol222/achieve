@@ -56,6 +56,23 @@ export function useProductSubmit(onClose: () => void) {
           .eq("product_id", productId);
 
         if (deleteError) throw deleteError;
+
+        // Insert updated permissions
+        if (data.permissions.length > 0) {
+          const { error: permissionsError } = await supabase
+            .from("product_permissions")
+            .insert(
+              data.permissions.map((permission) => ({
+                product_id: productId,
+                test_type_id: permission.test_type_id,
+                has_course: permission.has_course,
+                has_simulator: permission.has_simulator,
+                has_practice: permission.has_practice,
+              }))
+            );
+
+          if (permissionsError) throw permissionsError;
+        }
       } else {
         // Insert new product
         const { data: newProduct, error: productError } = await supabase
@@ -88,24 +105,22 @@ export function useProductSubmit(onClose: () => void) {
           if (mediaError) throw mediaError;
         }
 
-        productId = newProduct.id;
-      }
+        // Insert permissions
+        if (data.permissions.length > 0) {
+          const { error: permissionsError } = await supabase
+            .from("product_permissions")
+            .insert(
+              data.permissions.map((permission) => ({
+                product_id: newProduct.id,
+                test_type_id: permission.test_type_id,
+                has_course: permission.has_course,
+                has_simulator: permission.has_simulator,
+                has_practice: permission.has_practice,
+              }))
+            );
 
-      // Insert permissions
-      if (data.permissions.length > 0) {
-        const { error: permissionsError } = await supabase
-          .from("product_permissions")
-          .insert(
-            data.permissions.map((permission) => ({
-              product_id: productId,
-              test_type_id: permission.test_type_id,
-              has_course: permission.has_course,
-              has_simulator: permission.has_simulator,
-              has_practice: permission.has_practice,
-            }))
-          );
-
-        if (permissionsError) throw permissionsError;
+          if (permissionsError) throw permissionsError;
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
