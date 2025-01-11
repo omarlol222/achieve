@@ -33,6 +33,13 @@ export const Navigation = () => {
             </Link>
           ) : (
             <>
+              {hasPurchased && !hideNavLinks && (
+                <Link to="/gat">
+                  <Button variant="ghost" size="sm">
+                    Dashboard
+                  </Button>
+                </Link>
+              )}
               {isAdmin && !hideNavLinks && (
                 <Link to="/admin">
                   <Button variant="ghost" size="sm">
