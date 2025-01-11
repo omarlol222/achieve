@@ -2,7 +2,6 @@ import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
-import { useCallback } from "react";
 
 type SignInFormProps = {
   siteUrl: string;
@@ -10,10 +9,6 @@ type SignInFormProps = {
 
 export const SignInForm = ({ siteUrl }: SignInFormProps) => {
   const navigate = useNavigate();
-
-  const handlePasswordReset = useCallback(() => {
-    navigate("/password-reset", { state: { recovery: true } });
-  }, [navigate]);
 
   return (
     <div className="space-y-4">
@@ -32,24 +27,22 @@ export const SignInForm = ({ siteUrl }: SignInFormProps) => {
           },
         }}
         theme="light"
-        showLinks={false}
+        providers={[]}
         redirectTo={siteUrl}
+        showLinks={false}
       />
 
       <div className="mt-4 text-center space-y-4">
         <p className="text-sm text-gray-600">
           Don't have an account?{" "}
-          <Link 
-            to="/signup" 
-            className="font-medium text-black hover:text-gray-800 transition-colors"
-          >
+          <Link to="/signup" className="font-medium text-black hover:text-gray-800">
             Sign up
           </Link>
         </p>
         <p className="text-sm text-gray-600">
           <button
-            onClick={handlePasswordReset}
-            className="font-medium text-black hover:text-gray-800 transition-colors"
+            onClick={() => navigate("/password-reset", { state: { recovery: true } })}
+            className="font-medium text-black hover:text-gray-800"
           >
             Forgot password?
           </button>
