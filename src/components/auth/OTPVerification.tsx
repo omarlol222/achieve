@@ -146,11 +146,11 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
           <InputOTP
             maxLength={6}
             value={otp}
-            onChange={(value) => setOtp(value)}
+            onChange={setOtp}
             render={({ slots }) => (
               <InputOTPGroup>
                 {slots.map((slot, index) => (
-                  <InputOTPSlot key={index} {...slot} index={index} />
+                  <InputOTPSlot key={index} {...slot} />
                 ))}
               </InputOTPGroup>
             )}
