@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { PasswordResetForm } from "@/components/auth/PasswordResetForm";
 import { OTPVerification } from "@/components/auth/OTPVerification";
+import { useNavigate } from "react-router-dom";
 
 const PasswordReset = () => {
   const [email, setEmail] = useState("");
   const [showOTP, setShowOTP] = useState(false);
+  const navigate = useNavigate();
 
   const handleResetSuccess = (resetEmail: string) => {
     setEmail(resetEmail);
@@ -12,9 +14,11 @@ const PasswordReset = () => {
   };
 
   const handleBack = () => {
-    if (showOTP) {
-      setShowOTP(false);
-    }
+    setShowOTP(false);
+  };
+
+  const handleSuccess = () => {
+    navigate("/signin");
   };
 
   return (
@@ -24,7 +28,7 @@ const PasswordReset = () => {
           <OTPVerification
             email={email}
             onBack={handleBack}
-            onSuccess={() => window.location.href = "/signin"}
+            onSuccess={handleSuccess}
           />
         ) : (
           <PasswordResetForm onResetSuccess={handleResetSuccess} />
