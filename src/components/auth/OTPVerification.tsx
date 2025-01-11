@@ -29,13 +29,13 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
     setIsLoading(true);
     try {
       setError(null);
-      const { data, error } = await supabase.auth.verifyOtp({
+      const { error: verifyError } = await supabase.auth.verifyOtp({
         email,
         token: otp,
         type: 'email'
       });
       
-      if (error) throw error;
+      if (verifyError) throw verifyError;
 
       setIsVerified(true);
       toast({
@@ -54,11 +54,11 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
     setIsLoading(true);
     try {
       setError(null);
-      const { error } = await supabase.auth.updateUser({
+      const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       onSuccess();
       toast({
