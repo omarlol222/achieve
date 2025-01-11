@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingCart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ interface Product {
 
 const Shop = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Fetch products with their permissions
   const { data: products, isLoading } = useQuery({
@@ -54,24 +56,6 @@ const Shop = () => {
       return data as Product[];
     },
   });
-
-  const handlePurchase = async (productId: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to make a purchase",
-      });
-      return;
-    }
-
-    // For now, just show a toast. We'll implement actual purchase later
-    toast({
-      title: "Coming soon!",
-      description: "Purchase functionality will be implemented soon.",
-    });
-  };
 
   if (isLoading) {
     return (
@@ -126,10 +110,10 @@ const Shop = () => {
                 </p>
                 <Button 
                   className="w-full bg-[#1B2E35] hover:bg-[#2d3f48]"
-                  onClick={() => handlePurchase(product.id)}
+                  onClick={() => navigate(`/products/${product.id}`)}
                 >
-                  <ShoppingCart className="mr-2 h-4 w-4" />
-                  Purchase
+                  View Details
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardFooter>
             </Card>
