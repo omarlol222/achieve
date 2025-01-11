@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,14 +10,14 @@ type PasswordResetFormProps = {
   onResetSuccess: (email: string) => void;
 };
 
-export const PasswordResetForm = ({ onResetSuccess }: PasswordResetFormProps) => {
+const PasswordResetFormComponent = ({ onResetSuccess }: PasswordResetFormProps) => {
   const [error, setError] = useState<string | null>(null);
   const [resetEmail, setResetEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [cooldownActive, setCooldownActive] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(45);
 
-  const startCooldownTimer = () => {
+  const startCooldownTimer = useCallback(() => {
     setCooldownActive(true);
     setCooldownSeconds(45);
     const timer = setInterval(() => {
@@ -30,9 +30,9 @@ export const PasswordResetForm = ({ onResetSuccess }: PasswordResetFormProps) =>
         return prev - 1;
       });
     }, 1000);
-  };
+  }, []);
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleResetPassword = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (cooldownActive) {
       setError(`Please wait ${cooldownSeconds} seconds before requesting another reset.`);
@@ -64,7 +64,11 @@ export const PasswordResetForm = ({ onResetSuccess }: PasswordResetFormProps) =>
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [cooldownActive, cooldownSeconds, resetEmail, onResetSuccess, startCooldownTimer]);
+
+  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setResetEmail(e.target.value);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -89,10 +93,11 @@ export const PasswordResetForm = ({ onResetSuccess }: PasswordResetFormProps) =>
             id="reset-email"
             type="email"
             value={resetEmail}
-            onChange={(e) => setResetEmail(e.target.value)}
+            onChange={handleEmailChange}
             placeholder="Enter your email"
             required
             className="mt-1"
+            disabled={isLoading || cooldownActive}
           />
         </div>
         <Button 
@@ -108,3 +113,5 @@ export const PasswordResetForm = ({ onResetSuccess }: PasswordResetFormProps) =>
     </div>
   );
 };
+
+export const PasswordResetForm = memo(PasswordResetFormComponent);

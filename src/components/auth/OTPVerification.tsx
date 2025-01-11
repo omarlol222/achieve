@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -12,14 +12,18 @@ type OTPVerificationProps = {
   onSuccess: () => void;
 };
 
-export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationProps) => {
+const OTPVerificationComponent = ({ email, onBack, onSuccess }: OTPVerificationProps) => {
   const [otp, setOtp] = useState("");
   const { error, isLoading, isVerified, verifyOTP } = useOTPVerification(email, onBack);
 
-  const handleVerifyOTP = async (e: React.FormEvent) => {
+  const handleVerifyOTP = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     await verifyOTP(otp);
-  };
+  }, [otp, verifyOTP]);
+
+  const handleOtpChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setOtp(e.target.value);
+  }, []);
 
   if (isVerified) {
     return <NewPasswordForm onSuccess={onSuccess} />;
@@ -49,11 +53,12 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
             id="verification-code"
             type="text"
             value={otp}
-            onChange={(e) => setOtp(e.target.value)}
+            onChange={handleOtpChange}
             placeholder="Enter verification code"
             required
             maxLength={6}
             className="mt-1"
+            disabled={isLoading}
           />
         </div>
 
@@ -66,6 +71,7 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
             type="button"
             onClick={onBack}
             className="text-sm text-gray-600 hover:text-gray-900"
+            disabled={isLoading}
           >
             Back to email input
           </button>
@@ -74,3 +80,5 @@ export const OTPVerification = ({ email, onBack, onSuccess }: OTPVerificationPro
     </div>
   );
 };
+
+export const OTPVerification = memo(OTPVerificationComponent);

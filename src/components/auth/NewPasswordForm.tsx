@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -9,14 +9,18 @@ type NewPasswordFormProps = {
   onSuccess: () => void;
 };
 
-export const NewPasswordForm = ({ onSuccess }: NewPasswordFormProps) => {
+const NewPasswordFormComponent = ({ onSuccess }: NewPasswordFormProps) => {
   const [newPassword, setNewPassword] = useState("");
   const { error, isLoading, resetPassword } = usePasswordReset(onSuccess);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     await resetPassword(newPassword);
-  };
+  }, [newPassword, resetPassword]);
+
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewPassword(e.target.value);
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -41,11 +45,12 @@ export const NewPasswordForm = ({ onSuccess }: NewPasswordFormProps) => {
             id="new-password"
             type="password"
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={handlePasswordChange}
             placeholder="Enter your new password"
             required
             className="mt-1"
             minLength={6}
+            disabled={isLoading}
           />
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
@@ -55,3 +60,5 @@ export const NewPasswordForm = ({ onSuccess }: NewPasswordFormProps) => {
     </div>
   );
 };
+
+export const NewPasswordForm = memo(NewPasswordFormComponent);
