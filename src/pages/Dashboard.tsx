@@ -66,10 +66,10 @@ const Dashboard = () => {
       console.log('Test types result:', data);
       return data;
     },
-    enabled: !!platformAccess, // Only fetch test types if user has platform access
+    enabled: platformAccess === true, // Only fetch test types if user has platform access
   });
 
-  if (isLoadingProfile || isLoadingAccess || isLoadingTestTypes) {
+  if (isLoadingProfile || isLoadingAccess || (platformAccess && isLoadingTestTypes)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
