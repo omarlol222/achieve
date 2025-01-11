@@ -28,7 +28,8 @@ type ProductFormData = {
   description: string;
   price: number;
   currency: string;
-  image_url: string[];
+  thumbnail_url: string;
+  detail_images: string[];
   permissions: {
     test_type_id: string;
     has_course: boolean;
@@ -54,24 +55,24 @@ export function ProductDialog({
       description: "",
       price: 0,
       currency: "SAR",
-      image_url: [],
+      thumbnail_url: "",
+      detail_images: [],
       permissions: [],
     },
   });
 
   useEffect(() => {
     if (product) {
-      // Convert single image_url to array if it's a string
-      const imageUrls = product.image_url 
-        ? (Array.isArray(product.image_url) ? product.image_url : [product.image_url])
-        : [];
+      // Get detail images from product_media
+      const detailImages = product.media?.map((m: any) => m.media_url) || [];
 
       form.reset({
         name: product.name,
         description: product.description,
         price: product.price,
         currency: product.currency,
-        image_url: imageUrls,
+        thumbnail_url: product.image_url || "",
+        detail_images: detailImages,
         permissions: product.permissions?.map((p: any) => ({
           test_type_id: p.test_type.id,
           has_course: p.has_course,
@@ -84,7 +85,8 @@ export function ProductDialog({
         description: "",
         price: 0,
         currency: "SAR",
-        image_url: [],
+        thumbnail_url: "",
+        detail_images: [],
         permissions: [],
       });
     }
@@ -92,9 +94,6 @@ export function ProductDialog({
 
   const onSubmit = async (data: ProductFormData) => {
     try {
-      // Use the first image as the main product image
-      const mainImageUrl = data.image_url[0] || null;
-
       if (product) {
         // Update existing product
         const { error: productError } = await supabase
@@ -104,14 +103,14 @@ export function ProductDialog({
             description: data.description,
             price: data.price,
             currency: data.currency,
-            image_url: mainImageUrl,
+            image_url: data.thumbnail_url,
           })
           .eq("id", product.id);
 
         if (productError) throw productError;
 
-        // Update or create product media entries for additional images
-        if (data.image_url.length > 0) {
+        // Update product media entries for detail images
+        if (data.detail_images.length > 0) {
           // Delete existing media
           const { error: deleteMediaError } = await supabase
             .from("product_media")
@@ -124,7 +123,7 @@ export function ProductDialog({
           const { error: mediaError } = await supabase
             .from("product_media")
             .insert(
-              data.image_url.map((url) => ({
+              data.detail_images.map((url) => ({
                 product_id: product.id,
                 media_url: url,
                 media_type: 'image'
@@ -150,19 +149,19 @@ export function ProductDialog({
             description: data.description,
             price: data.price,
             currency: data.currency,
-            image_url: mainImageUrl,
+            image_url: data.thumbnail_url,
           })
           .select()
           .single();
 
         if (productError) throw productError;
 
-        // Insert media entries for additional images
-        if (data.image_url.length > 0) {
+        // Insert media entries for detail images
+        if (data.detail_images.length > 0) {
           const { error: mediaError } = await supabase
             .from("product_media")
             .insert(
-              data.image_url.map((url) => ({
+              data.detail_images.map((url) => ({
                 product_id: newProduct.id,
                 media_url: url,
                 media_type: 'image'
@@ -278,8 +277,15 @@ export function ProductDialog({
 
             <ImageUploadField
               form={form}
-              fieldName="image_url"
-              label="Product Images"
+              fieldName="thumbnail_url"
+              label="Shop Thumbnail Image"
+              multiple={false}
+            />
+
+            <ImageUploadField
+              form={form}
+              fieldName="detail_images"
+              label="Product Detail Images"
               multiple={true}
             />
 
