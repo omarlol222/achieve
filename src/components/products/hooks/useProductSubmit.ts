@@ -2,6 +2,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ProductFormData } from "../types";
+import { updateProductPermissions, createProductPermissions } from "./useProductPermissions";
+import { updateProductMedia, createProductMedia } from "./useProductMedia";
 
 export function useProductSubmit(onClose: () => void) {
   const { toast } = useToast();
@@ -25,54 +27,9 @@ export function useProductSubmit(onClose: () => void) {
 
         if (productError) throw productError;
 
-        // Update product media entries for detail images
-        if (data.detail_images.length > 0) {
-          // Delete existing media
-          const { error: deleteMediaError } = await supabase
-            .from("product_media")
-            .delete()
-            .eq("product_id", productId);
-
-          if (deleteMediaError) throw deleteMediaError;
-
-          // Insert new media entries
-          const { error: mediaError } = await supabase
-            .from("product_media")
-            .insert(
-              data.detail_images.map((url) => ({
-                product_id: productId,
-                media_url: url,
-                media_type: 'image'
-              }))
-            );
-
-          if (mediaError) throw mediaError;
-        }
-
-        // Delete existing permissions
-        const { error: deleteError } = await supabase
-          .from("product_permissions")
-          .delete()
-          .eq("product_id", productId);
-
-        if (deleteError) throw deleteError;
-
-        // Insert updated permissions
-        if (data.permissions.length > 0) {
-          const { error: permissionsError } = await supabase
-            .from("product_permissions")
-            .insert(
-              data.permissions.map((permission) => ({
-                product_id: productId,
-                test_type_id: permission.test_type_id,
-                has_course: permission.has_course,
-                has_simulator: permission.has_simulator,
-                has_practice: permission.has_practice,
-              }))
-            );
-
-          if (permissionsError) throw permissionsError;
-        }
+        // Update product media and permissions
+        await updateProductMedia(productId, data.detail_images);
+        await updateProductPermissions(productId, data.permissions);
       } else {
         // Insert new product
         const { data: newProduct, error: productError } = await supabase
@@ -90,37 +47,9 @@ export function useProductSubmit(onClose: () => void) {
 
         if (productError) throw productError;
 
-        // Insert media entries for detail images
-        if (data.detail_images.length > 0) {
-          const { error: mediaError } = await supabase
-            .from("product_media")
-            .insert(
-              data.detail_images.map((url) => ({
-                product_id: newProduct.id,
-                media_url: url,
-                media_type: 'image'
-              }))
-            );
-
-          if (mediaError) throw mediaError;
-        }
-
-        // Insert permissions
-        if (data.permissions.length > 0) {
-          const { error: permissionsError } = await supabase
-            .from("product_permissions")
-            .insert(
-              data.permissions.map((permission) => ({
-                product_id: newProduct.id,
-                test_type_id: permission.test_type_id,
-                has_course: permission.has_course,
-                has_simulator: permission.has_simulator,
-                has_practice: permission.has_practice,
-              }))
-            );
-
-          if (permissionsError) throw permissionsError;
-        }
+        // Create product media and permissions
+        await createProductMedia(newProduct.id, data.detail_images);
+        await createProductPermissions(newProduct.id, data.permissions);
       }
 
       queryClient.invalidateQueries({ queryKey: ["admin-products"] });
