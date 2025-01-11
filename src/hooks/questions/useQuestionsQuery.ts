@@ -1,5 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 
+type Difficulty = "Easy" | "Moderate" | "Hard";
+
+const isValidDifficulty = (value: string): value is Difficulty => {
+  return ["Easy", "Moderate", "Hard"].includes(value);
+};
+
 export function buildQuestionsQuery(
   search: string,
   subjectFilter: string,
@@ -41,10 +47,9 @@ export function buildQuestionsQuery(
   }
 
   if (difficultyFilter && difficultyFilter !== "all") {
-    const validDifficulty = ["Easy", "Moderate", "Hard"].includes(difficultyFilter) 
-      ? difficultyFilter 
-      : "Easy";
-    query = query.eq("difficulty", validDifficulty);
+    if (isValidDifficulty(difficultyFilter)) {
+      query = query.eq("difficulty", difficultyFilter);
+    }
   }
 
   if (typeFilter && typeFilter !== "all") {
