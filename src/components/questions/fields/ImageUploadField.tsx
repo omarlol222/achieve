@@ -46,19 +46,12 @@ export function ImageUploadField<T extends Record<string, any>>({
         uploadedUrls.push(publicUrl.publicUrl);
       }
 
-      // If multiple is true, append to existing URLs, otherwise just set the single URL
       if (multiple) {
         const currentUrls = (form.getValues(fieldName) as string[]) || [];
         const newUrls = [...currentUrls, ...uploadedUrls];
-        form.setValue(
-          fieldName,
-          newUrls as PathValue<T, Path<T>>
-        );
+        form.setValue(fieldName, newUrls as PathValue<T, Path<T>>);
       } else {
-        form.setValue(
-          fieldName,
-          uploadedUrls[0] as PathValue<T, Path<T>>
-        );
+        form.setValue(fieldName, uploadedUrls[0] as PathValue<T, Path<T>>);
       }
     } catch (error: any) {
       console.error("Error uploading image:", error.message);
