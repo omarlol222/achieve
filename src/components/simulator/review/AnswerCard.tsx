@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ContentProtection } from "@/components/security/ContentProtection";
 
 type AnswerCardProps = {
   answer: {
@@ -45,51 +46,53 @@ export const AnswerCard = ({ answer }: AnswerCardProps) => {
   };
 
   return (
-    <Card className="p-6 space-y-6">
-      <div className="space-y-4">
-        <div className="flex justify-between items-start">
-          <div className="space-y-2">
-            <p className="text-sm text-gray-500">
-              Topic: {answer.question.topic?.name || "Unknown"}
-            </p>
-            <p className="font-medium">{answer.question.question_text}</p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {choices.map((choice, index) => (
-            <div
-              key={index}
-              className={cn(
-                "p-4 border rounded-lg",
-                getAnswerStyle(index)
-              )}
-            >
-              {choice}
+    <ContentProtection>
+      <Card className="p-6 space-y-6">
+        <div className="space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500">
+                Topic: {answer.question.topic?.name || "Unknown"}
+              </p>
+              <p className="font-medium">{answer.question.question_text}</p>
             </div>
-          ))}
-        </div>
-
-        {(answer.question.explanation || answer.question.explanation_image_url) && (
-          <div className="pt-4 border-t space-y-4">
-            {answer.question.explanation && (
-              <>
-                <p className="text-sm text-gray-500">Explanation:</p>
-                <p className="mt-1">{answer.question.explanation}</p>
-              </>
-            )}
-            {answer.question.explanation_image_url && (
-              <div className="rounded-lg border overflow-hidden">
-                <img
-                  src={answer.question.explanation_image_url}
-                  alt="Explanation"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-            )}
           </div>
-        )}
-      </div>
-    </Card>
+
+          <div className="space-y-3">
+            {choices.map((choice, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "p-4 border rounded-lg",
+                  getAnswerStyle(index)
+                )}
+              >
+                {choice}
+              </div>
+            ))}
+          </div>
+
+          {(answer.question.explanation || answer.question.explanation_image_url) && (
+            <div className="pt-4 border-t space-y-4">
+              {answer.question.explanation && (
+                <>
+                  <p className="text-sm text-gray-500">Explanation:</p>
+                  <p className="mt-1">{answer.question.explanation}</p>
+                </>
+              )}
+              {answer.question.explanation_image_url && (
+                <div className="rounded-lg border overflow-hidden">
+                  <img
+                    src={answer.question.explanation_image_url}
+                    alt="Explanation"
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Card>
+    </ContentProtection>
   );
 };
