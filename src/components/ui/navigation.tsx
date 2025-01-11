@@ -14,26 +14,6 @@ export const Navigation = () => {
     handleSignOut,
   } = useNavigation();
 
-  if (!userId) {
-    return (
-      <nav className="border-b">
-        <div className="container flex h-16 items-center justify-between">
-          <Link to="/">
-            <Logo />
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              to="/signin"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              Sign in
-            </Link>
-          </div>
-        </div>
-      </nav>
-    );
-  }
-
   return (
     <nav className="border-b">
       <div className="container flex h-16 items-center">
@@ -44,26 +24,37 @@ export const Navigation = () => {
         </div>
         {!hideNavLinks && <NavLinks />}
         <div className="w-[200px] flex justify-end items-center gap-2">
-          {hasPurchased && (
-            <Link to="/gat">
-              <Button variant="ghost" size="sm">
-                Dashboard
-              </Button>
+          {!userId ? (
+            <Link
+              to="/signin"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Sign in
             </Link>
+          ) : (
+            <>
+              {hasPurchased && (
+                <Link to="/gat">
+                  <Button variant="ghost" size="sm">
+                    Dashboard
+                  </Button>
+                </Link>
+              )}
+              {isAdmin && (
+                <Link to="/admin">
+                  <Button variant="ghost" size="sm">
+                    Admin
+                  </Button>
+                </Link>
+              )}
+              <UserMenu
+                isAdmin={isAdmin}
+                hasPurchased={hasPurchased}
+                hideNavLinks={hideNavLinks}
+                handleSignOut={handleSignOut}
+              />
+            </>
           )}
-          {isAdmin && (
-            <Link to="/admin">
-              <Button variant="ghost" size="sm">
-                Admin
-              </Button>
-            </Link>
-          )}
-          <UserMenu
-            isAdmin={isAdmin}
-            hasPurchased={hasPurchased}
-            hideNavLinks={hideNavLinks}
-            handleSignOut={handleSignOut}
-          />
         </div>
       </div>
     </nav>
