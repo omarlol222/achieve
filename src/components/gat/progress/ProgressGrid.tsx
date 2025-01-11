@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { SubjectProgress } from "./SubjectProgress";
 
 type ProgressGridProps = {
@@ -18,7 +19,7 @@ type ProgressGridProps = {
   };
 };
 
-export const ProgressGrid = ({ subjects, calculateTopicProgress }: ProgressGridProps) => (
+export const ProgressGrid = memo(({ subjects, calculateTopicProgress }: ProgressGridProps) => (
   <div className="grid md:grid-cols-2 gap-8">
     {subjects && subjects.length > 0 ? (
       subjects.map((subject) => (
@@ -32,4 +33,6 @@ export const ProgressGrid = ({ subjects, calculateTopicProgress }: ProgressGridP
       <p className="text-muted-foreground">No subjects available.</p>
     )}
   </div>
-);
+));
+
+ProgressGrid.displayName = "ProgressGrid";

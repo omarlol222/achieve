@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { TopicProgress } from "../TopicProgress";
 
 type SubjectProgressProps = {
@@ -18,7 +19,7 @@ type SubjectProgressProps = {
   };
 };
 
-export const SubjectProgress = ({ subject, calculateTopicProgress }: SubjectProgressProps) => (
+export const SubjectProgress = memo(({ subject, calculateTopicProgress }: SubjectProgressProps) => (
   <div className="space-y-4">
     <h3 className="text-xl font-semibold">{subject.name}</h3>
     <div className="space-y-3">
@@ -34,4 +35,6 @@ export const SubjectProgress = ({ subject, calculateTopicProgress }: SubjectProg
       })}
     </div>
   </div>
-);
+));
+
+SubjectProgress.displayName = "SubjectProgress";

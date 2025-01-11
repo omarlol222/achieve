@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ProgressHeader } from "./progress/ProgressHeader";
 import { ProgressGrid } from "./progress/ProgressGrid";
 
@@ -19,7 +20,7 @@ export type ProgressSectionProps = {
   };
 };
 
-export const ProgressSection = ({ subjects, calculateTopicProgress }: ProgressSectionProps) => (
+export const ProgressSection = memo(({ subjects, calculateTopicProgress }: ProgressSectionProps) => (
   <section className="space-y-6">
     <ProgressHeader />
     <ProgressGrid 
@@ -27,4 +28,6 @@ export const ProgressSection = ({ subjects, calculateTopicProgress }: ProgressSe
       calculateTopicProgress={calculateTopicProgress}
     />
   </section>
-);
+));
+
+ProgressSection.displayName = "ProgressSection";
