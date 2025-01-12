@@ -6,13 +6,14 @@ import { ProgressSection } from "@/components/gat/ProgressSection";
 import { LearningSection } from "@/components/gat/LearningSection";
 import { Navigation } from "@/components/ui/navigation";
 import { useToast } from "@/components/ui/use-toast";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorFallback } from "@/components/ui/error-boundary/ErrorFallback";
 
 export default function GAT() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Check session and set user ID
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
@@ -52,7 +53,15 @@ export default function GAT() {
     };
   }, [navigate, toast]);
 
-  // Fetch subjects with error handling
+  const handleError = (error: Error) => {
+    console.error("Error in GAT component:", error);
+    toast({
+      title: "Error",
+      description: "There was a problem loading your data. Please try again.",
+      variant: "destructive",
+    });
+  };
+
   const { data: subjects } = useQuery({
     queryKey: ["subjects"],
     queryFn: async () => {
@@ -116,11 +125,17 @@ export default function GAT() {
     <div className="min-h-screen bg-white">
       <Navigation />
       <div className="container py-8 space-y-8">
-        <ProgressSection
-          subjects={userProgress}
-          calculateTopicProgress={calculateTopicProgress}
-        />
-        <LearningSection />
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          onError={handleError}
+          onReset={() => window.location.reload()}
+        >
+          <ProgressSection
+            subjects={userProgress}
+            calculateTopicProgress={calculateTopicProgress}
+          />
+          <LearningSection />
+        </ErrorBoundary>
       </div>
     </div>
   );
