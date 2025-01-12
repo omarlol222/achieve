@@ -1,10 +1,13 @@
+import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-white">
+      <Navigation />
+      
       <div className="container mx-auto px-4 py-16">
         {/* Hero Section */}
         <div className="text-center mb-16">
