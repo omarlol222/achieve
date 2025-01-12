@@ -3,7 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { usePasswordReset } from "@/hooks/usePasswordReset";
+import { useAuthStore } from "@/store/useAuthStore";
 
 type NewPasswordFormProps = {
   onSuccess: () => void;
@@ -11,16 +11,17 @@ type NewPasswordFormProps = {
 
 const NewPasswordFormComponent = ({ onSuccess }: NewPasswordFormProps) => {
   const [newPassword, setNewPassword] = useState("");
-  const { error, isLoading, resetPassword } = usePasswordReset(onSuccess);
+  const { error, isLoading, updatePassword } = useAuthStore();
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    await resetPassword(newPassword);
-  }, [newPassword, resetPassword]);
-
-  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewPassword(e.target.value);
-  }, []);
+    try {
+      await updatePassword(newPassword);
+      onSuccess();
+    } catch (err) {
+      // Error is handled by the store
+    }
+  }, [newPassword, updatePassword, onSuccess]);
 
   return (
     <div className="space-y-8">
@@ -45,7 +46,7 @@ const NewPasswordFormComponent = ({ onSuccess }: NewPasswordFormProps) => {
             id="new-password"
             type="password"
             value={newPassword}
-            onChange={handlePasswordChange}
+            onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Enter your new password"
             required
             className="mt-1"

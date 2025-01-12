@@ -1,9 +1,9 @@
-import { useState, useCallback, memo } from "react";
+import { memo } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "@/components/ui/use-toast";
 
 type PasswordResetFormProps = {
@@ -11,64 +11,22 @@ type PasswordResetFormProps = {
 };
 
 const PasswordResetFormComponent = ({ onResetSuccess }: PasswordResetFormProps) => {
-  const [error, setError] = useState<string | null>(null);
+  const { error, isLoading, resetPassword } = useAuthStore();
   const [resetEmail, setResetEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [cooldownActive, setCooldownActive] = useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = useState(45);
-
-  const startCooldownTimer = useCallback(() => {
-    setCooldownActive(true);
-    setCooldownSeconds(45);
-    const timer = setInterval(() => {
-      setCooldownSeconds((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setCooldownActive(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
 
   const handleResetPassword = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (cooldownActive) {
-      setError(`Please wait ${cooldownSeconds} seconds before requesting another reset.`);
-      return;
-    }
-
-    setIsLoading(true);
     try {
-      setError(null);
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: window.location.origin + '/password-reset'
-      });
-      
-      if (error) {
-        if (error.message.includes('over_email_send_rate_limit')) {
-          startCooldownTimer();
-          throw new Error(`Please wait ${cooldownSeconds} seconds before requesting another reset.`);
-        }
-        throw error;
-      }
-      
+      await resetPassword(resetEmail);
       onResetSuccess(resetEmail);
       toast({
         title: "Check your email",
         description: "We've sent you a code to verify your identity.",
       });
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      // Error is handled by the store
     }
-  }, [cooldownActive, cooldownSeconds, resetEmail, onResetSuccess, startCooldownTimer]);
-
-  const handleEmailChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setResetEmail(e.target.value);
-  }, []);
+  }, [resetEmail, resetPassword, onResetSuccess]);
 
   return (
     <div className="space-y-8">
@@ -93,21 +51,19 @@ const PasswordResetFormComponent = ({ onResetSuccess }: PasswordResetFormProps) 
             id="reset-email"
             type="email"
             value={resetEmail}
-            onChange={handleEmailChange}
+            onChange={(e) => setResetEmail(e.target.value)}
             placeholder="Enter your email"
             required
             className="mt-1"
-            disabled={isLoading || cooldownActive}
+            disabled={isLoading}
           />
         </div>
         <Button 
           type="submit" 
           className="w-full" 
-          disabled={isLoading || cooldownActive}
+          disabled={isLoading}
         >
-          {isLoading ? "Sending..." : cooldownActive 
-            ? `Wait ${cooldownSeconds}s` 
-            : "Send Reset Code"}
+          {isLoading ? "Sending..." : "Send Reset Code"}
         </Button>
       </form>
     </div>
