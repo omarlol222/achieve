@@ -53,15 +53,15 @@ const Dashboard = () => {
     <div className="container py-8">
       <h1 className="mb-8 text-3xl font-bold">My Dashboard</h1>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {testTypes?.map((testType) => (
-          <Card key={testType.id}>
-            <CardHeader>
-              <CardTitle>{testType.name}</CardTitle>
-              <CardDescription>{testType.description}</CardDescription>
+          <Card key={testType.id} className="flex flex-col justify-between min-h-[300px]">
+            <CardHeader className="flex-1">
+              <CardTitle className="text-2xl mb-4">{testType.name}</CardTitle>
+              <CardDescription className="text-base">{testType.description}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full">
+            <CardContent className="pt-4">
+              <Button asChild className="w-full py-6 text-lg">
                 <Link to={`/${testType.name.toLowerCase()}`}>
                   Access {testType.name} Platform
                 </Link>
