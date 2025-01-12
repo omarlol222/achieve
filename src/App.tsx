@@ -14,6 +14,7 @@ import SignUp from "./pages/SignUp";
 import PasswordReset from "./pages/PasswordReset";
 import AdminLayout from "./components/layout/AdminLayout";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/admin/Dashboard";
 import Questions from "./pages/admin/Questions";
 import Tests from "./pages/admin/Tests";
 import Products from "./pages/admin/Products";
@@ -108,7 +109,7 @@ const App = () => (
             </ProtectedGatRoute>
           } />
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
+            <Route index element={<AdminDashboard />} />
             <Route path="questions" element={<Questions />} />
             <Route path="tests" element={<Tests />} />
             <Route path="products" element={<Products />} />
