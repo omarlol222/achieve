@@ -9,8 +9,8 @@ import { ProtectedGatRoute } from "@/components/auth/ProtectedGatRoute";
 // Eagerly loaded components
 import Landing from "./pages/Landing";
 import AdminLayout from "./components/layout/AdminLayout";
+import Index from "./pages/Index";
 
-// Lazy loaded components
 const About = lazy(() => import("./pages/About"));
 const Shop = lazy(() => import("./pages/Shop"));
 const ProductDetails = lazy(() => import("./pages/ProductDetails"));
@@ -66,8 +66,8 @@ const App = () => (
       <BrowserRouter>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            <Route path="/" element={<Navigate to="/index" replace />} />
-            <Route path="/index" element={<Landing />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/index" element={<Navigate to="/" replace />} />
             <Route path="/about" element={<About />} />
             <Route path="/shop" element={<Shop />} />
             <Route path="/shop/:id" element={<ProductDetails />} />
