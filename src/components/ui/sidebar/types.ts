@@ -1,4 +1,5 @@
-import { VariantProps } from "class-variance-authority";
+import { type VariantProps } from "class-variance-authority";
+import { type TooltipContent } from "@radix-ui/react-tooltip";
 import { sidebarMenuButtonVariants } from "./variants";
 
 export type SidebarContext = {
