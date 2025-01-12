@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Dashboard = () => {
-  const { data: platforms, isLoading } = useQuery({
-    queryKey: ["user-platforms"],
+  const { data: testTypes, isLoading } = useQuery({
+    queryKey: ["user-test-types"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("No session");
@@ -15,18 +15,11 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from("user_product_access")
         .select(`
-          product_id,
           products (
-            id,
-            name,
-            description,
-            product_permissions (
-              has_course,
-              has_simulator,
-              has_practice,
-              course_text,
-              simulator_text,
-              practice_text
+            test_type:test_types (
+              id,
+              name,
+              description
             )
           )
         `)
@@ -34,7 +27,17 @@ const Dashboard = () => {
         .is("expires_at", null);
 
       if (error) throw error;
-      return data;
+
+      // Transform and deduplicate test types
+      const uniqueTestTypes = data.reduce((acc: any[], item: any) => {
+        const testType = item.products.test_type;
+        if (testType && !acc.some(t => t.id === testType.id)) {
+          acc.push(testType);
+        }
+        return acc;
+      }, []);
+
+      return uniqueTestTypes;
     },
   });
 
@@ -51,32 +54,18 @@ const Dashboard = () => {
       <h1 className="mb-8 text-3xl font-bold">My Dashboard</h1>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {platforms?.map((platform) => (
-          <Card key={platform.product_id}>
+        {testTypes?.map((testType) => (
+          <Card key={testType.id}>
             <CardHeader>
-              <CardTitle>{platform.products.name}</CardTitle>
-              <CardDescription>{platform.products.description}</CardDescription>
+              <CardTitle>{testType.name}</CardTitle>
+              <CardDescription>{testType.description}</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              {platform.products.product_permissions.map((permission, index) => (
-                <div key={index} className="space-y-2">
-                  {permission.has_course && (
-                    <Button asChild className="w-full">
-                      <Link to="/gat">{permission.course_text || "Access Course"}</Link>
-                    </Button>
-                  )}
-                  {permission.has_simulator && (
-                    <Button asChild className="w-full">
-                      <Link to="/gat/simulator">{permission.simulator_text || "Access Simulator"}</Link>
-                    </Button>
-                  )}
-                  {permission.has_practice && (
-                    <Button asChild className="w-full">
-                      <Link to="/gat/practice">{permission.practice_text || "Access Practice"}</Link>
-                    </Button>
-                  )}
-                </div>
-              ))}
+            <CardContent>
+              <Button asChild className="w-full">
+                <Link to={`/${testType.name.toLowerCase()}`}>
+                  Access {testType.name} Platform
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         ))}
