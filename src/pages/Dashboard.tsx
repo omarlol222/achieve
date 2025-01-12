@@ -57,8 +57,8 @@ const Dashboard = () => {
         {testTypes?.map((testType) => (
           <Card key={testType.id} className="flex flex-col justify-between min-h-[300px]">
             <CardHeader className="flex-1">
-              <CardTitle className="text-2xl mb-4">{testType.name}</CardTitle>
-              <CardDescription className="text-base">{testType.description}</CardDescription>
+              <CardTitle className="text-2xl mb-4 text-center">{testType.name}</CardTitle>
+              <CardDescription className="text-base text-center">{testType.description}</CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
               <Button asChild className="w-full py-6 text-lg">
