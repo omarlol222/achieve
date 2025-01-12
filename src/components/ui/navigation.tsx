@@ -10,19 +10,18 @@ export function Navigation({ hideNavLinks }: { hideNavLinks?: boolean }) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Logo />
-          {userId && (
+        <Logo />
+        {userId && (
+          <div className="flex items-center gap-4">
             <Button variant="ghost" asChild>
               <Link to="/dashboard">Dashboard</Link>
             </Button>
-          )}
-        </div>
-        {userId ? (
-          <Button variant="ghost" onClick={handleSignOut}>
-            Log out
-          </Button>
-        ) : (
+            <Button variant="ghost" onClick={handleSignOut}>
+              Log out
+            </Button>
+          </div>
+        )}
+        {!userId && (
           <Button variant="ghost" asChild>
             <Link to="/signin">Log in</Link>
           </Button>
