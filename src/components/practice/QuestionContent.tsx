@@ -2,6 +2,7 @@ import { TeXComponent } from "./TeXComponent";
 import { PassageQuestion } from "./question-types/PassageQuestion";
 import { ComparisonQuestion } from "./question-types/ComparisonQuestion";
 import { QuestionChoices } from "./question-types/QuestionChoices";
+import { OptimizedImage } from "@/components/ui/optimized-image/OptimizedImage";
 
 type QuestionContentProps = {
   question: any;
@@ -41,6 +42,16 @@ export function QuestionContent({
           <TeXComponent>{question.question_text}</TeXComponent>
         </div>
 
+        {question.image_url && (
+          <div className="my-4">
+            <OptimizedImage
+              src={question.image_url}
+              alt="Question"
+              className="max-w-full h-auto rounded-lg"
+            />
+          </div>
+        )}
+
         <QuestionChoices
           choices={choices}
           selectedAnswer={selectedAnswer}
@@ -49,10 +60,23 @@ export function QuestionContent({
           onAnswerSelect={onAnswerSelect}
         />
 
-        {showFeedback && question.explanation && (
+        {showFeedback && (
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <p className="font-medium mb-2">Explanation:</p>
-            <TeXComponent>{question.explanation}</TeXComponent>
+            {question.explanation && (
+              <>
+                <p className="font-medium mb-2">Explanation:</p>
+                <TeXComponent>{question.explanation}</TeXComponent>
+              </>
+            )}
+            {question.explanation_image_url && (
+              <div className="mt-4">
+                <OptimizedImage
+                  src={question.explanation_image_url}
+                  alt="Explanation"
+                  className="max-w-full h-auto rounded-lg"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
