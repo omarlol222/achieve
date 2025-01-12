@@ -13,7 +13,7 @@ const Landing = () => {
           <p className="text-xl mb-8 text-gray-600">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean mattis congue metus.
           </p>
-          <Button className="bg-[#1B2E35] hover:bg-[#2C4752] text-lg px-8 py-6">
+          <Button className="bg-[#13292a] hover:bg-[#285759] text-lg px-8 py-6">
             Get Started
           </Button>
         </div>
