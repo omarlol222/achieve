@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export const PasswordResetForm = memo(() => {
+interface PasswordResetFormProps {
+  onResetSuccess: (email: string) => void;
+}
+
+export const PasswordResetForm = memo<PasswordResetFormProps>(({ onResetSuccess }) => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +34,8 @@ export const PasswordResetForm = memo(() => {
         title: "Check your email",
         description: "We've sent you a password reset link.",
       });
+      
+      onResetSuccess(email);
     } catch (err: any) {
       setError(err.message);
     } finally {
