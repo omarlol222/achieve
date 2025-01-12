@@ -38,27 +38,31 @@ export function QuestionContent({
       )}
 
       <div className="space-y-4">
-        <div className="text-lg font-medium">
-          <TeXComponent>{question.question_text}</TeXComponent>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="space-y-4">
+            <div className="text-lg font-medium">
+              <TeXComponent>{question.question_text}</TeXComponent>
+            </div>
 
-        {question.image_url && (
-          <div className="my-4">
-            <OptimizedImage
-              src={question.image_url}
-              alt="Question"
-              className="max-w-full h-auto rounded-lg"
+            <QuestionChoices
+              choices={choices}
+              selectedAnswer={selectedAnswer}
+              correctAnswer={showFeedback ? question.correct_answer : undefined}
+              showFeedback={showFeedback}
+              onAnswerSelect={onAnswerSelect}
             />
           </div>
-        )}
 
-        <QuestionChoices
-          choices={choices}
-          selectedAnswer={selectedAnswer}
-          correctAnswer={showFeedback ? question.correct_answer : undefined}
-          showFeedback={showFeedback}
-          onAnswerSelect={onAnswerSelect}
-        />
+          {question.image_url && (
+            <div className="w-full">
+              <OptimizedImage
+                src={question.image_url}
+                alt="Question"
+                className="w-full h-auto rounded-lg"
+              />
+            </div>
+          )}
+        </div>
 
         {showFeedback && (
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
