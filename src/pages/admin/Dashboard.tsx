@@ -32,15 +32,45 @@ const Dashboard = () => {
     },
   });
 
-  const { data: totalRevenue } = useQuery({
-    queryKey: ["total-revenue"],
+  const { data: revenueData } = useQuery({
+    queryKey: ["revenue-data"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Get current month's revenue
+      const { data: currentMonthData, error: currentError } = await supabase
         .from("purchases")
         .select("amount")
-        .eq("status", "completed");
-      if (error) throw error;
-      return data.reduce((sum, purchase) => sum + Number(purchase.amount), 0);
+        .eq("status", "completed")
+        .gte("created_at", thirtyDaysAgo.toISOString());
+      
+      if (currentError) throw currentError;
+
+      // Get previous month's revenue
+      const sixtyDaysAgo = new Date();
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+      
+      const { data: previousMonthData, error: previousError } = await supabase
+        .from("purchases")
+        .select("amount")
+        .eq("status", "completed")
+        .gte("created_at", sixtyDaysAgo.toISOString())
+        .lt("created_at", thirtyDaysAgo.toISOString());
+
+      if (previousError) throw previousError;
+
+      const currentRevenue = currentMonthData.reduce((sum, purchase) => sum + Number(purchase.amount), 0);
+      const previousRevenue = previousMonthData.reduce((sum, purchase) => sum + Number(purchase.amount), 0);
+      
+      const percentageChange = previousRevenue === 0 
+        ? 100 
+        : ((currentRevenue - previousRevenue) / previousRevenue) * 100;
+
+      return {
+        total: currentRevenue,
+        percentageChange: Math.round(percentageChange),
+      };
     },
   });
 
@@ -63,10 +93,10 @@ const Dashboard = () => {
   const stats = [
     {
       name: "Total Revenue",
-      value: `SAR ${totalRevenue?.toFixed(2) || "0"}`,
+      value: `SAR ${(revenueData?.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       icon: CreditCard,
-      change: "+20% from last month",
-      changeType: "positive" as const,
+      change: `${revenueData?.percentageChange >= 0 ? '+' : ''}${revenueData?.percentageChange || 0}% from last month`,
+      changeType: (revenueData?.percentageChange || 0) >= 0 ? "positive" as const : "negative" as const,
     },
     {
       name: "Active Members",
