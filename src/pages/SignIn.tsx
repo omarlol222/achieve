@@ -14,7 +14,7 @@ const SignIn = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/gat");
+        navigate("/dashboard");
       }
     };
     checkSession();
@@ -43,7 +43,7 @@ const SignIn = () => {
           return;
         }
 
-        navigate("/gat");
+        navigate("/dashboard");
       }
     });
 
