@@ -37,7 +37,7 @@ export const StatsCard = ({ name, value, icon: Icon, change, changeType }: StatP
             : "text-gray-600"
         }`}
       >
-        {change} from last month
+        {change}
       </span>
     </div>
   </Card>

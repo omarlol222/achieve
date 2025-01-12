@@ -8,7 +8,6 @@ import {
   Users,
 } from "lucide-react";
 import { StatsCard } from "@/components/admin/dashboard/StatsCard";
-import { UserProgressCard } from "@/components/admin/dashboard/UserProgressCard";
 
 const Dashboard = () => {
   const { data: usersCount } = useQuery({
@@ -45,82 +44,50 @@ const Dashboard = () => {
     },
   });
 
-  const { data: averageScore } = useQuery({
-    queryKey: ["average-score"],
+  const { data: activeUsers } = useQuery({
+    queryKey: ["active-users"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("test_sessions")
-        .select("total_score")
-        .not("total_score", "is", null);
-      if (error) throw error;
-      if (!data?.length) return 0;
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
-      const scores = data.map(session => session.total_score || 0);
-      return Math.round(
-        scores.reduce((sum, score) => sum + score, 0) / scores.length
-      );
-    },
-  });
-
-  const { data: userProgress, isLoading: isLoadingProgress } = useQuery({
-    queryKey: ["user-progress"],
-    queryFn: async () => {
-      const { data, error } = await supabase
+      const { count, error } = await supabase
         .from("user_progress")
-        .select(`
-          questions_attempted,
-          questions_correct,
-          user_id,
-          topic:topics(
-            name,
-            subject:subjects(name)
-          )
-        `)
-        .order('created_at', { ascending: false });
-
+        .select("*", { count: "exact" })
+        .gt("last_activity", thirtyDaysAgo.toISOString());
+      
       if (error) throw error;
-
-      const userIds = [...new Set(data?.map(progress => progress.user_id) || [])];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, full_name')
-        .in('id', userIds);
-
-      return data?.map(progress => ({
-        ...progress,
-        user: profiles?.find(profile => profile.id === progress.user_id) || { full_name: 'Unknown User' }
-      }));
+      return count || 0;
     },
   });
 
   const stats = [
     {
-      name: "Total Users",
-      value: usersCount?.toString() || "0",
-      icon: Users,
-      change: "+0%",
-      changeType: "positive" as const,
-    },
-    {
-      name: "Active Questions",
-      value: questionsCount?.toString() || "0",
-      icon: BookOpen,
-      change: "+0%",
-      changeType: "positive" as const,
-    },
-    {
       name: "Total Revenue",
       value: `SAR ${totalRevenue?.toFixed(2) || "0"}`,
       icon: CreditCard,
-      change: "+0%",
+      change: "+20% from last month",
       changeType: "positive" as const,
     },
     {
-      name: "Avg. Score",
-      value: `${averageScore || 0}%`,
+      name: "Active Members",
+      value: activeUsers?.toString() || "0",
+      icon: Users,
+      change: "+20% from last month",
+      changeType: "positive" as const,
+    },
+    {
+      name: "Total Questions",
+      value: questionsCount?.toString() || "0",
+      icon: BookOpen,
+      change: "+20% from last month",
+      changeType: "positive" as const,
+    },
+    {
+      name: "Total Members",
+      value: usersCount?.toString() || "0",
       icon: BarChart,
-      change: "0%",
-      changeType: "neutral" as const,
+      change: "+20% from last month",
+      changeType: "positive" as const,
     },
   ];
 
@@ -130,16 +97,11 @@ const Dashboard = () => {
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2">
         {stats.map((stat) => (
           <StatsCard key={stat.name} {...stat} />
         ))}
       </div>
-
-      <UserProgressCard 
-        userProgress={userProgress} 
-        isLoading={isLoadingProgress} 
-      />
 
       <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="p-6">
