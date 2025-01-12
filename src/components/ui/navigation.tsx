@@ -50,7 +50,7 @@ export function Navigation({ hideNavLinks }: { hideNavLinks?: boolean }) {
           </div>
         )}
 
-        <div className="flex-none flex items-center gap-4">
+        <div className="flex-1 flex justify-end items-center gap-4">
           {userId && (
             <>
               <Button variant="ghost" asChild>
