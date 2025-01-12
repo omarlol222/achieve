@@ -1,15 +1,8 @@
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { SignUpForm } from "@/components/auth/SignUpForm";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { SignUpForm } from "@/components/auth/SignUpForm";
 
 const Index = () => {
-  const { error: redirectError, isLoading } = useAuthRedirect();
-
-  if (isLoading) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto px-4 py-16">
