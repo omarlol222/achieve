@@ -6,6 +6,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { OptimizedImage } from "@/components/ui/optimized-image/OptimizedImage";
 
 type Media = {
   media_url: string;
@@ -22,7 +23,7 @@ export const ProductGallery = ({ media }: ProductGalleryProps) => (
         {media?.map((item, index) => (
           <CarouselItem key={index}>
             <div className="h-[400px]">
-              <img 
+              <OptimizedImage 
                 src={item.media_url}
                 alt={`Product image ${index + 1}`}
                 className="w-full h-full object-contain rounded-none"
