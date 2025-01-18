@@ -66,11 +66,13 @@ export default function SimulatorTest() {
 
   const loadModuleQuestions = async () => {
     try {
+      const subjectName = currentModuleIndex === 0 ? "Verbal" : "Quantitative";
+      
       const { data: questions, error } = await supabase
         .from("questions")
         .select(`
           *,
-          topic:topics (
+          topic:topics!topic_id (
             id,
             name,
             subject:subjects (
@@ -79,7 +81,7 @@ export default function SimulatorTest() {
             )
           )
         `)
-        .eq("topic:topics.subject.name", currentModuleIndex === 0 ? "Verbal" : "Quantitative")
+        .eq("topic.subject.name", subjectName)
         .limit(20);
 
       if (error) throw error;
@@ -135,7 +137,7 @@ export default function SimulatorTest() {
         .from("module_progress")
         .update({ completed_at: new Date().toISOString() })
         .eq("session_id", sessionId)
-        .eq("module_id", currentModuleIndex);
+        .eq("module_id", currentModuleIndex.toString());
 
       if (error) throw error;
 
