@@ -9,6 +9,8 @@ type QuestionContentProps = {
   selectedAnswer: number | null;
   showFeedback: boolean;
   onAnswerSelect: (answer: number) => void;
+  questionNumber?: number;
+  totalQuestions?: number;
 };
 
 export function QuestionContent({
@@ -16,6 +18,8 @@ export function QuestionContent({
   selectedAnswer,
   showFeedback,
   onAnswerSelect,
+  questionNumber = 1,
+  totalQuestions = 1,
 }: QuestionContentProps) {
   if (!question) {
     console.error("No question provided to QuestionContent");
@@ -30,24 +34,35 @@ export function QuestionContent({
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {question.question_type === "passage" && (
-          <div className="lg:col-span-4">
-            <PassageQuestion passageText={question.passage_text} />
-          </div>
+    <div className="space-y-8 max-w-5xl mx-auto">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">
+          QUESTION {questionNumber}
+        </h2>
+        {question.id && (
+          <span className="text-gray-500">QUESTION ID #{question.id}</span>
         )}
+      </div>
 
-        <div className={`lg:col-span-${question.image_url ? "6" : (question.question_type === "passage" ? "8" : "12")}`}>
-          {question.question_type === "comparison" && (
-            <ComparisonQuestion
-              value1={question.comparison_value1}
-              value2={question.comparison_value2}
-            />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className={`lg:col-span-${question.image_url ? "6" : "12"}`}>
+          {question.question_type === "passage" && (
+            <div className="mb-6">
+              <PassageQuestion passageText={question.passage_text} />
+            </div>
           )}
 
-          <div className="space-y-4">
-            <div className="text-lg font-medium">
+          {question.question_type === "comparison" && (
+            <div className="mb-6">
+              <ComparisonQuestion
+                value1={question.comparison_value1}
+                value2={question.comparison_value2}
+              />
+            </div>
+          )}
+
+          <div className="space-y-6">
+            <div className="text-lg text-gray-800 leading-relaxed">
               <TeXComponent>{question.question_text}</TeXComponent>
             </div>
 
@@ -62,21 +77,23 @@ export function QuestionContent({
         </div>
 
         {question.image_url && (
-          <div className="lg:col-span-6 lg:col-start-7">
-            <OptimizedImage
-              src={question.image_url}
-              alt="Question"
-              className="w-full h-auto rounded-lg"
-            />
+          <div className="lg:col-span-6">
+            <div className="bg-black rounded-lg overflow-hidden">
+              <OptimizedImage
+                src={question.image_url}
+                alt="Question"
+                className="w-full h-auto object-contain"
+              />
+            </div>
           </div>
         )}
       </div>
 
       {showFeedback && (
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+        <div className="mt-8 p-6 bg-blue-50 rounded-lg">
           {question.explanation && (
             <>
-              <p className="font-medium mb-2">Explanation:</p>
+              <p className="font-medium mb-3">Explanation:</p>
               <TeXComponent>{question.explanation}</TeXComponent>
             </>
           )}

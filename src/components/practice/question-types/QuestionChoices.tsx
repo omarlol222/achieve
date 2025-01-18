@@ -17,11 +17,12 @@ export function QuestionChoices({
   onAnswerSelect 
 }: QuestionChoicesProps) {
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {choices.map((choice, index) => {
         const isSelected = selectedAnswer === index + 1;
         const isCorrect = showFeedback && correctAnswer === index + 1;
         const isWrong = showFeedback && isSelected && !isCorrect;
+        const letter = String.fromCharCode(65 + index); // Convert 0,1,2,3 to A,B,C,D
 
         return (
           <button
@@ -29,19 +30,20 @@ export function QuestionChoices({
             onClick={() => !showFeedback && onAnswerSelect(index + 1)}
             disabled={showFeedback}
             className={cn(
-              "w-full text-left p-4 rounded-lg border transition-colors",
-              isSelected ? "border-2" : "border",
-              isCorrect
-                ? "bg-green-50 border-green-500"
-                : isWrong
-                ? "bg-red-50 border-red-500"
-                : isSelected
-                ? "border-gray-400"
-                : "border-gray-200 hover:border-gray-400",
-              "disabled:cursor-default"
+              "w-full text-left p-4 rounded-lg border-2 transition-colors",
+              "hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2",
+              isSelected ? "border-primary" : "border-gray-200",
+              isCorrect && "bg-green-50 border-green-500",
+              isWrong && "bg-red-50 border-red-500",
+              "disabled:cursor-default flex items-center gap-3"
             )}
           >
-            <TeXComponent>{choice}</TeXComponent>
+            <span className="flex-shrink-0 w-8 h-8 rounded-full border-2 border-current flex items-center justify-center">
+              {letter}
+            </span>
+            <span className="flex-grow">
+              <TeXComponent>{choice}</TeXComponent>
+            </span>
           </button>
         );
       })}
