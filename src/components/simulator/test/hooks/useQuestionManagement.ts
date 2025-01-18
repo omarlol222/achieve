@@ -41,7 +41,14 @@ export function useQuestionManagement(currentModuleIndex: number) {
         const { data: topicQuestions, error: questionsError } = await supabase
           .from("questions")
           .select(`
-            *,
+            id,
+            question_text,
+            choice1,
+            choice2,
+            choice3,
+            choice4,
+            correct_answer,
+            image_url,
             topic:topics!topic_id (
               id,
               name,
@@ -64,10 +71,18 @@ export function useQuestionManagement(currentModuleIndex: number) {
 
       // If no questions were found, try to get default questions based on subject
       if (allQuestions.length === 0) {
+        console.log("No topic-specific questions found, fetching default questions");
         const { data: defaultQuestions, error: defaultError } = await supabase
           .from("questions")
           .select(`
-            *,
+            id,
+            question_text,
+            choice1,
+            choice2,
+            choice3,
+            choice4,
+            correct_answer,
+            image_url,
             topic:topics!topic_id (
               id,
               name,
