@@ -16,7 +16,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
         setError(null);
         console.log("Loading questions for module index:", currentModuleIndex);
 
-        // First get all modules ordered by order_index
+        // First get the module at the specified index
         const { data: modules, error: modulesError } = await supabase
           .from("test_modules")
           .select("id")
@@ -41,10 +41,12 @@ export function useQuestionManagement(currentModuleIndex: number) {
 
         console.log("Found module:", currentModule.id);
 
-        // Get questions for the current module
+        // Get questions for the current module with a proper join
         const { data: moduleQuestions, error: questionsError } = await supabase
           .from("module_questions")
           .select(`
+            id,
+            module_id,
             question:questions (
               id,
               question_text,
@@ -55,6 +57,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
               correct_answer,
               image_url,
               explanation,
+              explanation_image_url,
               question_type,
               passage_text,
               comparison_value1,
@@ -68,7 +71,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
           console.error("Error fetching module questions:", questionsError);
           throw new Error("Failed to load module questions");
         }
-        
+
         if (!moduleQuestions || moduleQuestions.length === 0) {
           console.error("No questions found for module:", currentModule.id);
           throw new Error("No questions available for this module");
@@ -77,7 +80,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
         // Transform the nested data structure and filter out any null questions
         const formattedQuestions = moduleQuestions
           .map(mq => mq.question)
-          .filter(q => q !== null);
+          .filter((q): q is NonNullable<typeof q> => q !== null);
 
         if (formattedQuestions.length === 0) {
           throw new Error("No valid questions found for this module");
