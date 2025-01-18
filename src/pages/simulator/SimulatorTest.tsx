@@ -60,6 +60,8 @@ export default function SimulatorTest() {
                 selectedAnswer={answers[currentQuestion.id] || null}
                 showFeedback={false}
                 onAnswerSelect={handleAnswer}
+                questionNumber={currentQuestionIndex + 1}
+                totalQuestions={questions.length}
               />
             )}
           </Card>
@@ -70,7 +72,7 @@ export default function SimulatorTest() {
             flagged={flagged}
             onPrevious={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
             onNext={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
-            onFlag={toggleFlag}
+            onFlag={() => currentQuestion && toggleFlag(currentQuestion.id)}
             onComplete={handleModuleComplete}
           />
         </div>
