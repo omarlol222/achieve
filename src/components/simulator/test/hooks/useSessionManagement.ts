@@ -12,10 +12,18 @@ export function useSessionManagement(currentModuleIndex: number) {
       setLoading(true);
       console.log("Initializing test session...");
 
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
       // Create a new test session
       const { data: session, error: sessionError } = await supabase
         .from("test_sessions")
-        .insert({})
+        .insert({
+          user_id: user.id
+        })
         .select()
         .single();
 

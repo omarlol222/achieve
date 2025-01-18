@@ -7,10 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 export function useTestSession(initialModuleIndex = 0) {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentModule, setCurrentModule] = useState<any>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   
   const {
     sessionId,
-    loading,
+    loading: sessionLoading,
     initializeSession,
     completeModule
   } = useSessionManagement(initialModuleIndex);
@@ -18,7 +19,8 @@ export function useTestSession(initialModuleIndex = 0) {
   const {
     questions,
     currentQuestionIndex,
-    setCurrentQuestionIndex
+    setCurrentQuestionIndex,
+    loading: questionsLoading
   } = useQuestionManagement(initialModuleIndex);
 
   const {
@@ -63,14 +65,33 @@ export function useTestSession(initialModuleIndex = 0) {
     loadModuleData();
   }, [initialModuleIndex]);
 
+  // Initialize session when component mounts
   useEffect(() => {
-    initializeSession();
-  }, []);
+    const init = async () => {
+      setIsInitializing(true);
+      await initializeSession();
+      setIsInitializing(false);
+    };
 
-  const handleAnswerSelect = async (answer: number) => {
-    if (!questions[currentQuestionIndex]) return;
-    const questionId = questions[currentQuestionIndex].id;
+    if (hasStarted && !sessionId) {
+      init();
+    }
+  }, [hasStarted, sessionId, initializeSession]);
+
+  const handleAnswerSelect = async (questionId: string, answer: number) => {
+    if (!sessionId) {
+      console.error("No active session");
+      return;
+    }
     await handleAnswer(questionId, answer);
+  };
+
+  const handleModuleComplete = async () => {
+    if (!sessionId) {
+      console.error("No active session");
+      return;
+    }
+    await completeModule();
   };
 
   return {
@@ -82,10 +103,10 @@ export function useTestSession(initialModuleIndex = 0) {
     answers,
     flagged,
     timeLeft: currentModule?.time_limit ? currentModule.time_limit * 60 : 3600,
-    loading,
+    loading: sessionLoading || questionsLoading || isInitializing,
     error: null,
     handleAnswer: handleAnswerSelect,
-    handleModuleComplete: completeModule,
+    handleModuleComplete,
     toggleFlag,
     hasStarted,
     setHasStarted,
