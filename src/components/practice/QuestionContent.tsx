@@ -34,60 +34,54 @@ export function QuestionContent({
   ];
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-8">
+    <div className="w-full max-w-4xl mx-auto px-4 py-8">
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-800">
             QUESTION {questionNumber}
           </h2>
           {question.id && (
-            <span className="text-gray-500">QUESTION ID #{question.id}</span>
+            <span className="text-sm text-gray-500">QUESTION ID #{question.id}</span>
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className={`lg:col-span-${question.image_url ? "7" : "12"} space-y-6`}>
-            {question.question_type === "passage" && (
-              <div className="mb-6">
-                <PassageQuestion passageText={question.passage_text} />
-              </div>
-            )}
-
-            {question.question_type === "comparison" && (
-              <div className="mb-6">
-                <ComparisonQuestion
-                  value1={question.comparison_value1}
-                  value2={question.comparison_value2}
-                />
-              </div>
-            )}
-
-            <div className="space-y-6">
-              <div className="text-lg text-gray-800 leading-relaxed">
-                <TeXComponent>{question.question_text}</TeXComponent>
-              </div>
-
-              <QuestionChoices
-                choices={choices}
-                selectedAnswer={selectedAnswer}
-                correctAnswer={showFeedback ? question.correct_answer : undefined}
-                showFeedback={showFeedback}
-                onAnswerSelect={onAnswerSelect}
-              />
-            </div>
-          </div>
-
-          {question.image_url && (
-            <div className="lg:col-span-5">
-              <div className="bg-black rounded-lg overflow-hidden">
-                <OptimizedImage
-                  src={question.image_url}
-                  alt="Question"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-            </div>
+        <div className="space-y-8">
+          {question.question_type === "passage" && (
+            <PassageQuestion passageText={question.passage_text} />
           )}
+
+          {question.question_type === "comparison" && (
+            <ComparisonQuestion
+              value1={question.comparison_value1}
+              value2={question.comparison_value2}
+            />
+          )}
+
+          <div className="space-y-6">
+            <div className="text-lg text-gray-800 leading-relaxed">
+              <TeXComponent>{question.question_text}</TeXComponent>
+            </div>
+
+            {question.image_url && (
+              <div className="max-w-2xl mx-auto">
+                <div className="bg-black rounded-lg overflow-hidden">
+                  <OptimizedImage
+                    src={question.image_url}
+                    alt="Question"
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              </div>
+            )}
+
+            <QuestionChoices
+              choices={choices}
+              selectedAnswer={selectedAnswer}
+              correctAnswer={showFeedback ? question.correct_answer : undefined}
+              showFeedback={showFeedback}
+              onAnswerSelect={onAnswerSelect}
+            />
+          </div>
         </div>
 
         {showFeedback && (
