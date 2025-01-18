@@ -15,59 +15,39 @@ export function useQuestionManagement(currentModuleIndex: number) {
       setError(null);
       console.log("Starting to load questions for module index:", currentModuleIndex);
       
-      // Get the module configuration based on the order_index
-      const { data: module, error: moduleError } = await supabase
+      // First get the module ID for the current index
+      const { data: modules, error: moduleError } = await supabase
         .from("test_modules")
-        .select(`
-          id,
-          name,
-          subject_id,
-          test_type_id,
-          difficulty_levels,
-          module_topics (
-            topic_id,
-            percentage,
-            question_count
-          )
-        `)
-        .eq("order_index", currentModuleIndex)
-        .maybeSingle();
+        .select("id")
+        .order('order_index', { ascending: true });
 
       if (moduleError) {
         console.error("Error fetching module:", moduleError);
-        setError("Failed to load module configuration");
-        throw moduleError;
-      }
-      
-      if (!module) {
-        console.error("No module found for index:", currentModuleIndex);
-        setError("Module not found");
+        setError("Failed to load module");
         return;
       }
 
-      console.log("Found module:", module);
-      console.log("Module topics:", module.module_topics);
-
-      // Validate and filter difficulty levels
-      const validDifficulties = (module.difficulty_levels || []).filter(
-        (level): level is Difficulty => 
-          level === "Easy" || level === "Moderate" || level === "Hard"
-      );
-
-      if (validDifficulties.length === 0) {
-        console.error("No valid difficulty levels found, using all difficulties");
-        validDifficulties.push("Easy", "Moderate", "Hard");
+      if (!modules || modules.length === 0) {
+        console.error("No modules found");
+        setError("No modules available");
+        return;
       }
 
-      // For each topic in the module, fetch the specified number of questions
-      let allQuestions: any[] = [];
-      
-      for (const topicConfig of module.module_topics) {
-        console.log("Fetching questions for topic config:", topicConfig);
-        
-        const { data: topicQuestions, error: questionsError } = await supabase
-          .from("questions")
-          .select(`
+      // Get the module at the specified index
+      const moduleId = modules[currentModuleIndex]?.id;
+      if (!moduleId) {
+        console.error("No module found at index:", currentModuleIndex);
+        setError(`No module found at position ${currentModuleIndex + 1}`);
+        return;
+      }
+
+      console.log("Found module ID:", moduleId);
+
+      // Get questions for this module through module_questions junction table
+      const { data: moduleQuestions, error: questionsError } = await supabase
+        .from("module_questions")
+        .select(`
+          question:questions (
             id,
             question_text,
             choice1,
@@ -80,7 +60,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
             passage_text,
             comparison_value1,
             comparison_value2,
-            topic:topics!topic_id (
+            topic:topics (
               id,
               name,
               subject:subjects (
@@ -88,77 +68,36 @@ export function useQuestionManagement(currentModuleIndex: number) {
                 name
               )
             )
-          `)
-          .eq("topic_id", topicConfig.topic_id)
-          .eq("test_type_id", module.test_type_id)
-          .in("difficulty", validDifficulties as readonly Difficulty[])
-          .limit(topicConfig.question_count);
+          )
+        `)
+        .eq('module_id', moduleId);
 
-        if (questionsError) {
-          console.error("Error fetching questions for topic:", questionsError);
-          setError("Failed to load questions for topic");
-          throw questionsError;
-        }
-        
-        if (topicQuestions) {
-          console.log(`Found ${topicQuestions.length} questions for topic ${topicConfig.topic_id}`);
-          allQuestions = [...allQuestions, ...topicQuestions];
-        }
+      if (questionsError) {
+        console.error("Error fetching questions:", questionsError);
+        setError("Failed to load questions");
+        return;
       }
 
-      // If no questions were found, try to get default questions based on subject
-      if (allQuestions.length === 0) {
-        console.log("No topic-specific questions found, fetching default questions");
-        const { data: defaultQuestions, error: defaultError } = await supabase
-          .from("questions")
-          .select(`
-            id,
-            question_text,
-            choice1,
-            choice2,
-            choice3,
-            choice4,
-            correct_answer,
-            image_url,
-            question_type,
-            passage_text,
-            comparison_value1,
-            comparison_value2,
-            topic:topics!topic_id (
-              id,
-              name,
-              subject:subjects (
-                id,
-                name
-              )
-            )
-          `)
-          .eq("topic.subject_id", module.subject_id)
-          .eq("test_type_id", module.test_type_id)
-          .in("difficulty", validDifficulties as readonly Difficulty[])
-          .limit(20);
+      // Transform the nested data structure
+      const questions = moduleQuestions
+        ?.map(mq => mq.question)
+        .filter(q => q !== null);
 
-        if (defaultError) {
-          console.error("Error fetching default questions:", defaultError);
-          setError("Failed to load default questions");
-          throw defaultError;
-        }
-        
-        if (defaultQuestions) {
-          console.log(`Found ${defaultQuestions.length} default questions`);
-          allQuestions = defaultQuestions;
-        }
-      }
-
-      // Shuffle the questions to randomize their order
-      const shuffledQuestions = allQuestions.sort(() => Math.random() - 0.5);
+      console.log(`Loaded ${questions?.length || 0} questions for module`);
       
-      console.log("Final questions loaded:", shuffledQuestions.length);
+      if (!questions || questions.length === 0) {
+        setError("No questions available for this module");
+        return;
+      }
+
+      // Shuffle the questions
+      const shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
       setQuestions(shuffledQuestions);
-      setLoading(false);
+      
     } catch (err: any) {
       console.error("Error loading questions:", err);
       setError(err.message || "Failed to load questions");
+    } finally {
       setLoading(false);
     }
   };
