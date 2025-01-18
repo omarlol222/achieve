@@ -3,11 +3,14 @@ import { useSessionManagement } from "./hooks/useSessionManagement";
 import { useQuestionManagement } from "./hooks/useQuestionManagement";
 import { useAnswerManagement } from "./hooks/useAnswerManagement";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export function useTestSession(initialModuleIndex = 0) {
+  const { toast } = useToast();
   const [hasStarted, setHasStarted] = useState(false);
   const [currentModule, setCurrentModule] = useState<any>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const {
     sessionId,
@@ -35,7 +38,7 @@ export function useTestSession(initialModuleIndex = 0) {
     const loadModuleData = async () => {
       try {
         console.log("Loading module data for index:", initialModuleIndex);
-        const { data: module, error } = await supabase
+        const { data: module, error: moduleError } = await supabase
           .from("test_modules")
           .select(`
             id,
@@ -50,20 +53,44 @@ export function useTestSession(initialModuleIndex = 0) {
           .eq("order_index", initialModuleIndex)
           .maybeSingle();
 
-        if (error) {
-          console.error("Error loading module:", error);
+        if (moduleError) {
+          console.error("Error loading module:", moduleError);
+          setError("Failed to load module data");
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to load module data"
+          });
+          return;
+        }
+
+        if (!module) {
+          console.error("No module found for index:", initialModuleIndex);
+          setError(`No module found with order index ${initialModuleIndex}`);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: `No module found with order index ${initialModuleIndex}`
+          });
           return;
         }
 
         console.log("Loaded module:", module);
         setCurrentModule(module);
+        setError(null);
       } catch (err) {
         console.error("Error in loadModuleData:", err);
+        setError("An unexpected error occurred");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "An unexpected error occurred while loading the module"
+        });
       }
     };
 
     loadModuleData();
-  }, [initialModuleIndex]);
+  }, [initialModuleIndex, toast]);
 
   // Initialize session when component mounts
   useEffect(() => {
@@ -104,7 +131,7 @@ export function useTestSession(initialModuleIndex = 0) {
     flagged,
     timeLeft: currentModule?.time_limit ? currentModule.time_limit * 60 : 3600,
     loading: sessionLoading || questionsLoading || isInitializing,
-    error: null,
+    error,
     handleAnswer: handleAnswerSelect,
     handleModuleComplete,
     toggleFlag,
