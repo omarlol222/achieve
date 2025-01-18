@@ -7,11 +7,11 @@ export const useModuleQuestions = (moduleId: string) => {
     queryFn: async () => {
       console.log("Fetching questions for module:", moduleId);
       
-      const { data: questions, error } = await supabase
+      const { data: moduleQuestions, error } = await supabase
         .from('module_questions')
         .select(`
-          question_id,
-          questions (
+          id,
+          question:questions (
             id,
             question_text,
             choice1,
@@ -35,15 +35,17 @@ export const useModuleQuestions = (moduleId: string) => {
         throw error;
       }
 
-      if (!questions?.length) {
+      if (!moduleQuestions?.length) {
         console.log("No questions found for module");
         return [];
       }
 
       // Transform the data to match the expected format
-      const transformedQuestions = questions.map(q => ({
-        ...q.questions,
-      }));
+      const transformedQuestions = moduleQuestions
+        .filter(mq => mq.question) // Filter out any null questions
+        .map(mq => ({
+          ...mq.question,
+        }));
 
       console.log("Fetched questions:", transformedQuestions.length);
       return transformedQuestions;
