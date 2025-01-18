@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { QuestionCard } from "./test/QuestionCard";
 import { QuestionNavigation } from "./test/QuestionNavigation";
@@ -6,6 +6,7 @@ import { TestHeader } from "./test/TestHeader";
 import { useQuestionNavigation } from "./test/hooks/useQuestionNavigation";
 import { useModuleAnswers } from "./test/hooks/useModuleAnswers";
 import { useModuleQuestions } from "./test/hooks/useModuleQuestions";
+import { supabase } from "@/integrations/supabase/client";
 
 type ModuleTestProps = {
   moduleProgress: {
