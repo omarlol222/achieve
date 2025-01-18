@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
-export const ProtectedGatRoute = ({ children }: { children: React.ReactNode }) => {
+export const ProtectedGatRoute = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -41,5 +41,5 @@ export const ProtectedGatRoute = ({ children }: { children: React.ReactNode }) =
     checkAccess();
   }, [navigate, toast]);
 
-  return <>{children}</>;
+  return <Outlet />;
 };
