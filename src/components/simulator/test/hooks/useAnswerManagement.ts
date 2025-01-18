@@ -2,19 +2,26 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export function useAnswerManagement(sessionId: string | null) {
+export function useAnswerManagement(moduleProgressId: string | null) {
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [flagged, setFlagged] = useState<Record<string, boolean>>({});
 
   const loadExistingAnswers = async () => {
-    if (!sessionId) return;
+    if (!moduleProgressId) {
+      console.log("No module progress ID provided");
+      return;
+    }
 
     try {
-      const { data: existingAnswers } = await supabase
+      console.log("Loading existing answers for module:", moduleProgressId);
+      
+      const { data: existingAnswers, error } = await supabase
         .from("module_answers")
         .select("question_id, selected_answer, is_flagged")
-        .eq("module_progress_id", sessionId);
+        .eq("module_progress_id", moduleProgressId);
+
+      if (error) throw error;
 
       if (existingAnswers) {
         const answerMap: Record<string, number> = {};
@@ -27,6 +34,7 @@ export function useAnswerManagement(sessionId: string | null) {
           }
         });
         
+        console.log("Loaded answers:", answerMap);
         setAnswers(answerMap);
         setFlagged(flagMap);
       }
@@ -37,13 +45,18 @@ export function useAnswerManagement(sessionId: string | null) {
 
   useEffect(() => {
     loadExistingAnswers();
-  }, [sessionId]);
+  }, [moduleProgressId]);
 
   const handleAnswer = async (questionId: string, answer: number) => {
-    if (!sessionId) return;
+    if (!moduleProgressId) {
+      console.error("No module progress ID available");
+      return;
+    }
     
     try {
-      // First update the local state
+      console.log("Saving answer:", { moduleProgressId, questionId, answer });
+      
+      // Update local state first
       setAnswers(prev => ({
         ...prev,
         [questionId]: answer
@@ -53,7 +66,7 @@ export function useAnswerManagement(sessionId: string | null) {
       const { error } = await supabase
         .from("module_answers")
         .upsert({
-          module_progress_id: sessionId,
+          module_progress_id: moduleProgressId,
           question_id: questionId,
           selected_answer: answer,
           is_flagged: flagged[questionId] || false
@@ -68,7 +81,10 @@ export function useAnswerManagement(sessionId: string | null) {
         });
         throw error;
       }
+      
+      console.log("Answer saved successfully");
     } catch (err: any) {
+      console.error("Error saving answer:", err);
       toast({
         variant: "destructive",
         title: "Error saving answer",
@@ -77,11 +93,35 @@ export function useAnswerManagement(sessionId: string | null) {
     }
   };
 
-  const toggleFlag = (questionId: string) => {
-    setFlagged(prev => ({
-      ...prev,
-      [questionId]: !prev[questionId]
-    }));
+  const toggleFlag = async (questionId: string) => {
+    if (!moduleProgressId) return;
+    
+    const newFlaggedState = !flagged[questionId];
+    
+    try {
+      setFlagged(prev => ({
+        ...prev,
+        [questionId]: newFlaggedState
+      }));
+
+      const { error } = await supabase
+        .from("module_answers")
+        .upsert({
+          module_progress_id: moduleProgressId,
+          question_id: questionId,
+          selected_answer: answers[questionId],
+          is_flagged: newFlaggedState
+        });
+
+      if (error) throw error;
+    } catch (err: any) {
+      // Revert flag state on error
+      setFlagged(prev => ({
+        ...prev,
+        [questionId]: !newFlaggedState
+      }));
+      console.error("Error toggling flag:", err);
+    }
   };
 
   return {

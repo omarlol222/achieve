@@ -7,6 +7,8 @@ export function useQuestionManagement(currentModuleIndex: number) {
 
   const loadModuleQuestions = async () => {
     try {
+      console.log("Loading questions for module index:", currentModuleIndex);
+      
       const subjectName = currentModuleIndex === 0 ? "Verbal" : "Quantitative";
       
       const { data: questions, error } = await supabase
@@ -26,6 +28,8 @@ export function useQuestionManagement(currentModuleIndex: number) {
         .limit(20);
 
       if (error) throw error;
+      
+      console.log("Loaded questions:", questions?.length);
       setQuestions(questions || []);
     } catch (err: any) {
       console.error("Error loading questions:", err);
