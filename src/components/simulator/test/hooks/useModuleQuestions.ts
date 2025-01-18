@@ -26,7 +26,15 @@ export const useModuleQuestions = (moduleId: string) => {
             image_url,
             explanation,
             passage_text,
-            explanation_image_url
+            explanation_image_url,
+            topic:topics (
+              id,
+              name,
+              subject:subjects (
+                id,
+                name
+              )
+            )
           )
         `)
         .eq('module_id', moduleId)
@@ -47,7 +55,7 @@ export const useModuleQuestions = (moduleId: string) => {
         .filter(mq => mq.question) // Filter out any null questions
         .map(mq => ({
           ...mq.question,
-          module_question_id: mq.id
+          module_question_id: mq.id // Keep track of the module_question association
         }));
 
       console.log("Fetched questions:", transformedQuestions.length);
