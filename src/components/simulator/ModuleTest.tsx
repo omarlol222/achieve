@@ -24,7 +24,7 @@ type ModuleTestProps = {
 
 export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
   const { toast } = useToast();
-  const { data: questions, isLoading: isLoadingQuestions, error } = useModuleQuestions(moduleProgress.module_id);
+  const { data: questions = [], isLoading: isLoadingQuestions, error } = useModuleQuestions(moduleProgress.module_id);
   const { answers, flagged, handleAnswer, toggleFlag } = useModuleAnswers(moduleProgress.id);
   const { isSubmitting, handleSubmitModule } = useModuleState(moduleProgress);
   
@@ -36,7 +36,7 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
     isFirstQuestion,
     isLastQuestion,
     timeLeft,
-  } = useQuestionNavigation(questions?.length || 0, moduleProgress.module?.time_limit || 30);
+  } = useQuestionNavigation(questions.length || 0, moduleProgress.module?.time_limit || 30);
 
   useEffect(() => {
     if (timeLeft === 0) {
