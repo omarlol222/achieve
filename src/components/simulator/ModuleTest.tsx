@@ -6,16 +6,23 @@ import { useModuleAnswers } from "./test/hooks/useModuleAnswers";
 import { useModuleQuestions } from "./test/hooks/useModuleQuestions";
 import { useModuleState } from "./test/hooks/useModuleState";
 import { Button } from "@/components/ui/button";
+import { TestHeader } from "./test/TestHeader";
+import { useToast } from "@/hooks/use-toast";
 
 type ModuleTestProps = {
   moduleProgress: {
     id: string;
     module_id: string;
+    module?: {
+      name?: string;
+      time_limit?: number;
+    };
   };
   onComplete?: () => void;
 };
 
 export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
+  const { toast } = useToast();
   const { data: questions, isLoading: isLoadingQuestions, error } = useModuleQuestions(moduleProgress.module_id);
   const { answers, flagged, handleAnswer, toggleFlag } = useModuleAnswers(moduleProgress.id);
   const { isSubmitting, handleSubmitModule } = useModuleState(moduleProgress);
@@ -27,19 +34,24 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
     goToPrevious,
     isFirstQuestion,
     isLastQuestion,
-  } = useQuestionNavigation(questions?.length || 0);
+    timeLeft,
+  } = useQuestionNavigation(questions?.length || 0, moduleProgress.module?.time_limit || 30);
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      toast({
+        title: "Time's up!",
+        description: "Your answers will be submitted automatically.",
+      });
+      handleSubmitModule();
+    }
+  }, [timeLeft, handleSubmitModule, toast]);
 
   useEffect(() => {
     if (onComplete && !isSubmitting) {
       onComplete();
     }
   }, [isSubmitting, onComplete]);
-
-  useEffect(() => {
-    if (questions) {
-      console.log("Questions loaded:", questions.length);
-    }
-  }, [questions]);
 
   if (isLoadingQuestions) {
     return (
@@ -79,6 +91,13 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
 
   return (
     <div className="space-y-8">
+      <TestHeader
+        moduleName={moduleProgress.module?.name || "Module"}
+        timeLeft={timeLeft}
+        currentIndex={currentIndex}
+        totalQuestions={questions.length}
+      />
+
       <QuestionCard
         question={currentQuestion}
         selectedAnswer={answers[currentQuestion.id]}

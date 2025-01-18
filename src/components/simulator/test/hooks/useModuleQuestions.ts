@@ -11,6 +11,7 @@ export const useModuleQuestions = (moduleId: string) => {
         .from('module_questions')
         .select(`
           id,
+          module_id,
           question:questions (
             id,
             question_text,
@@ -25,10 +26,19 @@ export const useModuleQuestions = (moduleId: string) => {
             image_url,
             explanation,
             passage_text,
-            explanation_image_url
+            explanation_image_url,
+            topic:topics (
+              id,
+              name,
+              subject:subjects (
+                id,
+                name
+              )
+            )
           )
         `)
-        .eq('module_id', moduleId);
+        .eq('module_id', moduleId)
+        .order('id');
 
       if (error) {
         console.error("Error fetching module questions:", error);
@@ -45,6 +55,7 @@ export const useModuleQuestions = (moduleId: string) => {
         .filter(mq => mq.question) // Filter out any null questions
         .map(mq => ({
           ...mq.question,
+          module_question_id: mq.id // Keep track of the module_question association
         }));
 
       console.log("Fetched questions:", transformedQuestions.length);
