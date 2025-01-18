@@ -24,20 +24,35 @@ type ModuleProgress = {
 };
 
 export const calculateSubjectScore = (subjectName: string, session: any) => {
-  console.log("Calculating score for subject:", subjectName);
-  console.log("Session data:", session);
+  if (!session?.module_progress) return 0;
   
   const name = subjectName.toLowerCase();
+  const isVerbal = name === 'english' || name.includes('verbal');
+  const isQuantitative = name === 'math' || name.includes('quant');
   
-  if (name === 'english' || name.includes('verbal')) {
-    console.log("Verbal score:", session.verbal_score);
-    return session.verbal_score || 0;
-  } else if (name === 'math' || name.includes('quant')) {
-    console.log("Quantitative score:", session.quantitative_score);
-    return session.quantitative_score || 0;
-  }
+  if (!isVerbal && !isQuantitative) return 0;
   
-  return 0;
+  const relevantProgress = session.module_progress.filter((progress: any) => {
+    const subjectLower = progress.module?.subject?.name.toLowerCase();
+    return isVerbal ? 
+      (subjectLower === 'english' || subjectLower.includes('verbal')) :
+      (subjectLower === 'math' || subjectLower.includes('quant'));
+  });
+
+  if (relevantProgress.length === 0) return 0;
+
+  const totalAnswers = relevantProgress.reduce((sum: number, progress: any) => 
+    sum + (progress.module_answers?.length || 0), 0);
+
+  if (totalAnswers === 0) return 0;
+
+  const correctAnswers = relevantProgress.reduce((sum: number, progress: any) => {
+    return sum + (progress.module_answers?.filter((answer: any) => 
+      answer.selected_answer === answer.question.correct_answer
+    ).length || 0);
+  }, 0);
+
+  return Math.round((correctAnswers / totalAnswers) * 100);
 };
 
 export const calculateTopicPerformance = (moduleProgress: ModuleProgress[]) => {

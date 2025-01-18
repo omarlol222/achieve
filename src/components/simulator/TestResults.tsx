@@ -28,12 +28,12 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
   const subjects = [...new Set(
     session.module_progress
-      ?.filter(progress => progress.module.subject)
+      ?.filter(progress => progress.module?.subject)
       .map(progress => progress.module.subject)
   )];
 
   const uniqueSubjects = subjects.filter((subject, index, self) =>
-    index === self.findIndex((s) => s.id === subject.id)
+    index === self.findIndex((s) => s?.id === subject?.id)
   );
 
   const subjectScores = uniqueSubjects.map(subject => ({
@@ -41,7 +41,11 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
     score: calculateSubjectScore(subject.name, session)
   }));
 
-  const totalScore = session.total_score || 0;
+  const totalScore = Math.round(
+    subjectScores.reduce((sum, subject) => sum + subject.score, 0) / 
+    (subjectScores.length || 1)
+  );
+
   const topicPerformance = calculateTopicPerformance(session.module_progress || []);
 
   if (selectedModuleId) {
