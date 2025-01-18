@@ -64,5 +64,6 @@ export const useModuleQuestions = (moduleId: string) => {
     enabled: !!moduleId,
     retry: 1,
     staleTime: 0,
+    refetchOnWindowFocus: false,
   });
 };
