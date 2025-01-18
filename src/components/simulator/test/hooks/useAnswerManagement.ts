@@ -2,24 +2,40 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export function useAnswerManagement(moduleProgressId: string | null) {
+export function useAnswerManagement(sessionId: string | null) {
   const { toast } = useToast();
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [flagged, setFlagged] = useState<Record<string, boolean>>({});
+  const [currentModuleProgressId, setCurrentModuleProgressId] = useState<string | null>(null);
 
   const loadExistingAnswers = async () => {
-    if (!moduleProgressId) {
-      console.log("No module progress ID provided");
+    if (!sessionId) {
+      console.log("No session ID provided");
       return;
     }
 
     try {
-      console.log("Loading existing answers for module:", moduleProgressId);
+      console.log("Loading existing answers for session:", sessionId);
+      
+      // First, get the current module progress ID
+      const { data: moduleProgress, error: moduleError } = await supabase
+        .from("module_progress")
+        .select("id")
+        .eq("session_id", sessionId)
+        .is("completed_at", null)
+        .single();
+
+      if (moduleError) {
+        console.error("Error loading module progress:", moduleError);
+        return;
+      }
+
+      setCurrentModuleProgressId(moduleProgress.id);
       
       const { data: existingAnswers, error } = await supabase
         .from("module_answers")
         .select("question_id, selected_answer, is_flagged")
-        .eq("module_progress_id", moduleProgressId);
+        .eq("module_progress_id", moduleProgress.id);
 
       if (error) throw error;
 
@@ -45,16 +61,16 @@ export function useAnswerManagement(moduleProgressId: string | null) {
 
   useEffect(() => {
     loadExistingAnswers();
-  }, [moduleProgressId]);
+  }, [sessionId]);
 
   const handleAnswer = async (questionId: string, answer: number) => {
-    if (!moduleProgressId) {
-      console.error("No module progress ID available");
+    if (!sessionId || !currentModuleProgressId) {
+      console.error("No session ID or module progress ID available");
       return;
     }
     
     try {
-      console.log("Saving answer:", { moduleProgressId, questionId, answer });
+      console.log("Saving answer:", { moduleProgressId: currentModuleProgressId, questionId, answer });
       
       // Update local state first
       setAnswers(prev => ({
@@ -66,7 +82,7 @@ export function useAnswerManagement(moduleProgressId: string | null) {
       const { error } = await supabase
         .from("module_answers")
         .upsert({
-          module_progress_id: moduleProgressId,
+          module_progress_id: currentModuleProgressId,
           question_id: questionId,
           selected_answer: answer,
           is_flagged: flagged[questionId] || false
@@ -94,7 +110,7 @@ export function useAnswerManagement(moduleProgressId: string | null) {
   };
 
   const toggleFlag = async (questionId: string) => {
-    if (!moduleProgressId) return;
+    if (!sessionId || !currentModuleProgressId) return;
     
     const newFlaggedState = !flagged[questionId];
     
@@ -107,7 +123,7 @@ export function useAnswerManagement(moduleProgressId: string | null) {
       const { error } = await supabase
         .from("module_answers")
         .upsert({
-          module_progress_id: moduleProgressId,
+          module_progress_id: currentModuleProgressId,
           question_id: questionId,
           selected_answer: answers[questionId],
           is_flagged: newFlaggedState
