@@ -6,19 +6,16 @@ import { useAnswerManagement } from "./hooks/useAnswerManagement";
 export function useTestSession(initialModuleIndex = 0) {
   const {
     sessionId,
-    currentModuleIndex,
     loading,
-    error,
     initializeSession,
-    handleModuleComplete,
-    setCurrentModuleIndex
+    completeModule
   } = useSessionManagement(initialModuleIndex);
 
   const {
     questions,
     currentQuestionIndex,
     setCurrentQuestionIndex
-  } = useQuestionManagement(currentModuleIndex);
+  } = useQuestionManagement(initialModuleIndex);
 
   const {
     answers,
@@ -39,7 +36,7 @@ export function useTestSession(initialModuleIndex = 0) {
 
   return {
     sessionId,
-    currentModuleIndex,
+    currentModuleIndex: initialModuleIndex,
     questions,
     currentQuestionIndex,
     setCurrentQuestionIndex,
@@ -47,9 +44,9 @@ export function useTestSession(initialModuleIndex = 0) {
     flagged,
     timeLeft: 3600, // TODO: Implement timer management in a separate hook
     loading,
-    error,
+    error: null,
     handleAnswer: handleAnswerSelect,
-    handleModuleComplete,
+    handleModuleComplete: completeModule,
     toggleFlag
   };
 }
