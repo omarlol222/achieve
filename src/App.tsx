@@ -17,6 +17,7 @@ const ProductDetails = lazy(() => import("./pages/ProductDetails"));
 const SignIn = lazy(() => import("./pages/SignIn"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const PasswordReset = lazy(() => import("./pages/PasswordReset"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 
 // Admin pages
 const AdminLayout = lazy(() => import("./components/layout/AdminLayout"));
@@ -40,6 +41,7 @@ function App() {
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/password-reset" element={<PasswordReset />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/gat" element={<GAT />} />
       <Route path="/gat/english" element={
         <ProtectedGatRoute>
