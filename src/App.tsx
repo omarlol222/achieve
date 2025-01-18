@@ -14,7 +14,6 @@ import AdminPayments from "@/pages/admin/Payments";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { ProtectedGatRoute } from "@/components/auth/ProtectedGatRoute";
 import Simulator from "@/pages/Simulator";
-import SimulatorTest from "@/pages/simulator/SimulatorTest";
 import SimulatorResults from "@/pages/simulator/SimulatorResults";
 import AllTests from "@/pages/simulator/AllTests";
 
@@ -29,7 +28,6 @@ export default function App() {
       <Route path="/gat" element={<ProtectedGatRoute />}>
         <Route index element={<GAT />} />
         <Route path="simulator" element={<Simulator />} />
-        <Route path="simulator/test" element={<SimulatorTest />} />
         <Route path="simulator/results/:sessionId" element={<SimulatorResults />} />
         <Route path="simulator/all-tests" element={<AllTests />} />
       </Route>
