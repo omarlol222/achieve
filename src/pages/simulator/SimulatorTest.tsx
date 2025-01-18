@@ -57,7 +57,7 @@ export default function SimulatorTest() {
             {currentQuestion && (
               <QuestionContent
                 question={currentQuestion}
-                selectedAnswer={answers[currentQuestionIndex] || null}
+                selectedAnswer={answers[currentQuestion.id] || null}
                 showFeedback={false}
                 onAnswerSelect={handleAnswer}
               />
@@ -69,7 +69,7 @@ export default function SimulatorTest() {
             totalQuestions={questions.length}
             flagged={flagged}
             onPrevious={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
-            onNext={() => setCurrentQuestionIndex(prev => prev + 1)}
+            onNext={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
             onFlag={toggleFlag}
             onComplete={handleModuleComplete}
           />

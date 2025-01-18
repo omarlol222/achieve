@@ -78,14 +78,13 @@ export function useTestSession(initialModuleIndex = 0) {
       if (error) throw error;
       setQuestions(questions || []);
 
-      // Load existing answers for this module
       if (sessionId) {
-        const { data: existingAnswers, error: answersError } = await supabase
+        const { data: existingAnswers } = await supabase
           .from("module_answers")
           .select("question_id, selected_answer, is_flagged")
           .eq("module_progress_id", sessionId);
 
-        if (!answersError && existingAnswers) {
+        if (existingAnswers) {
           const answerMap: Record<string, number> = {};
           const flagMap: Record<string, boolean> = {};
           
@@ -111,6 +110,13 @@ export function useTestSession(initialModuleIndex = 0) {
     const currentQuestion = questions[currentQuestionIndex];
     
     try {
+      // First update the local state
+      setAnswers(prev => ({
+        ...prev,
+        [currentQuestion.id]: answer
+      }));
+
+      // Then persist to the database
       const { error } = await supabase
         .from("module_answers")
         .upsert({
@@ -120,13 +126,15 @@ export function useTestSession(initialModuleIndex = 0) {
           is_flagged: flagged[currentQuestion.id] || false
         });
 
-      if (error) throw error;
-
-      setAnswers(prev => ({
-        ...prev,
-        [currentQuestion.id]: answer
-      }));
-
+      if (error) {
+        // If there's an error, revert the local state
+        setAnswers(prev => {
+          const newState = { ...prev };
+          delete newState[currentQuestion.id];
+          return newState;
+        });
+        throw error;
+      }
     } catch (err: any) {
       toast({
         variant: "destructive",
