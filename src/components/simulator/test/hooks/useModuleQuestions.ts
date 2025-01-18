@@ -7,63 +7,49 @@ export const useModuleQuestions = (moduleId: string) => {
     queryFn: async () => {
       console.log("Fetching questions for module:", moduleId);
       
-      // First, get the existing questions for this module
-      const { data: moduleQuestions, error: moduleError } = await supabase
-        .from("module_questions")
-        .select("question_id")
-        .eq("module_id", moduleId);
+      const { data: questions, error } = await supabase
+        .from('module_questions')
+        .select(`
+          question_id,
+          questions (
+            id,
+            question_text,
+            choice1,
+            choice2,
+            choice3,
+            choice4,
+            correct_answer,
+            question_type,
+            comparison_value1,
+            comparison_value2,
+            image_url,
+            explanation,
+            passage_text,
+            explanation_image_url
+          )
+        `)
+        .eq('module_id', moduleId);
 
-      if (moduleError) {
-        console.error("Error fetching module questions:", moduleError);
-        throw moduleError;
+      if (error) {
+        console.error("Error fetching module questions:", error);
+        throw error;
       }
 
-      if (!moduleQuestions?.length) {
+      if (!questions?.length) {
         console.log("No questions found for module");
         return [];
       }
 
-      const questionIds = moduleQuestions.map(q => q.question_id);
-      console.log("Question IDs:", questionIds);
-      
-      // Then fetch the full question details
-      const { data: questions, error: questionsError } = await supabase
-        .from("questions")
-        .select(`
-          id,
-          question_text,
-          choice1,
-          choice2,
-          choice3,
-          choice4,
-          correct_answer,
-          question_type,
-          comparison_value1,
-          comparison_value2,
-          image_url,
-          explanation,
-          passage_text
-        `)
-        .in('id', questionIds);
+      // Transform the data to match the expected format
+      const transformedQuestions = questions.map(q => ({
+        ...q.questions,
+      }));
 
-      if (questionsError) {
-        console.error("Error fetching questions:", questionsError);
-        throw questionsError;
-      }
-
-      console.log("Fetched questions:", questions?.length);
-      
-      if (!questions?.length) {
-        console.log("No questions data returned");
-        return [];
-      }
-
-      // Shuffle the questions
-      return questions.sort(() => Math.random() - 0.5);
+      console.log("Fetched questions:", transformedQuestions.length);
+      return transformedQuestions;
     },
     enabled: !!moduleId,
-    retry: 1,
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     refetchOnWindowFocus: false,
   });
 };
