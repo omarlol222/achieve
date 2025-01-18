@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -51,7 +51,14 @@ const Dashboard = () => {
 
   return (
     <div className="container py-8">
-      <h1 className="mb-8 text-3xl font-bold">My Dashboard</h1>
+      <div className="mb-8 flex items-center gap-4">
+        <Button variant="outline" size="icon" asChild>
+          <Link to="/gat">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
+        <h1 className="text-3xl font-bold">My Dashboard</h1>
+      </div>
       
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {testTypes?.map((testType) => (
