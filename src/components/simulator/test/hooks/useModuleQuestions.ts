@@ -8,18 +8,22 @@ export const useModuleQuestions = (moduleId: string) => {
       console.log("Fetching questions for module:", moduleId);
       
       // First, get the existing questions for this module
-      const { data: existingQuestions, error: existingError } = await supabase
+      const { data: moduleQuestions, error: moduleError } = await supabase
         .from("module_questions")
         .select("question_id")
         .eq("module_id", moduleId);
 
-      if (existingError) throw existingError;
-
-      if (!existingQuestions?.length) {
-        throw new Error("No questions found for this module");
+      if (moduleError) {
+        console.error("Error fetching module questions:", moduleError);
+        throw moduleError;
       }
 
-      const questionIds = existingQuestions.map(q => q.question_id);
+      if (!moduleQuestions?.length) {
+        console.log("No questions found for module");
+        return [];
+      }
+
+      const questionIds = moduleQuestions.map(q => q.question_id);
       
       // Then fetch the full question details
       const { data: questions, error: questionsError } = await supabase
@@ -41,10 +45,16 @@ export const useModuleQuestions = (moduleId: string) => {
         `)
         .in('id', questionIds);
 
-      if (questionsError) throw questionsError;
+      if (questionsError) {
+        console.error("Error fetching questions:", questionsError);
+        throw questionsError;
+      }
+
+      console.log("Fetched questions:", questions?.length);
       
       // Shuffle the questions
       return questions?.sort(() => Math.random() - 0.5) || [];
     },
+    enabled: !!moduleId,
   });
 };
