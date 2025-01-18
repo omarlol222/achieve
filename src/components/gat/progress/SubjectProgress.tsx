@@ -1,4 +1,5 @@
 import { memo, useMemo } from "react";
+import { Button } from "@/components/ui/button";
 import { TopicProgress } from "../TopicProgress";
 
 type SubjectProgressProps = {
@@ -11,45 +12,67 @@ type SubjectProgressProps = {
       progress: {
         points: number;
       };
+      subtopics?: {
+        id: string;
+        name: string;
+        progress: {
+          points: number;
+        };
+      }[];
     }[];
   };
   calculateTopicProgress: (topicId: string) => {
     percentage: number;
     points: number;
   };
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 };
 
-export const SubjectProgress = memo(({ subject, calculateTopicProgress }: SubjectProgressProps) => {
-  // Memoize the topics list to prevent unnecessary re-renders
+export const SubjectProgress = memo(({ subject, calculateTopicProgress, isExpanded, onToggleExpand }: SubjectProgressProps) => {
   const topicsList = useMemo(() => 
     subject.topics.map((topic) => {
       const progress = calculateTopicProgress(topic.id);
       return (
-        <TopicProgress
-          key={topic.id}
-          name={topic.name}
-          value={progress.points}
-        />
+        <div key={topic.id} className="space-y-4">
+          <TopicProgress
+            name={topic.name}
+            value={progress.points}
+          />
+          {isExpanded && topic.subtopics && topic.subtopics.length > 0 && (
+            <div className="ml-4 space-y-3">
+              {topic.subtopics.map((subtopic) => (
+                <TopicProgress
+                  key={subtopic.id}
+                  name={subtopic.name}
+                  value={subtopic.progress.points}
+                  variant="subtle"
+                />
+              ))}
+            </div>
+          )}
+        </div>
       );
     }),
-    [subject.topics, calculateTopicProgress]
+    [subject.topics, calculateTopicProgress, isExpanded]
   );
 
   return (
     <div className="space-y-4">
-      <h3 className="text-xl font-semibold">{subject.name}</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-semibold">{subject.name}</h3>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={onToggleExpand}
+        >
+          {isExpanded ? "Hide details" : "View details"}
+        </Button>
+      </div>
       <div className="space-y-3">
         {topicsList}
       </div>
     </div>
-  );
-}, (prevProps, nextProps) => {
-  // Deep comparison for subject and calculateTopicProgress
-  return (
-    prevProps.subject.id === nextProps.subject.id &&
-    prevProps.subject.name === nextProps.subject.name &&
-    prevProps.subject.topics === nextProps.subject.topics &&
-    prevProps.calculateTopicProgress === nextProps.calculateTopicProgress
   );
 });
 

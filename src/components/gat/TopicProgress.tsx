@@ -1,28 +1,41 @@
 import { memo, useMemo } from "react";
 import { Progress } from "@/components/ui/progress";
 import { ProgressStats } from "./progress/ProgressStats";
+import { cn } from "@/lib/utils";
 
 type TopicProgressProps = {
   name: string;
   value: number;
+  variant?: "default" | "subtle";
 };
 
-export const TopicProgress = memo(({ name, value }: TopicProgressProps) => {
-  // Memoize the progress percentage calculation
+export const TopicProgress = memo(({ name, value, variant = "default" }: TopicProgressProps) => {
   const progressPercentage = useMemo(() => (value / 1000) * 100, [value]);
 
   return (
-    <div className="space-y-2">
+    <div className={cn("space-y-2", variant === "subtle" && "opacity-80")}>
       <div className="flex justify-between items-center">
-        <div className="text-sm font-medium">{name}</div>
+        <div className={cn(
+          "text-sm font-medium",
+          variant === "subtle" && "text-sm font-normal"
+        )}>
+          {name}
+        </div>
         <ProgressStats points={value} />
       </div>
-      <Progress value={progressPercentage} className="h-2" />
+      <Progress 
+        value={progressPercentage} 
+        className={cn(
+          "h-2",
+          variant === "subtle" && "h-1.5"
+        )} 
+      />
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison function for memo
-  return prevProps.name === nextProps.name && prevProps.value === nextProps.value;
+  return prevProps.name === nextProps.name && 
+         prevProps.value === nextProps.value && 
+         prevProps.variant === nextProps.variant;
 });
 
 TopicProgress.displayName = "TopicProgress";

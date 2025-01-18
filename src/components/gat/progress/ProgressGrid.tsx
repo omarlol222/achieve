@@ -11,16 +11,24 @@ type ProgressGridProps = {
       progress: {
         points: number;
       };
+      subtopics?: {
+        id: string;
+        name: string;
+        progress: {
+          points: number;
+        };
+      }[];
     }[];
   }[];
   calculateTopicProgress: (topicId: string) => {
     percentage: number;
     points: number;
   };
+  expandedSubject: string | null;
+  onToggleExpand: (subjectId: string | null) => void;
 };
 
-export const ProgressGrid = memo(({ subjects, calculateTopicProgress }: ProgressGridProps) => {
-  // Memoize the empty state check
+export const ProgressGrid = memo(({ subjects, calculateTopicProgress, expandedSubject, onToggleExpand }: ProgressGridProps) => {
   const isEmpty = useMemo(() => !subjects || subjects.length === 0, [subjects]);
 
   if (isEmpty) {
@@ -34,15 +42,11 @@ export const ProgressGrid = memo(({ subjects, calculateTopicProgress }: Progress
           key={subject.id}
           subject={subject}
           calculateTopicProgress={calculateTopicProgress}
+          isExpanded={expandedSubject === subject.id}
+          onToggleExpand={() => onToggleExpand(expandedSubject === subject.id ? null : subject.id)}
         />
       ))}
     </div>
-  );
-}, (prevProps, nextProps) => {
-  // Deep comparison for subjects array
-  return (
-    prevProps.subjects === nextProps.subjects &&
-    prevProps.calculateTopicProgress === nextProps.calculateTopicProgress
   );
 });
 
