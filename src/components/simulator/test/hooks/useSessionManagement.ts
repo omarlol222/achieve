@@ -29,12 +29,22 @@ export function useSessionManagement(initialModuleIndex = 0) {
       console.log("Created test session:", session.id);
       setSessionId(session.id);
       
-      // Initialize first module progress
+      // Get the first module ID
+      const { data: modules, error: modulesError } = await supabase
+        .from("test_modules")
+        .select("id")
+        .order("order_index")
+        .limit(1)
+        .single();
+
+      if (modulesError) throw modulesError;
+      
+      // Initialize first module progress with actual module ID
       const { error: moduleError } = await supabase
         .from("module_progress")
         .insert({
           session_id: session.id,
-          module_id: currentModuleIndex.toString(),
+          module_id: modules.id,
           started_at: new Date().toISOString()
         });
 
@@ -63,33 +73,53 @@ export function useSessionManagement(initialModuleIndex = 0) {
     try {
       console.log("Completing module:", currentModuleIndex);
       
+      // Get current module ID
+      const { data: currentModule, error: currentModuleError } = await supabase
+        .from("test_modules")
+        .select("id")
+        .order("order_index")
+        .eq("order_index", currentModuleIndex)
+        .single();
+
+      if (currentModuleError) throw currentModuleError;
+
       // Update current module progress
       const { error: progressError } = await supabase
         .from("module_progress")
-        .update({ 
-          completed_at: new Date().toISOString() 
-        })
+        .update({ completed_at: new Date().toISOString() })
         .eq("session_id", sessionId)
-        .eq("module_id", currentModuleIndex.toString());
+        .eq("module_id", currentModule.id);
 
       if (progressError) throw progressError;
       
       console.log("Updated module progress completion");
 
-      if (currentModuleIndex === 0) {
+      // Check if there's a next module
+      const { data: nextModule, error: nextModuleError } = await supabase
+        .from("test_modules")
+        .select("id")
+        .order("order_index")
+        .eq("order_index", currentModuleIndex + 1)
+        .single();
+
+      if (nextModuleError && nextModuleError.code !== "PGRST116") {
+        throw nextModuleError;
+      }
+
+      if (nextModule) {
         // Start next module
-        const { error: nextModuleError } = await supabase
+        const { error: nextModuleProgressError } = await supabase
           .from("module_progress")
           .insert({
             session_id: sessionId,
-            module_id: "1",
+            module_id: nextModule.id,
             started_at: new Date().toISOString()
           });
 
-        if (nextModuleError) throw nextModuleError;
+        if (nextModuleProgressError) throw nextModuleProgressError;
         
         console.log("Created next module progress");
-        setCurrentModuleIndex(1);
+        setCurrentModuleIndex(currentModuleIndex + 1);
       } else {
         // Complete session
         const { error: sessionError } = await supabase
