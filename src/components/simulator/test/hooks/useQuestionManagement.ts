@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Difficulty = "Easy" | "Moderate" | "Hard";
-
 export function useQuestionManagement(currentModuleIndex: number) {
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -15,15 +13,15 @@ export function useQuestionManagement(currentModuleIndex: number) {
       setError(null);
       console.log("Starting to load questions for module index:", currentModuleIndex);
       
-      // First get the module ID for the current index
+      // Get all modules ordered by order_index
       const { data: modules, error: moduleError } = await supabase
         .from("test_modules")
         .select("id")
         .order('order_index', { ascending: true });
 
       if (moduleError) {
-        console.error("Error fetching module:", moduleError);
-        setError("Failed to load module");
+        console.error("Error fetching modules:", moduleError);
+        setError("Failed to load modules");
         return;
       }
 
@@ -34,14 +32,14 @@ export function useQuestionManagement(currentModuleIndex: number) {
       }
 
       // Get the module at the specified index
-      const moduleId = modules[currentModuleIndex]?.id;
-      if (!moduleId) {
+      const module = modules[currentModuleIndex];
+      if (!module) {
         console.error("No module found at index:", currentModuleIndex);
         setError(`No module found at position ${currentModuleIndex + 1}`);
         return;
       }
 
-      console.log("Found module ID:", moduleId);
+      console.log("Found module ID:", module.id);
 
       // Get questions for this module through module_questions junction table
       const { data: moduleQuestions, error: questionsError } = await supabase
@@ -70,7 +68,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
             )
           )
         `)
-        .eq('module_id', moduleId);
+        .eq('module_id', module.id);
 
       if (questionsError) {
         console.error("Error fetching questions:", questionsError);
@@ -78,20 +76,20 @@ export function useQuestionManagement(currentModuleIndex: number) {
         return;
       }
 
-      // Transform the nested data structure
-      const questions = moduleQuestions
+      // Transform the nested data structure and filter out null values
+      const validQuestions = moduleQuestions
         ?.map(mq => mq.question)
-        .filter(q => q !== null);
+        .filter((q): q is NonNullable<typeof q> => q !== null);
 
-      console.log(`Loaded ${questions?.length || 0} questions for module`);
+      console.log(`Loaded ${validQuestions?.length || 0} questions for module`);
       
-      if (!questions || questions.length === 0) {
+      if (!validQuestions || validQuestions.length === 0) {
         setError("No questions available for this module");
         return;
       }
 
       // Shuffle the questions
-      const shuffledQuestions = [...questions].sort(() => Math.random() - 0.5);
+      const shuffledQuestions = [...validQuestions].sort(() => Math.random() - 0.5);
       setQuestions(shuffledQuestions);
       
     } catch (err: any) {

@@ -33,16 +33,21 @@ export function useSessionManagement(currentModuleIndex: number) {
       console.log("Created test session:", session.id);
       setSessionId(session.id);
       
-      // Get the first module ID
-      const { data: module, error: moduleError } = await supabase
+      // Get all modules ordered by order_index
+      const { data: modules, error: moduleError } = await supabase
         .from("test_modules")
-        .select("id")
-        .eq("order_index", currentModuleIndex)
-        .maybeSingle();
+        .select("id, order_index")
+        .order('order_index', { ascending: true });
 
       if (moduleError) throw moduleError;
+      if (!modules || modules.length === 0) {
+        throw new Error("No test modules available");
+      }
+
+      // Find the module at the requested index position
+      const module = modules[currentModuleIndex];
       if (!module) {
-        throw new Error(`No module found with order index: ${currentModuleIndex}`);
+        throw new Error(`No module found at position ${currentModuleIndex + 1}`);
       }
       
       // Initialize first module progress
@@ -66,6 +71,7 @@ export function useSessionManagement(currentModuleIndex: number) {
         title: "Error",
         description: error.message
       });
+      throw error; // Re-throw to be handled by the caller
     }
   };
 
@@ -79,34 +85,40 @@ export function useSessionManagement(currentModuleIndex: number) {
       console.log("Completing current module...");
 
       // Get current module progress
-      const { data: currentModule, error: currentModuleError } = await supabase
-        .from("test_modules")
-        .select("id")
-        .eq("order_index", currentModuleIndex)
-        .maybeSingle();
+      const { data: currentProgress, error: progressError } = await supabase
+        .from("module_progress")
+        .select("id, module_id")
+        .eq("session_id", sessionId)
+        .is("completed_at", null)
+        .single();
 
-      if (currentModuleError) throw currentModuleError;
-      if (!currentModule) {
-        throw new Error(`No module found with order index: ${currentModuleIndex}`);
+      if (progressError) throw progressError;
+      if (!currentProgress) {
+        throw new Error("No active module progress found");
       }
 
       // Mark current module as completed
       const { error: completeError } = await supabase
         .from("module_progress")
         .update({ completed_at: new Date().toISOString() })
-        .eq("session_id", sessionId)
-        .eq("module_id", currentModule.id);
+        .eq("id", currentProgress.id);
 
       if (completeError) throw completeError;
 
-      // Check if there's a next module
-      const { data: nextModule, error: nextModuleError } = await supabase
+      // Get all modules ordered by order_index
+      const { data: modules, error: modulesError } = await supabase
         .from("test_modules")
-        .select("id")
-        .eq("order_index", currentModuleIndex + 1)
-        .maybeSingle();
+        .select("id, order_index")
+        .order('order_index', { ascending: true });
 
-      if (nextModuleError) throw nextModuleError;
+      if (modulesError) throw modulesError;
+      if (!modules || modules.length === 0) {
+        throw new Error("No test modules available");
+      }
+
+      // Find current module index and check if there's a next one
+      const currentIndex = modules.findIndex(m => m.id === currentProgress.module_id);
+      const nextModule = modules[currentIndex + 1];
 
       // If there's a next module, initialize it
       if (nextModule) {
