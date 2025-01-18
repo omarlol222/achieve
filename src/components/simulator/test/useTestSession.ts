@@ -77,31 +77,54 @@ export function useTestSession(initialModuleIndex = 0) {
 
       if (error) throw error;
       setQuestions(questions || []);
+
+      // Load existing answers for this module
+      if (sessionId) {
+        const { data: existingAnswers, error: answersError } = await supabase
+          .from("module_answers")
+          .select("question_id, selected_answer, is_flagged")
+          .eq("module_progress_id", sessionId);
+
+        if (!answersError && existingAnswers) {
+          const answerMap: Record<string, number> = {};
+          const flagMap: Record<string, boolean> = {};
+          
+          existingAnswers.forEach(answer => {
+            if (answer.question_id) {
+              answerMap[answer.question_id] = answer.selected_answer;
+              flagMap[answer.question_id] = answer.is_flagged;
+            }
+          });
+          
+          setAnswers(answerMap);
+          setFlagged(flagMap);
+        }
+      }
     } catch (err: any) {
       setError(err.message);
     }
   };
 
   const handleAnswer = async (answer: number) => {
-    if (!sessionId) return;
+    if (!sessionId || !questions[currentQuestionIndex]) return;
 
+    const currentQuestion = questions[currentQuestionIndex];
+    
     try {
-      const currentQuestion = questions[currentQuestionIndex];
-      
       const { error } = await supabase
         .from("module_answers")
-        .insert({
+        .upsert({
           module_progress_id: sessionId,
           question_id: currentQuestion.id,
           selected_answer: answer,
-          is_flagged: flagged[currentQuestionIndex] || false
+          is_flagged: flagged[currentQuestion.id] || false
         });
 
       if (error) throw error;
 
       setAnswers(prev => ({
         ...prev,
-        [currentQuestionIndex]: answer
+        [currentQuestion.id]: answer
       }));
 
     } catch (err: any) {
@@ -152,9 +175,12 @@ export function useTestSession(initialModuleIndex = 0) {
   };
 
   const toggleFlag = () => {
+    if (!questions[currentQuestionIndex]) return;
+    
+    const questionId = questions[currentQuestionIndex].id;
     setFlagged(prev => ({
       ...prev,
-      [currentQuestionIndex]: !prev[currentQuestionIndex]
+      [questionId]: !prev[questionId]
     }));
   };
 
