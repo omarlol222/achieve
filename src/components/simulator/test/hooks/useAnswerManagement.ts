@@ -7,6 +7,7 @@ export function useAnswerManagement(sessionId: string | null) {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [flagged, setFlagged] = useState<Record<string, boolean>>({});
   const [currentModuleProgressId, setCurrentModuleProgressId] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const loadExistingAnswers = async () => {
     if (!sessionId) {
@@ -15,6 +16,7 @@ export function useAnswerManagement(sessionId: string | null) {
     }
 
     try {
+      setIsInitializing(true);
       console.log("Loading existing answers for session:", sessionId);
       
       // First, get the current module progress ID
@@ -30,6 +32,12 @@ export function useAnswerManagement(sessionId: string | null) {
         return;
       }
 
+      if (!moduleProgress) {
+        console.error("No active module progress found for session:", sessionId);
+        return;
+      }
+
+      console.log("Found module progress:", moduleProgress.id);
       setCurrentModuleProgressId(moduleProgress.id);
       
       const { data: existingAnswers, error } = await supabase
@@ -56,23 +64,51 @@ export function useAnswerManagement(sessionId: string | null) {
       }
     } catch (err) {
       console.error("Error loading existing answers:", err);
+      toast({
+        variant: "destructive",
+        title: "Error loading answers",
+        description: "Please try refreshing the page"
+      });
+    } finally {
+      setIsInitializing(false);
     }
   };
 
   useEffect(() => {
-    loadExistingAnswers();
+    if (sessionId) {
+      loadExistingAnswers();
+    }
   }, [sessionId]);
 
   const handleAnswer = async (questionId: string, answer: number) => {
-    if (!sessionId || !currentModuleProgressId) {
-      console.error("No session ID or module progress ID available");
+    if (!sessionId) {
+      console.error("No session ID available");
+      toast({
+        variant: "destructive",
+        title: "Error saving answer",
+        description: "No active session found"
+      });
+      return;
+    }
+
+    if (!currentModuleProgressId) {
+      console.error("No module progress ID available");
+      toast({
+        variant: "destructive",
+        title: "Error saving answer",
+        description: "No active module found"
+      });
       return;
     }
     
     try {
-      console.log("Saving answer:", { moduleProgressId: currentModuleProgressId, questionId, answer });
+      console.log("Saving answer:", { 
+        moduleProgressId: currentModuleProgressId, 
+        questionId, 
+        answer 
+      });
       
-      // Update local state first
+      // Update local state first for immediate feedback
       setAnswers(prev => ({
         ...prev,
         [questionId]: answer
@@ -110,7 +146,14 @@ export function useAnswerManagement(sessionId: string | null) {
   };
 
   const toggleFlag = async (questionId: string) => {
-    if (!sessionId || !currentModuleProgressId) return;
+    if (!sessionId || !currentModuleProgressId) {
+      toast({
+        variant: "destructive",
+        title: "Error flagging question",
+        description: "No active session found"
+      });
+      return;
+    }
     
     const newFlaggedState = !flagged[questionId];
     
@@ -137,6 +180,11 @@ export function useAnswerManagement(sessionId: string | null) {
         [questionId]: !newFlaggedState
       }));
       console.error("Error toggling flag:", err);
+      toast({
+        variant: "destructive",
+        title: "Error flagging question",
+        description: err.message
+      });
     }
   };
 
@@ -144,6 +192,7 @@ export function useAnswerManagement(sessionId: string | null) {
     answers,
     flagged,
     handleAnswer,
-    toggleFlag
+    toggleFlag,
+    isInitializing
   };
 }
