@@ -39,23 +39,25 @@ export function useTestSession(initialModuleIndex = 0) {
       try {
         setIsInitializing(true);
         console.log("Loading module data for index:", initialModuleIndex);
-        const { data: module, error: moduleError } = await supabase
+        
+        // First, get all modules ordered by order_index
+        const { data: modules, error: modulesError } = await supabase
           .from("test_modules")
           .select(`
             id,
             name,
             description,
             time_limit,
+            order_index,
             subject:subjects (
               id,
               name
             )
           `)
-          .eq("order_index", initialModuleIndex)
-          .maybeSingle();
+          .order('order_index', { ascending: true });
 
-        if (moduleError) {
-          console.error("Error loading module:", moduleError);
+        if (modulesError) {
+          console.error("Error loading modules:", modulesError);
           setError("Failed to load module data");
           toast({
             variant: "destructive",
@@ -65,13 +67,27 @@ export function useTestSession(initialModuleIndex = 0) {
           return;
         }
 
-        if (!module) {
-          console.error("No module found for index:", initialModuleIndex);
-          setError(`No module found with order index ${initialModuleIndex}`);
+        if (!modules || modules.length === 0) {
+          console.error("No modules found");
+          setError("No modules available");
           toast({
             variant: "destructive",
             title: "Error",
-            description: `No module found with order index ${initialModuleIndex}`
+            description: "No modules available"
+          });
+          return;
+        }
+
+        // Find the module at the specified index
+        const module = modules[initialModuleIndex];
+        
+        if (!module) {
+          console.error("No module found at index:", initialModuleIndex);
+          setError(`No module found at position ${initialModuleIndex + 1}`);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: `No module found at position ${initialModuleIndex + 1}`
           });
           return;
         }
