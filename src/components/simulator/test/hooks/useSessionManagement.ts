@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export function useSessionManagement(currentModuleIndex: number) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const initializeSession = async () => {
     try {
@@ -90,7 +92,9 @@ export function useSessionManagement(currentModuleIndex: number) {
         .select("id, module_id")
         .eq("session_id", sessionId)
         .is("completed_at", null)
-        .maybeSingle();
+        .limit(1)
+        .order('created_at', { ascending: false })
+        .single();
 
       if (progressError) throw progressError;
       if (!currentProgress) {
@@ -132,6 +136,9 @@ export function useSessionManagement(currentModuleIndex: number) {
 
         if (nextProgressError) throw nextProgressError;
         console.log("Initialized next module progress");
+        
+        // Redirect to results page with session ID
+        navigate(`/gat/simulator/results/${sessionId}`);
       } else {
         // If no next module, complete the session
         const { error: sessionError } = await supabase
@@ -141,6 +148,9 @@ export function useSessionManagement(currentModuleIndex: number) {
 
         if (sessionError) throw sessionError;
         console.log("Completed test session");
+        
+        // Redirect to results page with session ID
+        navigate(`/gat/simulator/results/${sessionId}`);
       }
     } catch (error: any) {
       console.error("Error completing module:", error);

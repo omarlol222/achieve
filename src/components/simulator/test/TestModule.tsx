@@ -29,6 +29,9 @@ export function TestModule({
   const currentQuestion = questions[currentQuestionIndex];
   const hasAnsweredCurrent = currentQuestion && answers[currentQuestion.id] !== undefined;
 
+  // Check if all questions are answered before allowing module completion
+  const canFinishModule = questions.every(q => answers[q.id] !== undefined);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -71,8 +74,13 @@ export function TestModule({
         {hasAnsweredCurrent && !isLastQuestion && (
           <Button onClick={onNext}>Next Question</Button>
         )}
-        {hasAnsweredCurrent && isLastQuestion && (
-          <Button onClick={onFinish}>Finish Module</Button>
+        {canFinishModule && (
+          <Button 
+            onClick={onFinish}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            Finish Module
+          </Button>
         )}
       </div>
     </div>
