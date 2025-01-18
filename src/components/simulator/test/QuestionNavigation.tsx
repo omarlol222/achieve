@@ -6,7 +6,7 @@ type QuestionNavigationProps = {
   totalQuestions: number;
   answers: Record<string, number>;
   flagged: Record<string, boolean>;
-  onQuestionClick: (index: number) => void;
+  onQuestionSelect: (index: number) => void;
 };
 
 export const QuestionNavigation = memo(({
@@ -14,7 +14,7 @@ export const QuestionNavigation = memo(({
   totalQuestions,
   answers,
   flagged,
-  onQuestionClick,
+  onQuestionSelect,
 }: QuestionNavigationProps) => {
   const questionNumbers = Array.from({ length: totalQuestions }, (_, i) => i);
 
@@ -30,7 +30,7 @@ export const QuestionNavigation = memo(({
             key={index}
             variant={isActive ? "default" : "outline"}
             size="sm"
-            onClick={() => onQuestionClick(index)}
+            onClick={() => onQuestionSelect(index)}
             className={`w-10 h-10 p-0 ${isAnswered ? "bg-green-100" : ""} ${
               isFlagged ? "border-yellow-500 border-2" : ""
             }`}
