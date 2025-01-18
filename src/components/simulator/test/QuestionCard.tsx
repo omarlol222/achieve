@@ -1,9 +1,12 @@
 import { memo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { QuestionContent } from "@/components/practice/QuestionContent";
 import { Flag } from "lucide-react";
 import { ContentProtection } from "@/components/security/ContentProtection";
+import { QuestionChoices } from "@/components/practice/question-types/QuestionChoices";
+import { PassageQuestion } from "@/components/practice/question-types/PassageQuestion";
+import { ComparisonQuestion } from "@/components/practice/question-types/ComparisonQuestion";
+import { TeXComponent } from "@/components/practice/TeXComponent";
 
 type QuestionCardProps = {
   question: {
@@ -33,29 +36,57 @@ export const QuestionCard = memo(({
   isFlagged,
   onAnswerSelect,
   onFlagToggle,
-}: QuestionCardProps) => (
-  <ContentProtection>
-    <Card className="p-6">
-      <div className="flex justify-between mb-4">
-        <Button
-          variant={isFlagged ? "default" : "outline"}
-          size="sm"
-          onClick={onFlagToggle}
-          className="flex items-center gap-2"
-        >
-          <Flag className="h-4 w-4" />
-          {isFlagged ? "Flagged" : "Flag for review"}
-        </Button>
-      </div>
+}: QuestionCardProps) => {
+  const choices = [
+    question.choice1,
+    question.choice2,
+    question.choice3,
+    question.choice4,
+  ];
 
-      <QuestionContent
-        question={question}
-        selectedAnswer={selectedAnswer}
-        showFeedback={false}
-        onAnswerSelect={onAnswerSelect}
-      />
-    </Card>
-  </ContentProtection>
-));
+  return (
+    <ContentProtection>
+      <Card className="p-6">
+        <div className="flex justify-between mb-4">
+          <Button
+            variant={isFlagged ? "default" : "outline"}
+            size="sm"
+            onClick={onFlagToggle}
+            className="flex items-center gap-2"
+          >
+            <Flag className="h-4 w-4" />
+            {isFlagged ? "Flagged" : "Flag for review"}
+          </Button>
+        </div>
+
+        <div className="space-y-6">
+          {question.question_type === "passage" && question.passage_text && (
+            <PassageQuestion passageText={question.passage_text} />
+          )}
+
+          {question.question_type === "comparison" && (
+            <ComparisonQuestion
+              value1={question.comparison_value1 || ""}
+              value2={question.comparison_value2 || ""}
+            />
+          )}
+
+          <div className="space-y-4">
+            <div className="text-lg font-medium">
+              <TeXComponent>{question.question_text}</TeXComponent>
+            </div>
+
+            <QuestionChoices
+              choices={choices}
+              selectedAnswer={selectedAnswer}
+              showFeedback={false}
+              onAnswerSelect={onAnswerSelect}
+            />
+          </div>
+        </div>
+      </Card>
+    </ContentProtection>
+  );
+});
 
 QuestionCard.displayName = "QuestionCard";

@@ -139,11 +139,16 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
           <Button 
             onClick={handleSubmitModule}
             disabled={isSubmitting}
+            className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
         ) : (
-          <Button onClick={goToNext} disabled={isLastQuestion}>
+          <Button 
+            onClick={goToNext} 
+            disabled={isLastQuestion}
+            className="bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+          >
             Next
           </Button>
         )}
