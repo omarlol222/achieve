@@ -3,22 +3,28 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { QuestionContent } from "@/components/practice/QuestionContent";
 import { Flag } from "lucide-react";
-import { ModuleOverview } from "./ModuleOverview";
 import { ContentProtection } from "@/components/security/ContentProtection";
 
 type QuestionCardProps = {
-  question: any;
+  question: {
+    id: string;
+    question_text: string;
+    choice1: string;
+    choice2: string;
+    choice3: string;
+    choice4: string;
+    correct_answer: number;
+    question_type: string;
+    comparison_value1?: string;
+    comparison_value2?: string;
+    image_url?: string;
+    explanation?: string;
+    passage_text?: string;
+  };
   selectedAnswer: number | null;
   isFlagged: boolean;
   onAnswerSelect: (answer: number) => void;
-  onToggleFlag: () => void;
-  showFeedback: boolean;
-  moduleName: string;
-  questions: any[];
-  currentIndex: number;
-  answers: Record<string, number>;
-  flagged: Record<string, boolean>;
-  onQuestionSelect: (index: number) => void;
+  onFlagToggle: () => void;
 };
 
 export const QuestionCard = memo(({
@@ -26,30 +32,15 @@ export const QuestionCard = memo(({
   selectedAnswer,
   isFlagged,
   onAnswerSelect,
-  onToggleFlag,
-  showFeedback,
-  moduleName,
-  questions,
-  currentIndex,
-  answers,
-  flagged,
-  onQuestionSelect,
+  onFlagToggle,
 }: QuestionCardProps) => (
   <ContentProtection>
     <Card className="p-6">
       <div className="flex justify-between mb-4">
-        <ModuleOverview
-          moduleName={moduleName}
-          questions={questions}
-          currentIndex={currentIndex}
-          answers={answers}
-          flagged={flagged}
-          onQuestionSelect={onQuestionSelect}
-        />
         <Button
           variant={isFlagged ? "default" : "outline"}
           size="sm"
-          onClick={onToggleFlag}
+          onClick={onFlagToggle}
           className="flex items-center gap-2"
         >
           <Flag className="h-4 w-4" />
@@ -60,7 +51,7 @@ export const QuestionCard = memo(({
       <QuestionContent
         question={question}
         selectedAnswer={selectedAnswer}
-        showFeedback={showFeedback}
+        showFeedback={false}
         onAnswerSelect={onAnswerSelect}
       />
     </Card>
