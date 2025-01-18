@@ -37,6 +37,11 @@ export const QuestionCard = memo(({
   onAnswerSelect,
   onFlagToggle,
 }: QuestionCardProps) => {
+  if (!question) {
+    console.error("Question is undefined");
+    return null;
+  }
+
   const choices = [
     question.choice1,
     question.choice2,
