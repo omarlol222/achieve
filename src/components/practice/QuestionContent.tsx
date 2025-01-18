@@ -34,8 +34,8 @@ export function QuestionContent({
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="w-full max-w-5xl mx-auto px-4 py-8">
+      <div className="space-y-8">
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-800">
             QUESTION {questionNumber}
