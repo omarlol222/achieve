@@ -40,7 +40,7 @@ export function useTestSession(initialModuleIndex = 0) {
         setIsInitializing(true);
         console.log("Loading module data for index:", initialModuleIndex);
         
-        // First, get all modules ordered by order_index
+        // Get all modules with a row number based on order_index
         const { data: modules, error: modulesError } = await supabase
           .from("test_modules")
           .select(`
@@ -78,8 +78,9 @@ export function useTestSession(initialModuleIndex = 0) {
           return;
         }
 
-        // Find the module at the specified index
-        const module = modules[initialModuleIndex];
+        // Sort modules by order_index and handle any gaps
+        const sortedModules = modules.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+        const module = sortedModules[initialModuleIndex];
         
         if (!module) {
           console.error("No module found at index:", initialModuleIndex);
