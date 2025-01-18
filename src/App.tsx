@@ -16,6 +16,7 @@ import { ProtectedGatRoute } from "@/components/auth/ProtectedGatRoute";
 import Simulator from "@/pages/Simulator";
 import SimulatorTest from "@/pages/simulator/SimulatorTest";
 import SimulatorResults from "@/pages/simulator/SimulatorResults";
+import AllTests from "@/pages/simulator/AllTests";
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="simulator" element={<Simulator />} />
         <Route path="simulator/test" element={<SimulatorTest />} />
         <Route path="simulator/results/:sessionId" element={<SimulatorResults />} />
+        <Route path="simulator/all-tests" element={<AllTests />} />
       </Route>
 
       <Route path="/dashboard" element={<Dashboard />} />
