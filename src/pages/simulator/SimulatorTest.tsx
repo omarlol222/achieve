@@ -70,7 +70,7 @@ export default function SimulatorTest() {
                 question={currentQuestion}
                 selectedAnswer={answers[currentQuestion.id] || null}
                 showFeedback={false}
-                onAnswerSelect={handleAnswer}
+                onAnswerSelect={(answer) => handleAnswer(currentQuestion.id, answer)}
                 questionNumber={currentQuestionIndex + 1}
                 totalQuestions={questions.length}
               />
