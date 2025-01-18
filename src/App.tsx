@@ -27,6 +27,7 @@ const Users = lazy(() => import("./pages/admin/Users"));
 const Payments = lazy(() => import("./pages/admin/Payments"));
 const GAT = lazy(() => import("./pages/GAT"));
 const English = lazy(() => import("./pages/gat/English"));
+const Math = lazy(() => import("./pages/gat/Math"));
 const Practice = lazy(() => import("./pages/practice/Practice"));
 const PracticeTest = lazy(() => import("./pages/practice/PracticeTest"));
 const Simulator = lazy(() => import("./pages/Simulator"));
@@ -89,6 +90,11 @@ const App = () => (
             <Route path="/gat/english" element={
               <ProtectedGatRoute>
                 <English />
+              </ProtectedGatRoute>
+            } />
+            <Route path="/gat/math" element={
+              <ProtectedGatRoute>
+                <Math />
               </ProtectedGatRoute>
             } />
             <Route path="/gat/practice" element={
