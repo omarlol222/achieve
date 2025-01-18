@@ -30,12 +30,22 @@ export function useAnswerManagement(sessionId: string | null) {
 
       if (moduleError) {
         console.error("Error loading module progress:", moduleError);
+        toast({
+          variant: "destructive",
+          title: "Error loading module progress",
+          description: moduleError.message
+        });
         return;
       }
 
       // Handle case where no module progress exists
       if (!moduleProgressData || moduleProgressData.length === 0) {
         console.log("No active module progress found for session:", sessionId);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No active module progress found"
+        });
         return;
       }
 
@@ -48,7 +58,15 @@ export function useAnswerManagement(sessionId: string | null) {
         .select("question_id, selected_answer, is_flagged")
         .eq("module_progress_id", currentProgress.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading answers:", error);
+        toast({
+          variant: "destructive",
+          title: "Error loading answers",
+          description: error.message
+        });
+        return;
+      }
 
       if (existingAnswers) {
         const answerMap: Record<string, number> = {};
@@ -65,7 +83,7 @@ export function useAnswerManagement(sessionId: string | null) {
         setAnswers(answerMap);
         setFlagged(flagMap);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error loading existing answers:", err);
       toast({
         variant: "destructive",
@@ -84,14 +102,26 @@ export function useAnswerManagement(sessionId: string | null) {
   }, [sessionId]);
 
   const handleAnswer = async (questionId: string, answer: number) => {
-    if (!sessionId || !currentModuleProgressId) {
-      console.error("No active session or module progress found");
+    if (!sessionId) {
       toast({
         variant: "destructive",
         title: "Error saving answer",
         description: "No active session found"
       });
       return;
+    }
+
+    if (!currentModuleProgressId) {
+      // Try to reload module progress if it's not set
+      await loadExistingAnswers();
+      if (!currentModuleProgressId) {
+        toast({
+          variant: "destructive",
+          title: "Error saving answer",
+          description: "No active module progress found"
+        });
+        return;
+      }
     }
     
     try {
