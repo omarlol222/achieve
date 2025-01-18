@@ -24,6 +24,7 @@ export const useModuleQuestions = (moduleId: string) => {
       }
 
       const questionIds = moduleQuestions.map(q => q.question_id);
+      console.log("Question IDs:", questionIds);
       
       // Then fetch the full question details
       const { data: questions, error: questionsError } = await supabase
@@ -52,9 +53,16 @@ export const useModuleQuestions = (moduleId: string) => {
 
       console.log("Fetched questions:", questions?.length);
       
+      if (!questions?.length) {
+        console.log("No questions data returned");
+        return [];
+      }
+
       // Shuffle the questions
-      return questions?.sort(() => Math.random() - 0.5) || [];
+      return questions.sort(() => Math.random() - 0.5);
     },
     enabled: !!moduleId,
+    retry: 1,
+    staleTime: 0,
   });
 };

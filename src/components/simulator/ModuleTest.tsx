@@ -16,7 +16,7 @@ type ModuleTestProps = {
 };
 
 export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
-  const { data: questions, isLoading: isLoadingQuestions } = useModuleQuestions(moduleProgress.module_id);
+  const { data: questions, isLoading: isLoadingQuestions, error } = useModuleQuestions(moduleProgress.module_id);
   const { answers, flagged, handleAnswer, toggleFlag } = useModuleAnswers(moduleProgress.id);
   const { isSubmitting, handleSubmitModule } = useModuleState(moduleProgress);
   
@@ -35,10 +35,25 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
     }
   }, [isSubmitting, onComplete]);
 
+  useEffect(() => {
+    if (questions) {
+      console.log("Questions loaded:", questions.length);
+    }
+  }, [questions]);
+
   if (isLoadingQuestions) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Error loading questions:", error);
+    return (
+      <div className="text-center py-8">
+        <p className="text-lg text-red-600">Error loading questions. Please try again.</p>
       </div>
     );
   }
@@ -52,6 +67,15 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
   }
 
   const currentQuestion = questions[currentIndex];
+
+  if (!currentQuestion) {
+    console.error("Current question is undefined. Index:", currentIndex, "Total questions:", questions.length);
+    return (
+      <div className="text-center py-8">
+        <p className="text-lg text-red-600">Error loading current question. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
