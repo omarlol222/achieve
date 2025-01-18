@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+type Difficulty = "Easy" | "Moderate" | "Hard";
+
 export function useQuestionManagement(currentModuleIndex: number) {
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -40,6 +42,17 @@ export function useQuestionManagement(currentModuleIndex: number) {
       console.log("Found module:", module);
       console.log("Module topics:", module.module_topics);
 
+      // Validate and filter difficulty levels
+      const validDifficulties = (module.difficulty_levels || []).filter(
+        (level): level is Difficulty => 
+          level === "Easy" || level === "Moderate" || level === "Hard"
+      );
+
+      if (validDifficulties.length === 0) {
+        console.error("No valid difficulty levels found, using all difficulties");
+        validDifficulties.push("Easy", "Moderate", "Hard");
+      }
+
       // For each topic in the module, fetch the specified number of questions
       let allQuestions: any[] = [];
       
@@ -72,7 +85,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
           `)
           .eq("topic_id", topicConfig.topic_id)
           .eq("test_type_id", module.test_type_id)
-          .in("difficulty", module.difficulty_levels)
+          .in("difficulty", validDifficulties as readonly Difficulty[])
           .limit(topicConfig.question_count);
 
         if (questionsError) {
@@ -115,7 +128,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
           `)
           .eq("topic.subject_id", module.subject_id)
           .eq("test_type_id", module.test_type_id)
-          .in("difficulty", module.difficulty_levels)
+          .in("difficulty", validDifficulties as readonly Difficulty[])
           .limit(20);
 
         if (defaultError) {
