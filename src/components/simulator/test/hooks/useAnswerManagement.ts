@@ -111,7 +111,6 @@ export function useAnswerManagement(sessionId: string | null) {
     }
 
     if (!currentModuleProgressId) {
-      // Try to reload module progress if it's not set
       await loadExistingAnswers();
       if (!currentModuleProgressId) {
         toast({
@@ -136,7 +135,7 @@ export function useAnswerManagement(sessionId: string | null) {
         [questionId]: answer
       }));
 
-      // Then persist to the database
+      // Then persist to the database using the named constraint
       const { error } = await supabase
         .from("module_answers")
         .upsert({
@@ -145,7 +144,7 @@ export function useAnswerManagement(sessionId: string | null) {
           selected_answer: answer,
           is_flagged: flagged[questionId] || false
         }, {
-          onConflict: 'module_progress_id,question_id'
+          onConflict: 'module_answers_module_progress_question_unique'
         });
 
       if (error) {
@@ -196,7 +195,7 @@ export function useAnswerManagement(sessionId: string | null) {
           selected_answer: answers[questionId],
           is_flagged: newFlaggedState
         }, {
-          onConflict: 'module_progress_id,question_id'
+          onConflict: 'module_answers_module_progress_question_unique'
         });
 
       if (error) throw error;
