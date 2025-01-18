@@ -17,6 +17,11 @@ export function QuestionContent({
   showFeedback,
   onAnswerSelect,
 }: QuestionContentProps) {
+  if (!question) {
+    console.error("No question provided to QuestionContent");
+    return null;
+  }
+
   const choices = [
     question.choice1,
     question.choice2,
