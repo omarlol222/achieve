@@ -18,6 +18,15 @@ const SignIn = lazy(() => import("./pages/SignIn"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const PasswordReset = lazy(() => import("./pages/PasswordReset"));
 
+// Admin pages
+const AdminLayout = lazy(() => import("./components/layout/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminQuestions = lazy(() => import("./pages/admin/Questions"));
+const AdminTests = lazy(() => import("./pages/admin/Tests"));
+const AdminProducts = lazy(() => import("./pages/admin/Products"));
+const AdminUsers = lazy(() => import("./pages/admin/Users"));
+const AdminPayments = lazy(() => import("./pages/admin/Payments"));
+
 function App() {
   return (
     <Routes>
@@ -45,6 +54,16 @@ function App() {
       <Route path="/gat/practice" element={<Practice />} />
       <Route path="/gat/practice-test" element={<PracticeTest />} />
       <Route path="/simulator" element={<Simulator />} />
+
+      {/* Admin routes */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="questions" element={<AdminQuestions />} />
+        <Route path="tests" element={<AdminTests />} />
+        <Route path="products" element={<AdminProducts />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="payments" element={<AdminPayments />} />
+      </Route>
     </Routes>
   );
 }
