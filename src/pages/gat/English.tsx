@@ -9,9 +9,27 @@ import { ArrowLeft, BookOpen, PenTool } from "lucide-react";
 export default function English() {
   const navigate = useNavigate();
 
-  const { data: progress } = useQuery({
-    queryKey: ["english-progress"],
+  // First, fetch the English subject
+  const { data: subject } = useQuery({
+    queryKey: ["english-subject"],
     queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subjects")
+        .select("id, name")
+        .eq("name", "English")
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Then fetch progress using the subject ID
+  const { data: progress } = useQuery({
+    queryKey: ["english-progress", subject?.id],
+    queryFn: async () => {
+      if (!subject?.id) return null;
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
@@ -25,11 +43,12 @@ export default function English() {
           )
         `)
         .eq("user_id", user.id)
-        .eq("topics.subject_id", "english-subject-id"); // Replace with actual English subject ID
+        .eq("topics.subject_id", subject.id);
 
       if (error) throw error;
       return data;
     },
+    enabled: !!subject?.id, // Only run this query when we have the subject ID
   });
 
   const totalProgress = progress?.reduce((acc, curr) => acc + (curr.points || 0), 0) || 0;
