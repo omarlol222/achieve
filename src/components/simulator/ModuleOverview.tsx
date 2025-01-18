@@ -8,8 +8,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Eye } from "lucide-react";
-import { ModuleStats } from "./test/stats/ModuleStats";
-import { QuestionGrid } from "./test/stats/QuestionGrid";
+import { ModuleStats } from "./stats/ModuleStats";
+import { QuestionGrid } from "./stats/QuestionGrid";
 
 type ModuleOverviewProps = {
   moduleName: string;
