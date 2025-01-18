@@ -1,6 +1,6 @@
 import { lazy } from "react";
-import { Route } from "react-router-dom";
-import { ProtectedGatRoute } from "./components/ProtectedGatRoute";
+import { Routes, Route } from "react-router-dom";
+import { ProtectedGatRoute } from "./components/auth/ProtectedGatRoute";
 
 const GAT = lazy(() => import("./pages/GAT"));
 const English = lazy(() => import("./pages/gat/English"));
