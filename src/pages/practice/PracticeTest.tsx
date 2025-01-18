@@ -133,6 +133,8 @@ const PracticeTest = () => {
           selectedAnswer={answers[currentQuestion.id] || null}
           showFeedback={answers[currentQuestion.id] !== undefined}
           onAnswerSelect={handleAnswer}
+          questionNumber={currentQuestionIndex + 1}
+          totalQuestions={questions.length}
         />
 
         <PracticeResults
