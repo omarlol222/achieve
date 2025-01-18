@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { QuestionContent } from "@/components/practice/QuestionContent";
 import { Progress } from "@/components/ui/progress";
+import { QuestionContent } from "@/components/practice/QuestionContent";
 import { TestHeader } from "@/components/simulator/test/TestHeader";
 import { TestNavigation } from "@/components/simulator/test/TestNavigation";
 import { useTestSession } from "@/components/simulator/test/useTestSession";
@@ -20,10 +20,9 @@ export default function SimulatorTest() {
     handleAnswer,
     handleModuleComplete,
     toggleFlag,
-    currentModuleIndex,
+    currentModule,
     hasStarted,
     setHasStarted,
-    currentModule
   } = useTestSession();
 
   if (loading) {
@@ -38,6 +37,10 @@ export default function SimulatorTest() {
     );
   }
 
+  if (!currentModule) {
+    return <div className="flex items-center justify-center min-h-screen">Loading module data...</div>;
+  }
+
   if (!hasStarted) {
     return <StartModule module={currentModule} onStart={() => setHasStarted(true)} />;
   }
@@ -50,7 +53,7 @@ export default function SimulatorTest() {
       <div className="container py-8">
         <div className="space-y-6 max-w-6xl mx-auto">
           <TestHeader
-            moduleName={currentModuleIndex === 0 ? "Verbal" : "Quantitative"}
+            moduleName={currentModule.name}
             timeLeft={timeLeft}
             questions={questions}
             currentQuestionIndex={currentQuestionIndex}
