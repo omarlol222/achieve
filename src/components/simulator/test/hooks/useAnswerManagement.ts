@@ -20,30 +20,33 @@ export function useAnswerManagement(sessionId: string | null) {
       console.log("Loading existing answers for session:", sessionId);
       
       // First, get the current module progress ID
-      const { data: moduleProgress, error: moduleError } = await supabase
+      const { data: moduleProgressData, error: moduleError } = await supabase
         .from("module_progress")
         .select("id")
         .eq("session_id", sessionId)
         .is("completed_at", null)
-        .single();
+        .limit(1)
+        .order('created_at', { ascending: false });
 
       if (moduleError) {
         console.error("Error loading module progress:", moduleError);
         return;
       }
 
-      if (!moduleProgress) {
-        console.error("No active module progress found for session:", sessionId);
+      // Handle case where no module progress exists
+      if (!moduleProgressData || moduleProgressData.length === 0) {
+        console.log("No active module progress found for session:", sessionId);
         return;
       }
 
-      console.log("Found module progress:", moduleProgress.id);
-      setCurrentModuleProgressId(moduleProgress.id);
+      const currentProgress = moduleProgressData[0];
+      console.log("Found module progress:", currentProgress.id);
+      setCurrentModuleProgressId(currentProgress.id);
       
       const { data: existingAnswers, error } = await supabase
         .from("module_answers")
         .select("question_id, selected_answer, is_flagged")
-        .eq("module_progress_id", moduleProgress.id);
+        .eq("module_progress_id", currentProgress.id);
 
       if (error) throw error;
 
@@ -81,22 +84,12 @@ export function useAnswerManagement(sessionId: string | null) {
   }, [sessionId]);
 
   const handleAnswer = async (questionId: string, answer: number) => {
-    if (!sessionId) {
-      console.error("No session ID available");
+    if (!sessionId || !currentModuleProgressId) {
+      console.error("No active session or module progress found");
       toast({
         variant: "destructive",
         title: "Error saving answer",
         description: "No active session found"
-      });
-      return;
-    }
-
-    if (!currentModuleProgressId) {
-      console.error("No module progress ID available");
-      toast({
-        variant: "destructive",
-        title: "Error saving answer",
-        description: "No active module found"
       });
       return;
     }
