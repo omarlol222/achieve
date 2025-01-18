@@ -457,6 +457,7 @@ export type Database = {
           passage_text: string | null
           question_text: string
           question_type: string
+          subtopic_id: string | null
           test_type_id: string | null
           topic_id: string | null
           updated_at: string
@@ -478,6 +479,7 @@ export type Database = {
           passage_text?: string | null
           question_text: string
           question_type?: string
+          subtopic_id?: string | null
           test_type_id?: string | null
           topic_id?: string | null
           updated_at?: string
@@ -499,11 +501,19 @@ export type Database = {
           passage_text?: string | null
           question_text?: string
           question_type?: string
+          subtopic_id?: string | null
           test_type_id?: string | null
           topic_id?: string | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "questions_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "subtopics"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "questions_test_type_id_fkey"
             columns: ["test_type_id"]
@@ -551,6 +561,41 @@ export type Database = {
             columns: ["test_type_id"]
             isOneToOne: false
             referencedRelation: "test_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subtopics: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          topic_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          topic_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtopics_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
             referencedColumns: ["id"]
           },
         ]

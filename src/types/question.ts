@@ -7,6 +7,7 @@ export type QuestionFormData = {
   correct_answer: string;
   difficulty: 'Easy' | 'Moderate' | 'Hard';
   topic_id: string;
+  subtopic_id?: string;
   explanation?: string;
   question_type: 'normal' | 'passage' | 'analogy' | 'comparison';
   passage_text?: string;
