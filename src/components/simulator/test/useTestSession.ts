@@ -31,9 +31,10 @@ export function useTestSession(initialModuleIndex = 0) {
     initializeSession();
   }, []);
 
-  const handleAnswerSelect = (answer: number) => {
+  const handleAnswerSelect = async (answer: number) => {
     if (!questions[currentQuestionIndex]) return;
-    handleAnswer(questions[currentQuestionIndex].id, answer);
+    const questionId = questions[currentQuestionIndex].id;
+    await handleAnswer(questionId, answer);
   };
 
   return {
