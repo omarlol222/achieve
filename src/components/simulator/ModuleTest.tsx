@@ -24,10 +24,19 @@ type ModuleTestProps = {
 
 export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
   const { toast } = useToast();
-  const { data: questions = [], isLoading: isLoadingQuestions, error } = useModuleQuestions(moduleProgress.module_id);
+  
+  // Fetch questions for the module
+  const { 
+    data: questions = [], 
+    isLoading: isLoadingQuestions,
+    error: questionsError
+  } = useModuleQuestions(moduleProgress.module_id);
+
+  // Initialize module state and handlers
   const { answers, flagged, handleAnswer, toggleFlag } = useModuleAnswers(moduleProgress.id);
   const { isSubmitting, handleSubmitModule } = useModuleState(moduleProgress);
   
+  // Initialize navigation state
   const {
     currentIndex,
     setCurrentIndex,
@@ -36,8 +45,9 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
     isFirstQuestion,
     isLastQuestion,
     timeLeft,
-  } = useQuestionNavigation(questions.length || 0, moduleProgress.module?.time_limit || 30);
+  } = useQuestionNavigation(questions.length, moduleProgress.module?.time_limit || 30);
 
+  // Handle time's up
   useEffect(() => {
     if (timeLeft === 0) {
       toast({
@@ -48,12 +58,16 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
     }
   }, [timeLeft, handleSubmitModule, toast]);
 
+  // Handle completion
   useEffect(() => {
     if (onComplete && !isSubmitting) {
       onComplete();
     }
   }, [isSubmitting, onComplete]);
 
+  console.log("ModuleTest render - Questions:", questions.length, "Loading:", isLoadingQuestions, "Error:", questionsError);
+
+  // Show loading state
   if (isLoadingQuestions) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -62,8 +76,9 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
     );
   }
 
-  if (error) {
-    console.error("Error loading questions:", error);
+  // Show error state
+  if (questionsError) {
+    console.error("Error loading questions:", questionsError);
     return (
       <div className="text-center py-8">
         <p className="text-lg text-red-600">Error loading questions. Please try again.</p>
@@ -71,6 +86,7 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
     );
   }
 
+  // Show empty state
   if (!questions?.length) {
     return (
       <div className="text-center py-8">
@@ -79,8 +95,10 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
     );
   }
 
+  // Get current question
   const currentQuestion = questions[currentIndex];
 
+  // Show error if current question is undefined
   if (!currentQuestion) {
     console.error("Current question is undefined. Index:", currentIndex, "Total questions:", questions.length);
     return (
