@@ -23,7 +23,10 @@ export function TestDialog({ open, onOpenChange }: TestDialogProps) {
 
       const { data, error } = await supabase
         .from("test_sessions")
-        .insert([{ user_id: user.id }])
+        .insert([{ 
+          user_id: user.id,
+          started_at: new Date().toISOString()
+        }])
         .select()
         .single();
 
@@ -34,7 +37,8 @@ export function TestDialog({ open, onOpenChange }: TestDialogProps) {
       onOpenChange(false);
       navigate("/gat/simulator/test", { state: { sessionId: session.id } });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("Error creating session:", error);
       toast({
         variant: "destructive",
         title: "Error starting test",

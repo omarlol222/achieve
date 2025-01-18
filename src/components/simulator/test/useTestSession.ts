@@ -46,7 +46,7 @@ export function useTestSession(initialModuleIndex = 0) {
             )
           `)
           .eq("order_index", initialModuleIndex)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error("Error loading module:", error);

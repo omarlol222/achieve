@@ -31,7 +31,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
           )
         `)
         .eq("order_index", currentModuleIndex)
-        .single();
+        .maybeSingle();
 
       if (moduleError) {
         console.error("Error fetching module:", moduleError);
