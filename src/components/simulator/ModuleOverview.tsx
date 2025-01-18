@@ -1,5 +1,3 @@
-import { memo } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -13,47 +11,53 @@ import { QuestionGrid } from "./stats/QuestionGrid";
 
 type ModuleOverviewProps = {
   moduleName: string;
+  totalQuestions: number;
+  currentQuestion: number;
+  answeredCount: number;
+  unansweredCount: number;
+  flaggedCount: number;
   questions: any[];
   currentIndex: number;
   answers: Record<string, number>;
   flagged: Record<string, boolean>;
   onQuestionSelect: (index: number) => void;
-  onSubmit: () => void;
 };
 
-export const ModuleOverview = memo(({
+export function ModuleOverview({
   moduleName,
+  totalQuestions,
+  currentQuestion,
+  answeredCount,
+  unansweredCount,
+  flaggedCount,
   questions,
   currentIndex,
   answers,
   flagged,
   onQuestionSelect,
-  onSubmit,
-}: ModuleOverviewProps) => {
-  const totalQuestions = questions.length;
-  const answeredCount = Object.keys(answers).length;
-  const flaggedCount = Object.values(flagged).filter(Boolean).length;
-  const unansweredCount = totalQuestions - answeredCount;
-
+}: ModuleOverviewProps) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <button className="flex items-center gap-2 text-sm text-gray-600">
           <Eye className="h-4 w-4" />
-          Module Overview
-        </Button>
+          Overview
+        </button>
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px]">
+      <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{moduleName}</SheetTitle>
+          <SheetTitle>
+            {moduleName} Module - Question {currentQuestion} of {totalQuestions}
+          </SheetTitle>
         </SheetHeader>
-        
-        <div className="mt-6 space-y-6">
+
+        <div className="py-6 space-y-6">
           <ModuleStats
             answeredCount={answeredCount}
             unansweredCount={unansweredCount}
             flaggedCount={flaggedCount}
           />
+
           <QuestionGrid
             questions={questions}
             currentIndex={currentIndex}
@@ -61,17 +65,8 @@ export const ModuleOverview = memo(({
             flagged={flagged}
             onQuestionSelect={onQuestionSelect}
           />
-          <Button 
-            onClick={onSubmit}
-            className="w-full"
-            disabled={unansweredCount > 0}
-          >
-            Submit Module
-          </Button>
         </div>
       </SheetContent>
     </Sheet>
   );
-});
-
-ModuleOverview.displayName = "ModuleOverview";
+}
