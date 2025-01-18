@@ -37,6 +37,7 @@ export function useTestSession(initialModuleIndex = 0) {
   useEffect(() => {
     const loadModuleData = async () => {
       try {
+        setIsInitializing(true);
         console.log("Loading module data for index:", initialModuleIndex);
         const { data: module, error: moduleError } = await supabase
           .from("test_modules")
@@ -86,6 +87,8 @@ export function useTestSession(initialModuleIndex = 0) {
           title: "Error",
           description: "An unexpected error occurred while loading the module"
         });
+      } finally {
+        setIsInitializing(false);
       }
     };
 

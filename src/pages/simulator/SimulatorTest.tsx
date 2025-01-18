@@ -6,6 +6,7 @@ import { TestHeader } from "@/components/simulator/test/TestHeader";
 import { TestNavigation } from "@/components/simulator/test/TestNavigation";
 import { useTestSession } from "@/components/simulator/test/useTestSession";
 import { StartModule } from "@/components/simulator/StartModule";
+import { Loader2 } from "lucide-react";
 
 export default function SimulatorTest() {
   const {
@@ -26,19 +27,31 @@ export default function SimulatorTest() {
   } = useTestSession();
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <Alert variant="destructive" className="m-4">
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="container py-8">
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   if (!currentModule) {
-    return <div className="flex items-center justify-center min-h-screen">Loading module data...</div>;
+    return (
+      <div className="container py-8">
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertDescription>No test module found. Please try again later.</AlertDescription>
+        </Alert>
+      </div>
+    );
   }
 
   if (!hasStarted) {
