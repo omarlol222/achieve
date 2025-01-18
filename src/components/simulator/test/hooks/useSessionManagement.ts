@@ -36,18 +36,18 @@ export function useSessionManagement(currentModuleIndex: number) {
       // Get all modules ordered by order_index
       const { data: modules, error: moduleError } = await supabase
         .from("test_modules")
-        .select("id, order_index")
-        .order('order_index', { ascending: true });
+        .select("id")
+        .order("order_index", { ascending: true });
 
       if (moduleError) throw moduleError;
       if (!modules || modules.length === 0) {
         throw new Error("No test modules available");
       }
 
-      // Find the module at the requested index position
-      const module = modules[currentModuleIndex];
-      if (!module) {
-        throw new Error(`No module found at position ${currentModuleIndex + 1}`);
+      // Get the module at the specified index
+      const currentModule = modules[currentModuleIndex];
+      if (!currentModule) {
+        throw new Error(`No module found at index: ${currentModuleIndex}`);
       }
       
       // Initialize first module progress
@@ -55,23 +55,23 @@ export function useSessionManagement(currentModuleIndex: number) {
         .from("module_progress")
         .insert({
           session_id: session.id,
-          module_id: module.id,
+          module_id: currentModule.id,
           started_at: new Date().toISOString()
         });
 
       if (progressError) throw progressError;
       
       console.log("Initialized first module progress");
-      setLoading(false);
     } catch (error: any) {
       console.error("Error initializing session:", error);
-      setLoading(false);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message
+        description: error.message || "Failed to initialize session"
       });
-      throw error; // Re-throw to be handled by the caller
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -90,7 +90,7 @@ export function useSessionManagement(currentModuleIndex: number) {
         .select("id, module_id")
         .eq("session_id", sessionId)
         .is("completed_at", null)
-        .single();
+        .maybeSingle();
 
       if (progressError) throw progressError;
       if (!currentProgress) {
@@ -108,8 +108,8 @@ export function useSessionManagement(currentModuleIndex: number) {
       // Get all modules ordered by order_index
       const { data: modules, error: modulesError } = await supabase
         .from("test_modules")
-        .select("id, order_index")
-        .order('order_index', { ascending: true });
+        .select("id")
+        .order("order_index", { ascending: true });
 
       if (modulesError) throw modulesError;
       if (!modules || modules.length === 0) {
@@ -147,7 +147,7 @@ export function useSessionManagement(currentModuleIndex: number) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message
+        description: error.message || "Failed to complete module"
       });
     }
   };
