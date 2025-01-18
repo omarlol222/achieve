@@ -12,6 +12,11 @@ const Index = lazy(() => import("./pages/Index"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const About = lazy(() => import("./pages/About"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Shop = lazy(() => import("./pages/Shop"));
+const ProductDetails = lazy(() => import("./pages/ProductDetails"));
+const SignIn = lazy(() => import("./pages/SignIn"));
+const SignUp = lazy(() => import("./pages/SignUp"));
+const PasswordReset = lazy(() => import("./pages/PasswordReset"));
 
 function App() {
   return (
@@ -21,6 +26,11 @@ function App() {
       <Route path="/about" element={<About />} />
       <Route path="/faq" element={<FAQ />} />
       <Route path="/leaderboard" element={<Leaderboard />} />
+      <Route path="/shop" element={<Shop />} />
+      <Route path="/shop/:id" element={<ProductDetails />} />
+      <Route path="/signin" element={<SignIn />} />
+      <Route path="/signup" element={<SignUp />} />
+      <Route path="/password-reset" element={<PasswordReset />} />
       <Route path="/gat" element={<GAT />} />
       <Route path="/gat/english" element={
         <ProtectedGatRoute>
