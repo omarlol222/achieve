@@ -14,6 +14,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
       try {
         setLoading(true);
         setError(null);
+        console.log("Loading questions for module index:", currentModuleIndex);
 
         // First get all modules ordered by order_index
         const { data: modules, error: modulesError } = await supabase
@@ -21,16 +22,24 @@ export function useQuestionManagement(currentModuleIndex: number) {
           .select("id")
           .order("order_index", { ascending: true });
 
-        if (modulesError) throw modulesError;
+        if (modulesError) {
+          console.error("Error fetching modules:", modulesError);
+          throw new Error("Failed to load test modules");
+        }
+
         if (!modules || modules.length === 0) {
-          throw new Error("No test modules found");
+          console.error("No test modules found");
+          throw new Error("No test modules available");
         }
 
         // Get the module at the specified index
         const currentModule = modules[currentModuleIndex];
         if (!currentModule) {
-          throw new Error(`No module found at index: ${currentModuleIndex}`);
+          console.error("No module found at index:", currentModuleIndex);
+          throw new Error(`No module found at position ${currentModuleIndex + 1}`);
         }
+
+        console.log("Found module:", currentModule.id);
 
         // Get questions for the current module
         const { data: moduleQuestions, error: questionsError } = await supabase
@@ -55,22 +64,32 @@ export function useQuestionManagement(currentModuleIndex: number) {
           .eq("module_id", currentModule.id)
           .order("created_at", { ascending: true });
 
-        if (questionsError) throw questionsError;
+        if (questionsError) {
+          console.error("Error fetching module questions:", questionsError);
+          throw new Error("Failed to load module questions");
+        }
         
         if (!moduleQuestions || moduleQuestions.length === 0) {
-          throw new Error("No questions found for this module");
+          console.error("No questions found for module:", currentModule.id);
+          throw new Error("No questions available for this module");
         }
 
-        // Transform the nested data structure
+        // Transform the nested data structure and filter out any null questions
         const formattedQuestions = moduleQuestions
           .map(mq => mq.question)
           .filter(q => q !== null);
 
+        if (formattedQuestions.length === 0) {
+          throw new Error("No valid questions found for this module");
+        }
+
+        console.log(`Loaded ${formattedQuestions.length} questions for module`);
         setQuestions(formattedQuestions);
         setCurrentQuestionIndex(0);
       } catch (err: any) {
         console.error("Error loading questions:", err);
         setError(err.message || "Failed to load questions");
+        setQuestions([]);
         toast({
           variant: "destructive",
           title: "Error",
