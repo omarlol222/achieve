@@ -26,19 +26,21 @@ export function QuestionContent({
 
   return (
     <div className="space-y-6">
-      {question.question_type === "passage" && (
-        <PassageQuestion passageText={question.passage_text} />
-      )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {question.question_type === "passage" && (
+          <div className="lg:col-span-4">
+            <PassageQuestion passageText={question.passage_text} />
+          </div>
+        )}
 
-      {question.question_type === "comparison" && (
-        <ComparisonQuestion
-          value1={question.comparison_value1}
-          value2={question.comparison_value2}
-        />
-      )}
+        <div className={`lg:col-span-${question.image_url ? "6" : (question.question_type === "passage" ? "8" : "12")}`}>
+          {question.question_type === "comparison" && (
+            <ComparisonQuestion
+              value1={question.comparison_value1}
+              value2={question.comparison_value2}
+            />
+          )}
 
-      <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           <div className="space-y-4">
             <div className="text-lg font-medium">
               <TeXComponent>{question.question_text}</TeXComponent>
@@ -52,38 +54,38 @@ export function QuestionContent({
               onAnswerSelect={onAnswerSelect}
             />
           </div>
+        </div>
 
-          {question.image_url && (
-            <div className="w-full">
+        {question.image_url && (
+          <div className="lg:col-span-6 lg:col-start-7">
+            <OptimizedImage
+              src={question.image_url}
+              alt="Question"
+              className="w-full h-auto rounded-lg"
+            />
+          </div>
+        )}
+      </div>
+
+      {showFeedback && (
+        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+          {question.explanation && (
+            <>
+              <p className="font-medium mb-2">Explanation:</p>
+              <TeXComponent>{question.explanation}</TeXComponent>
+            </>
+          )}
+          {question.explanation_image_url && (
+            <div className="mt-4">
               <OptimizedImage
-                src={question.image_url}
-                alt="Question"
-                className="w-full h-auto rounded-lg"
+                src={question.explanation_image_url}
+                alt="Explanation"
+                className="max-w-full h-auto rounded-lg"
               />
             </div>
           )}
         </div>
-
-        {showFeedback && (
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            {question.explanation && (
-              <>
-                <p className="font-medium mb-2">Explanation:</p>
-                <TeXComponent>{question.explanation}</TeXComponent>
-              </>
-            )}
-            {question.explanation_image_url && (
-              <div className="mt-4">
-                <OptimizedImage
-                  src={question.explanation_image_url}
-                  alt="Explanation"
-                  className="max-w-full h-auto rounded-lg"
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }

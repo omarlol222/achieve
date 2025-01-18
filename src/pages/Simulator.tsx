@@ -46,22 +46,6 @@ export default function Simulator() {
     },
   });
 
-  const calculateSubjectScore = (session: any, subjectId: string) => {
-    if (!session.module_progress) return 0;
-    
-    const moduleAnswers = session.module_progress
-      .filter((progress: any) => progress.module.subject?.id === subjectId)
-      .flatMap((progress: any) => progress.module_answers || []);
-
-    if (moduleAnswers.length === 0) return 0;
-
-    const correctAnswers = moduleAnswers.filter(
-      (answer: any) => answer.selected_answer === answer.question.correct_answer
-    ).length;
-
-    return Math.round((correctAnswers / moduleAnswers.length) * 100);
-  };
-
   return (
     <div className="min-h-screen bg-white">
       <div className="container py-8">
@@ -74,83 +58,82 @@ export default function Simulator() {
           Back to Dashboard
         </Button>
 
-        <h1 className="text-5xl font-bold mb-12">GAT SIMULATOR</h1>
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4">GAT Simulator</h1>
+          
+          <Card className="p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-4">How it works</h2>
+            <p className="text-gray-600 mb-6">
+              Simulate a full GAT exam with timed modules to evaluate your readiness. 
+              Each module focuses on specific subjects and skills, helping you prepare 
+              effectively for the actual exam.
+            </p>
+            <ul className="list-disc list-inside space-y-2 text-gray-600 mb-6">
+              <li>Complete timed modules sequentially</li>
+              <li>Track your progress with detailed analytics</li>
+              <li>Review your performance by subject and topic</li>
+              <li>Export your results for future reference</li>
+            </ul>
+            <Button 
+              onClick={() => setDialogOpen(true)}
+              className="w-full bg-[#1B2B2B] hover:bg-[#2C3C3C]"
+              size="lg"
+            >
+              Start New Test
+            </Button>
+          </Card>
 
-        <div className="space-y-8">
-          <div className="flex justify-between items-center">
-            <h2 className="text-4xl font-bold">Previous tests</h2>
-            {testSessions && testSessions.length > 0 && (
-              <Button 
-                variant="outline"
-                onClick={() => navigate("/gat/simulator/all-tests")}
-              >
-                View All Tests
-              </Button>
-            )}
-          </div>
+          {testSessions && testSessions.length > 0 && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Previous Tests</h2>
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate("/gat/simulator/all-tests")}
+                >
+                  View All Tests
+                </Button>
+              </div>
 
-          {!testSessions || testSessions.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-4xl text-gray-500 font-light mb-16">
-                You don't have any previous tests... Take one!
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {testSessions.map((session) => {
-                const scores = [
-                  { name: "Verbal", score: session.verbal_score || 0 },
-                  { name: "Quantitative", score: session.quantitative_score || 0 },
-                  { name: "Total", score: session.total_score || 0 }
-                ];
-
-                return (
-                  <div
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {testSessions.map((session) => (
+                  <Card
                     key={session.id}
-                    className="bg-gray-100 p-6 rounded-lg space-y-4"
+                    className="p-4 hover:shadow-md transition-shadow"
                   >
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-start mb-4">
                       <div>
-                        <p className="text-sm text-gray-600">DATE:</p>
-                        <p className="font-medium">
+                        <p className="text-sm text-gray-500">
                           {format(new Date(session.created_at), "MMM d, yyyy")}
                         </p>
+                        <div className="space-y-1 mt-2">
+                          <p>
+                            <span className="font-medium">Verbal:</span>{" "}
+                            {session.verbal_score}
+                          </p>
+                          <p>
+                            <span className="font-medium">Quantitative:</span>{" "}
+                            {session.quantitative_score}
+                          </p>
+                          <p>
+                            <span className="font-medium">Total:</span>{" "}
+                            {session.total_score}
+                          </p>
+                        </div>
                       </div>
-                      <Button 
-                        variant="link" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => navigate(`/gat/simulator/results/${session.id}`)}
                       >
-                        VIEW DETAILS
+                        View Details
                       </Button>
                     </div>
-
-                    <div>
-                      <p className="text-sm text-gray-600">SCORE:</p>
-                      <div className="space-y-2">
-                        {scores.map(score => (
-                          <p key={score.name}>
-                            <span className="font-medium">{score.name.toUpperCase()}: </span>
-                            {score.score}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
-
-          <div className="flex justify-center mt-12">
-            <Button 
-              size="lg"
-              onClick={() => setDialogOpen(true)}
-              className="bg-[#1B2B2B] hover:bg-[#2C3C3C] text-white px-12 py-6 text-lg h-auto"
-            >
-              START A TEST
-            </Button>
-          </div>
         </div>
 
         <TestDialog 

@@ -8,6 +8,7 @@ import { useModuleState } from "./test/hooks/useModuleState";
 import { Button } from "@/components/ui/button";
 import { TestHeader } from "./test/TestHeader";
 import { useToast } from "@/hooks/use-toast";
+import { ModuleOverview } from "./ModuleOverview";
 
 type ModuleTestProps = {
   moduleProgress: {
@@ -91,12 +92,23 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
 
   return (
     <div className="space-y-8">
-      <TestHeader
-        moduleName={moduleProgress.module?.name || "Module"}
-        timeLeft={timeLeft}
-        currentIndex={currentIndex}
-        totalQuestions={questions.length}
-      />
+      <div className="flex items-center justify-between">
+        <TestHeader
+          moduleName={moduleProgress.module?.name || "Module"}
+          timeLeft={timeLeft}
+          currentIndex={currentIndex}
+          totalQuestions={questions.length}
+        />
+        <ModuleOverview
+          moduleName={moduleProgress.module?.name || "Module"}
+          questions={questions}
+          currentIndex={currentIndex}
+          answers={answers}
+          flagged={flagged}
+          onQuestionSelect={setCurrentIndex}
+          onSubmit={handleSubmitModule}
+        />
+      </div>
 
       <QuestionCard
         question={currentQuestion}
@@ -120,7 +132,7 @@ export const ModuleTest = ({ moduleProgress, onComplete }: ModuleTestProps) => {
           currentIndex={currentIndex}
           answers={answers}
           flagged={flagged}
-          onQuestionClick={setCurrentIndex}
+          onQuestionSelect={setCurrentIndex}
         />
 
         {isLastQuestion ? (
