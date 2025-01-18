@@ -34,7 +34,7 @@ export function QuestionContent({
   ];
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-4xl mx-auto px-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800">
           QUESTION {questionNumber}
@@ -45,7 +45,7 @@ export function QuestionContent({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className={`lg:col-span-${question.image_url ? "6" : "12"}`}>
+        <div className={`lg:col-span-${question.image_url ? "7" : "12"} space-y-6`}>
           {question.question_type === "passage" && (
             <div className="mb-6">
               <PassageQuestion passageText={question.passage_text} />
@@ -77,7 +77,7 @@ export function QuestionContent({
         </div>
 
         {question.image_url && (
-          <div className="lg:col-span-6">
+          <div className="lg:col-span-5">
             <div className="bg-black rounded-lg overflow-hidden">
               <OptimizedImage
                 src={question.image_url}

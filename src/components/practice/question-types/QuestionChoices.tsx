@@ -17,7 +17,7 @@ export function QuestionChoices({
   onAnswerSelect 
 }: QuestionChoicesProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 mt-6">
+    <div className="grid grid-cols-1 gap-4 mt-6 max-w-3xl">
       {choices.map((choice, index) => {
         const isSelected = selectedAnswer === index + 1;
         const isCorrect = showFeedback && correctAnswer === index + 1;
