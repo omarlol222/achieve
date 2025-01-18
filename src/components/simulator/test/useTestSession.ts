@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useSessionManagement } from "./hooks/useSessionManagement";
 import { useQuestionManagement } from "./hooks/useQuestionManagement";
 import { useAnswerManagement } from "./hooks/useAnswerManagement";
 
 export function useTestSession(initialModuleIndex = 0) {
+  const [hasStarted, setHasStarted] = useState(false);
   const {
     sessionId,
     loading,
@@ -34,6 +35,12 @@ export function useTestSession(initialModuleIndex = 0) {
     await handleAnswer(questionId, answer);
   };
 
+  const currentModule = {
+    name: initialModuleIndex === 0 ? "Verbal" : "Quantitative",
+    description: "This module tests your ability to understand and analyze written material.",
+    time_limit: 60 // 60 minutes
+  };
+
   return {
     sessionId,
     currentModuleIndex: initialModuleIndex,
@@ -47,6 +54,9 @@ export function useTestSession(initialModuleIndex = 0) {
     error: null,
     handleAnswer: handleAnswerSelect,
     handleModuleComplete: completeModule,
-    toggleFlag
+    toggleFlag,
+    hasStarted,
+    setHasStarted,
+    currentModule
   };
 }

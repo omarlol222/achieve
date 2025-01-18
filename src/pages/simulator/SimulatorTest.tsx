@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { TestHeader } from "@/components/simulator/test/TestHeader";
 import { TestNavigation } from "@/components/simulator/test/TestNavigation";
 import { useTestSession } from "@/components/simulator/test/useTestSession";
+import { StartModule } from "@/components/simulator/StartModule";
 
 export default function SimulatorTest() {
   const {
@@ -20,6 +21,9 @@ export default function SimulatorTest() {
     handleModuleComplete,
     toggleFlag,
     currentModuleIndex,
+    hasStarted,
+    setHasStarted,
+    currentModule
   } = useTestSession();
 
   if (loading) {
@@ -32,6 +36,10 @@ export default function SimulatorTest() {
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
+  }
+
+  if (!hasStarted) {
+    return <StartModule module={currentModule} onStart={() => setHasStarted(true)} />;
   }
 
   const currentQuestion = questions[currentQuestionIndex];
