@@ -9,12 +9,13 @@ export function useQuestionManagement(currentModuleIndex: number) {
     try {
       console.log("Loading questions for module index:", currentModuleIndex);
       
-      // First, get the module configuration based on the order_index
+      // Get the module configuration based on the order_index
       const { data: module, error: moduleError } = await supabase
         .from("test_modules")
         .select(`
           id,
           subject_id,
+          test_type_id,
           module_topics (
             topic_id,
             percentage,
@@ -51,12 +52,39 @@ export function useQuestionManagement(currentModuleIndex: number) {
             )
           `)
           .eq("topic_id", topicConfig.topic_id)
+          .eq("test_type_id", module.test_type_id)
           .limit(topicConfig.question_count);
 
         if (questionsError) throw questionsError;
         
         if (topicQuestions) {
           allQuestions = [...allQuestions, ...topicQuestions];
+        }
+      }
+
+      // If no questions were found, try to get default questions based on subject
+      if (allQuestions.length === 0) {
+        const { data: defaultQuestions, error: defaultError } = await supabase
+          .from("questions")
+          .select(`
+            *,
+            topic:topics!topic_id (
+              id,
+              name,
+              subject:subjects (
+                id,
+                name
+              )
+            )
+          `)
+          .eq("topic.subject_id", module.subject_id)
+          .eq("test_type_id", module.test_type_id)
+          .limit(20);
+
+        if (defaultError) throw defaultError;
+        
+        if (defaultQuestions) {
+          allQuestions = defaultQuestions;
         }
       }
 

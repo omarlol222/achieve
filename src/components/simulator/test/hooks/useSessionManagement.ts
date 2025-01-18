@@ -30,25 +30,25 @@ export function useSessionManagement(initialModuleIndex = 0) {
       setSessionId(session.id);
       
       // Get the first module ID
-      const { data: modules, error: modulesError } = await supabase
+      const { data: module, error: moduleError } = await supabase
         .from("test_modules")
         .select("id")
         .order("order_index")
-        .limit(1)
+        .eq("order_index", currentModuleIndex)
         .single();
 
-      if (modulesError) throw modulesError;
+      if (moduleError) throw moduleError;
       
-      // Initialize first module progress with actual module ID
-      const { error: moduleError } = await supabase
+      // Initialize first module progress
+      const { error: progressError } = await supabase
         .from("module_progress")
         .insert({
           session_id: session.id,
-          module_id: modules.id,
+          module_id: module.id,
           started_at: new Date().toISOString()
         });
 
-      if (moduleError) throw moduleError;
+      if (progressError) throw progressError;
       
       console.log("Initialized first module progress");
       setLoading(false);
@@ -77,7 +77,6 @@ export function useSessionManagement(initialModuleIndex = 0) {
       const { data: currentModule, error: currentModuleError } = await supabase
         .from("test_modules")
         .select("id")
-        .order("order_index")
         .eq("order_index", currentModuleIndex)
         .single();
 
@@ -98,7 +97,6 @@ export function useSessionManagement(initialModuleIndex = 0) {
       const { data: nextModule, error: nextModuleError } = await supabase
         .from("test_modules")
         .select("id")
-        .order("order_index")
         .eq("order_index", currentModuleIndex + 1)
         .single();
 
