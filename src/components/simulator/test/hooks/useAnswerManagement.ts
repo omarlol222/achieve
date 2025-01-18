@@ -38,7 +38,6 @@ export function useAnswerManagement(sessionId: string | null) {
         return;
       }
 
-      // Handle case where no module progress exists
       if (!moduleProgressData || moduleProgressData.length === 0) {
         console.log("No active module progress found for session:", sessionId);
         toast({
@@ -145,9 +144,12 @@ export function useAnswerManagement(sessionId: string | null) {
           question_id: questionId,
           selected_answer: answer,
           is_flagged: flagged[questionId] || false
+        }, {
+          onConflict: 'module_progress_id,question_id'
         });
 
       if (error) {
+        console.error("Supabase error:", error);
         // If there's an error, revert the local state
         setAnswers(prev => {
           const newState = { ...prev };
@@ -193,6 +195,8 @@ export function useAnswerManagement(sessionId: string | null) {
           question_id: questionId,
           selected_answer: answers[questionId],
           is_flagged: newFlaggedState
+        }, {
+          onConflict: 'module_progress_id,question_id'
         });
 
       if (error) throw error;
