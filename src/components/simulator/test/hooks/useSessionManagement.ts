@@ -24,7 +24,8 @@ export function useSessionManagement(currentModuleIndex: number) {
       const { data: session, error: sessionError } = await supabase
         .from("test_sessions")
         .insert({
-          user_id: user.id
+          user_id: user.id,
+          started_at: new Date().toISOString()
         })
         .select()
         .single();
@@ -38,7 +39,7 @@ export function useSessionManagement(currentModuleIndex: number) {
       // Get all modules ordered by order_index
       const { data: modules, error: moduleError } = await supabase
         .from("test_modules")
-        .select("id")
+        .select("id, name")
         .order("order_index", { ascending: true });
 
       if (moduleError) throw moduleError;
@@ -52,18 +53,30 @@ export function useSessionManagement(currentModuleIndex: number) {
         throw new Error(`No module found at index: ${currentModuleIndex}`);
       }
       
+      console.log("Initializing module progress for module:", currentModule.name);
+      
       // Initialize first module progress
-      const { error: progressError } = await supabase
+      const { data: moduleProgress, error: progressError } = await supabase
         .from("module_progress")
         .insert({
           session_id: session.id,
           module_id: currentModule.id,
           started_at: new Date().toISOString()
-        });
+        })
+        .select()
+        .single();
 
-      if (progressError) throw progressError;
+      if (progressError) {
+        console.error("Error creating module progress:", progressError);
+        throw progressError;
+      }
+
+      if (!moduleProgress) {
+        throw new Error("Failed to create module progress");
+      }
+
+      console.log("Initialized module progress:", moduleProgress.id);
       
-      console.log("Initialized first module progress");
     } catch (error: any) {
       console.error("Error initializing session:", error);
       toast({
@@ -136,9 +149,6 @@ export function useSessionManagement(currentModuleIndex: number) {
 
         if (nextProgressError) throw nextProgressError;
         console.log("Initialized next module progress");
-        
-        // Redirect to results page with session ID
-        navigate(`/gat/simulator/results/${sessionId}`);
       } else {
         // If no next module, complete the session
         const { error: sessionError } = await supabase
@@ -148,10 +158,11 @@ export function useSessionManagement(currentModuleIndex: number) {
 
         if (sessionError) throw sessionError;
         console.log("Completed test session");
-        
-        // Redirect to results page with session ID
-        navigate(`/gat/simulator/results/${sessionId}`);
       }
+      
+      // Redirect to results page with session ID
+      navigate(`/gat/simulator/results/${sessionId}`);
+      
     } catch (error: any) {
       console.error("Error completing module:", error);
       toast({
