@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, BookOpen, PenTool } from "lucide-react";
 
-export default function Math() {
+export default function MathProgress() {
   const navigate = useNavigate();
 
   // First, fetch the Math subject
@@ -52,7 +52,7 @@ export default function Math() {
   });
 
   const totalProgress = progress?.reduce((acc, curr) => acc + (curr.points || 0), 0) || 0;
-  const progressPercentage = Math.min((totalProgress / 1000) * 100, 100);
+  const progressPercentage = window.Math.min((totalProgress / 1000) * 100, 100);
 
   return (
     <div className="min-h-screen bg-white">
