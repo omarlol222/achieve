@@ -23,7 +23,13 @@ type TestModuleListProps = {
 };
 
 export function TestModuleList({ modules, onEdit, onDelete }: TestModuleListProps) {
-  const sortedModules = [...modules].sort((a, b) => a.order_index - b.order_index);
+  // Ensure modules are sorted by order_index
+  const sortedModules = [...modules].sort((a, b) => {
+    // Handle undefined or null order_index values
+    const orderA = a.order_index ?? Number.MAX_SAFE_INTEGER;
+    const orderB = b.order_index ?? Number.MAX_SAFE_INTEGER;
+    return orderA - orderB;
+  });
 
   return (
     <Table>
