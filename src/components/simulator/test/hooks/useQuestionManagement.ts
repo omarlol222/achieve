@@ -6,9 +6,13 @@ type Difficulty = "Easy" | "Moderate" | "Hard";
 export function useQuestionManagement(currentModuleIndex: number) {
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadModuleQuestions = async () => {
     try {
+      setLoading(true);
+      setError(null);
       console.log("Starting to load questions for module index:", currentModuleIndex);
       
       // Get the module configuration based on the order_index
@@ -31,11 +35,13 @@ export function useQuestionManagement(currentModuleIndex: number) {
 
       if (moduleError) {
         console.error("Error fetching module:", moduleError);
+        setError("Failed to load module configuration");
         throw moduleError;
       }
       
       if (!module) {
         console.error("No module found for index:", currentModuleIndex);
+        setError("Module not found");
         return;
       }
 
@@ -90,6 +96,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
 
         if (questionsError) {
           console.error("Error fetching questions for topic:", questionsError);
+          setError("Failed to load questions for topic");
           throw questionsError;
         }
         
@@ -133,6 +140,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
 
         if (defaultError) {
           console.error("Error fetching default questions:", defaultError);
+          setError("Failed to load default questions");
           throw defaultError;
         }
         
@@ -147,8 +155,11 @@ export function useQuestionManagement(currentModuleIndex: number) {
       
       console.log("Final questions loaded:", shuffledQuestions.length);
       setQuestions(shuffledQuestions);
+      setLoading(false);
     } catch (err: any) {
       console.error("Error loading questions:", err);
+      setError(err.message || "Failed to load questions");
+      setLoading(false);
     }
   };
 
@@ -160,6 +171,8 @@ export function useQuestionManagement(currentModuleIndex: number) {
     questions,
     currentQuestionIndex,
     setCurrentQuestionIndex,
-    loadModuleQuestions
+    loadModuleQuestions,
+    loading,
+    error
   };
 }
