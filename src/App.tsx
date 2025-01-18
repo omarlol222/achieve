@@ -8,10 +8,19 @@ const MathProgress = lazy(() => import("./pages/gat/Math"));
 const Practice = lazy(() => import("./pages/practice/Practice"));
 const PracticeTest = lazy(() => import("./pages/practice/PracticeTest"));
 const Simulator = lazy(() => import("./pages/Simulator"));
+const Index = lazy(() => import("./pages/Index"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const About = lazy(() => import("./pages/About"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/index" element={<Index />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/faq" element={<FAQ />} />
+      <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/gat" element={<GAT />} />
       <Route path="/gat/english" element={
         <ProtectedGatRoute>
