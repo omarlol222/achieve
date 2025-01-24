@@ -5,6 +5,12 @@ export function useSessionData(sessionId: string) {
   return useQuery({
     queryKey: ["test-session", sessionId],
     queryFn: async () => {
+      // Validate sessionId format
+      if (!sessionId || sessionId === ":sessionId") {
+        console.error("Invalid session ID:", sessionId);
+        throw new Error("Invalid session ID");
+      }
+
       console.log("Fetching session:", sessionId);
       const { data, error } = await supabase
         .from("test_sessions")
@@ -43,14 +49,21 @@ export function useSessionData(sessionId: string) {
           )
         `)
         .eq("id", sessionId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching session:", error);
         throw error;
       }
+
+      if (!data) {
+        console.log("No session found for ID:", sessionId);
+        return null;
+      }
+
       console.log("Session data:", data);
       return data;
     },
+    enabled: !!sessionId && sessionId !== ":sessionId",
   });
 }
