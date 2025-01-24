@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React from 'react';
 import { useQuestionManagement } from "./hooks/useQuestionManagement";
 import { QuestionContent } from "@/components/practice/QuestionContent";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ export function TestModule({
   const { 
     questions, 
     currentQuestionIndex, 
-    setCurrentQuestionIndex,
     loading,
     error 
   } = useQuestionManagement(currentModuleIndex);
@@ -31,6 +30,10 @@ export function TestModule({
 
   // Check if all questions are answered before allowing module completion
   const canFinishModule = questions.every(q => answers[q.id] !== undefined);
+
+  console.log('Current answers:', answers);
+  console.log('Current question ID:', currentQuestion?.id);
+  console.log('Selected answer:', currentQuestion ? answers[currentQuestion.id] : null);
 
   if (loading) {
     return (
@@ -63,8 +66,11 @@ export function TestModule({
     <div className="space-y-6">
       <QuestionContent
         question={currentQuestion}
-        selectedAnswer={answers[currentQuestion.id] || null}
-        onAnswerSelect={(answer) => onAnswer(currentQuestion.id, answer)}
+        selectedAnswer={currentQuestion ? answers[currentQuestion.id] : null}
+        onAnswerSelect={(answer) => {
+          console.log('Answer selected:', answer);
+          onAnswer(currentQuestion.id, answer);
+        }}
         showFeedback={false}
         questionNumber={currentQuestionIndex + 1}
         totalQuestions={questions.length}
