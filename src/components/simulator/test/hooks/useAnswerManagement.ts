@@ -111,24 +111,41 @@ export function useAnswerManagement(sessionId: string | null) {
         [questionId]: answer
       }));
 
-      // Save to database
-      const { error } = await supabase
+      // Check if answer already exists
+      const { data: existingAnswer } = await supabase
         .from("module_answers")
-        .upsert({
-          module_progress_id: currentModuleProgressId,
-          question_id: questionId,
-          selected_answer: answer,
-          is_flagged: flagged[questionId] || false
-        }, {
-          onConflict: 'module_progress_id,question_id'
-        });
+        .select("id")
+        .eq("module_progress_id", currentModuleProgressId)
+        .eq("question_id", questionId)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (existingAnswer) {
+        // Update existing answer
+        const { error: updateError } = await supabase
+          .from("module_answers")
+          .update({
+            selected_answer: answer,
+            is_flagged: flagged[questionId] || false
+          })
+          .eq("id", existingAnswer.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Insert new answer
+        const { error: insertError } = await supabase
+          .from("module_answers")
+          .insert({
+            module_progress_id: currentModuleProgressId,
+            question_id: questionId,
+            selected_answer: answer,
+            is_flagged: flagged[questionId] || false
+          });
+
+        if (insertError) throw insertError;
+      }
 
       console.log("Answer saved successfully");
-      
-      // Refresh answers to ensure UI is in sync with database
-      await loadExistingAnswers();
+      await loadExistingAnswers(); // Refresh answers to ensure UI is in sync
       
     } catch (err: any) {
       console.error("Error saving answer:", err);
@@ -164,18 +181,35 @@ export function useAnswerManagement(sessionId: string | null) {
         [questionId]: newFlaggedState
       }));
 
-      const { error } = await supabase
+      // Check if answer exists first
+      const { data: existingAnswer } = await supabase
         .from("module_answers")
-        .upsert({
-          module_progress_id: currentModuleProgressId,
-          question_id: questionId,
-          selected_answer: answers[questionId],
-          is_flagged: newFlaggedState
-        }, {
-          onConflict: 'module_progress_id,question_id'
-        });
+        .select("id")
+        .eq("module_progress_id", currentModuleProgressId)
+        .eq("question_id", questionId)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (existingAnswer) {
+        // Update existing answer
+        const { error } = await supabase
+          .from("module_answers")
+          .update({ is_flagged: newFlaggedState })
+          .eq("id", existingAnswer.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new answer with flag
+        const { error } = await supabase
+          .from("module_answers")
+          .insert({
+            module_progress_id: currentModuleProgressId,
+            question_id: questionId,
+            selected_answer: answers[questionId],
+            is_flagged: newFlaggedState
+          });
+
+        if (error) throw error;
+      }
     } catch (err: any) {
       // Revert flag state on error
       setFlagged(prev => ({
