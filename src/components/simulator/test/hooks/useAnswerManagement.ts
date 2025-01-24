@@ -25,13 +25,13 @@ export function useAnswerManagement(sessionId: string | null) {
       setIsInitializing(true);
       console.log("Loading existing answers for session:", sessionId);
       
-      // Get current module progress
+      // Get current module progress using maybeSingle to handle no data case
       const { data: moduleProgressData, error: moduleError } = await supabase
         .from("module_progress")
         .select("id")
         .eq("session_id", sessionId)
         .is("completed_at", null)
-        .single();
+        .maybeSingle();
 
       if (moduleError) {
         console.error("Error loading module progress:", moduleError);
@@ -117,7 +117,7 @@ export function useAnswerManagement(sessionId: string | null) {
         .from("questions")
         .select("correct_answer")
         .eq("id", questionId)
-        .single();
+        .maybeSingle();
 
       const isCorrect = questionData?.correct_answer === answer;
 
@@ -127,7 +127,7 @@ export function useAnswerManagement(sessionId: string | null) {
         .select("id")
         .eq("module_progress_id", currentModuleProgressId)
         .eq("question_id", questionId)
-        .single();
+        .maybeSingle();
 
       if (existingAnswer) {
         // Update existing answer
@@ -199,7 +199,7 @@ export function useAnswerManagement(sessionId: string | null) {
         .select("id")
         .eq("module_progress_id", currentModuleProgressId)
         .eq("question_id", questionId)
-        .single();
+        .maybeSingle();
 
       if (existingAnswer) {
         // Update existing answer
