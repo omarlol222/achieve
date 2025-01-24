@@ -29,9 +29,6 @@ export function TestModule({
   const currentQuestion = questions[currentQuestionIndex];
   const hasAnsweredCurrent = currentQuestion && answers[currentQuestion.id] !== undefined;
 
-  // Check if all questions are answered before allowing module completion
-  const canFinishModule = questions.every(q => answers[q.id] !== undefined);
-
   console.log('Current answers:', answers);
   console.log('Current question ID:', currentQuestion?.id);
   console.log('Selected answer:', currentQuestion ? answers[currentQuestion.id] : null);
@@ -103,7 +100,7 @@ export function TestModule({
               Next Question
             </Button>
           )}
-          {canFinishModule && (
+          {hasAnsweredCurrent && isLastQuestion && (
             <Button 
               onClick={onFinish}
               className="bg-green-600 hover:bg-green-700"

@@ -25,13 +25,13 @@ export function useAnswerManagement(sessionId: string | null) {
       setIsInitializing(true);
       console.log("Loading existing answers for session:", sessionId);
       
-      // Get current module progress using maybeSingle()
+      // Get current module progress
       const { data: moduleProgressData, error: moduleError } = await supabase
         .from("module_progress")
         .select("id")
         .eq("session_id", sessionId)
         .is("completed_at", null)
-        .maybeSingle();
+        .single();
 
       if (moduleError) {
         console.error("Error loading module progress:", moduleError);
@@ -51,7 +51,7 @@ export function useAnswerManagement(sessionId: string | null) {
       console.log("Found module progress:", moduleProgressData.id);
       setCurrentModuleProgressId(moduleProgressData.id);
       
-      // Load existing answers for this module progress
+      // Load existing answers
       const { data: existingAnswers, error: answersError } = await supabase
         .from("module_answers")
         .select("question_id, selected_answer, is_flagged")
@@ -96,6 +96,7 @@ export function useAnswerManagement(sessionId: string | null) {
 
   const handleAnswer = async (questionId: string, answer: number) => {
     if (!sessionId || !currentModuleProgressId) {
+      console.error("No active session or module progress found");
       toast({
         variant: "destructive",
         title: "Error saving answer",
@@ -111,13 +112,22 @@ export function useAnswerManagement(sessionId: string | null) {
         [questionId]: answer
       }));
 
+      // Get the correct answer to determine if the selected answer is correct
+      const { data: questionData } = await supabase
+        .from("questions")
+        .select("correct_answer")
+        .eq("id", questionId)
+        .single();
+
+      const isCorrect = questionData?.correct_answer === answer;
+
       // Check if answer already exists
       const { data: existingAnswer } = await supabase
         .from("module_answers")
         .select("id")
         .eq("module_progress_id", currentModuleProgressId)
         .eq("question_id", questionId)
-        .maybeSingle();
+        .single();
 
       if (existingAnswer) {
         // Update existing answer
@@ -125,6 +135,7 @@ export function useAnswerManagement(sessionId: string | null) {
           .from("module_answers")
           .update({
             selected_answer: answer,
+            is_correct: isCorrect,
             is_flagged: flagged[questionId] || false
           })
           .eq("id", existingAnswer.id);
@@ -138,6 +149,7 @@ export function useAnswerManagement(sessionId: string | null) {
             module_progress_id: currentModuleProgressId,
             question_id: questionId,
             selected_answer: answer,
+            is_correct: isCorrect,
             is_flagged: flagged[questionId] || false
           });
 
@@ -145,7 +157,6 @@ export function useAnswerManagement(sessionId: string | null) {
       }
 
       console.log("Answer saved successfully");
-      await loadExistingAnswers(); // Refresh answers to ensure UI is in sync
       
     } catch (err: any) {
       console.error("Error saving answer:", err);
@@ -176,18 +187,19 @@ export function useAnswerManagement(sessionId: string | null) {
     const newFlaggedState = !flagged[questionId];
     
     try {
+      // Update local state immediately
       setFlagged(prev => ({
         ...prev,
         [questionId]: newFlaggedState
       }));
 
-      // Check if answer exists first
+      // Check if answer exists
       const { data: existingAnswer } = await supabase
         .from("module_answers")
         .select("id")
         .eq("module_progress_id", currentModuleProgressId)
         .eq("question_id", questionId)
-        .maybeSingle();
+        .single();
 
       if (existingAnswer) {
         // Update existing answer
@@ -204,7 +216,6 @@ export function useAnswerManagement(sessionId: string | null) {
           .insert({
             module_progress_id: currentModuleProgressId,
             question_id: questionId,
-            selected_answer: answers[questionId],
             is_flagged: newFlaggedState
           });
 
