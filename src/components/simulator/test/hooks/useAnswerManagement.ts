@@ -25,7 +25,7 @@ export function useAnswerManagement(sessionId: string | null) {
       setIsInitializing(true);
       console.log("Loading existing answers for session:", sessionId);
       
-      // Get current module progress using maybeSingle() instead of single()
+      // Get current module progress using maybeSingle()
       const { data: moduleProgressData, error: moduleError } = await supabase
         .from("module_progress")
         .select("id")
@@ -105,40 +105,31 @@ export function useAnswerManagement(sessionId: string | null) {
     }
 
     try {
-      // First update local state for immediate feedback
+      // Update local state immediately for UI responsiveness
       setAnswers(prev => ({
         ...prev,
         [questionId]: answer
       }));
 
-      // Try to insert first
-      const { error: insertError } = await supabase
+      // Save to database
+      const { error } = await supabase
         .from("module_answers")
-        .insert({
+        .upsert({
           module_progress_id: currentModuleProgressId,
           question_id: questionId,
           selected_answer: answer,
           is_flagged: flagged[questionId] || false
+        }, {
+          onConflict: 'module_progress_id,question_id'
         });
 
-      // If insert fails (likely because record exists), try update
-      if (insertError) {
-        console.log("Insert failed, trying update:", insertError);
-        const { error: updateError } = await supabase
-          .from("module_answers")
-          .update({
-            selected_answer: answer,
-            is_flagged: flagged[questionId] || false
-          })
-          .eq("module_progress_id", currentModuleProgressId)
-          .eq("question_id", questionId);
-
-        if (updateError) {
-          throw updateError;
-        }
-      }
+      if (error) throw error;
 
       console.log("Answer saved successfully");
+      
+      // Refresh answers to ensure UI is in sync with database
+      await loadExistingAnswers();
+      
     } catch (err: any) {
       console.error("Error saving answer:", err);
       // Revert local state on error
@@ -175,11 +166,14 @@ export function useAnswerManagement(sessionId: string | null) {
 
       const { error } = await supabase
         .from("module_answers")
-        .update({
+        .upsert({
+          module_progress_id: currentModuleProgressId,
+          question_id: questionId,
+          selected_answer: answers[questionId],
           is_flagged: newFlaggedState
-        })
-        .eq("module_progress_id", currentModuleProgressId)
-        .eq("question_id", questionId);
+        }, {
+          onConflict: 'module_progress_id,question_id'
+        });
 
       if (error) throw error;
     } catch (err: any) {
