@@ -19,4 +19,12 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Add more flexible build options
+    outDir: "dist",
+    sourcemap: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
 }));
