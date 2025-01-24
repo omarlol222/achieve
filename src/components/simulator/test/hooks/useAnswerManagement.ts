@@ -9,7 +9,6 @@ export function useAnswerManagement(sessionId: string | null) {
   const [currentModuleProgressId, setCurrentModuleProgressId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
-  // Load existing answers when session changes
   useEffect(() => {
     if (sessionId) {
       loadExistingAnswers();
@@ -26,13 +25,13 @@ export function useAnswerManagement(sessionId: string | null) {
       setIsInitializing(true);
       console.log("Loading existing answers for session:", sessionId);
       
-      // Get current module progress
+      // Get current module progress using maybeSingle() instead of single()
       const { data: moduleProgressData, error: moduleError } = await supabase
         .from("module_progress")
         .select("id")
         .eq("session_id", sessionId)
         .is("completed_at", null)
-        .single();
+        .maybeSingle();
 
       if (moduleError) {
         console.error("Error loading module progress:", moduleError);
@@ -112,20 +111,19 @@ export function useAnswerManagement(sessionId: string | null) {
         [questionId]: answer
       }));
 
-      // Then save to database
-      const { data, error } = await supabase
+      // Try to insert first
+      const { error: insertError } = await supabase
         .from("module_answers")
         .insert({
           module_progress_id: currentModuleProgressId,
           question_id: questionId,
           selected_answer: answer,
           is_flagged: flagged[questionId] || false
-        })
-        .select()
-        .single();
+        });
 
-      if (error) {
-        // If insert fails, try update
+      // If insert fails (likely because record exists), try update
+      if (insertError) {
+        console.log("Insert failed, trying update:", insertError);
         const { error: updateError } = await supabase
           .from("module_answers")
           .update({
