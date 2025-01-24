@@ -78,7 +78,12 @@ export function TestModule({
 
       <div className="flex justify-end space-x-4">
         {hasAnsweredCurrent && !isLastQuestion && (
-          <Button onClick={onNext}>Next Question</Button>
+          <Button 
+            onClick={onNext}
+            className="bg-primary hover:bg-primary/90"
+          >
+            Next Question
+          </Button>
         )}
         {canFinishModule && (
           <Button 
