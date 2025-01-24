@@ -22,7 +22,8 @@ export function TestModule({
     questions, 
     currentQuestionIndex, 
     loading,
-    error 
+    error,
+    setCurrentQuestionIndex
   } = useQuestionManagement(currentModuleIndex);
 
   const currentQuestion = questions[currentQuestionIndex];
@@ -34,6 +35,12 @@ export function TestModule({
   console.log('Current answers:', answers);
   console.log('Current question ID:', currentQuestion?.id);
   console.log('Selected answer:', currentQuestion ? answers[currentQuestion.id] : null);
+
+  const handlePrevious = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
 
   if (loading) {
     return (
@@ -69,30 +76,42 @@ export function TestModule({
         selectedAnswer={currentQuestion ? answers[currentQuestion.id] : null}
         onAnswerSelect={(answer) => {
           console.log('Answer selected:', answer);
-          onAnswer(currentQuestion.id, answer);
+          if (currentQuestion) {
+            onAnswer(currentQuestion.id, answer);
+          }
         }}
         showFeedback={false}
         questionNumber={currentQuestionIndex + 1}
         totalQuestions={questions.length}
       />
 
-      <div className="flex justify-end space-x-4">
-        {hasAnsweredCurrent && !isLastQuestion && (
-          <Button 
-            onClick={onNext}
-            className="bg-primary hover:bg-primary/90"
-          >
-            Next Question
-          </Button>
-        )}
-        {canFinishModule && (
-          <Button 
-            onClick={onFinish}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Finish Module
-          </Button>
-        )}
+      <div className="flex justify-between space-x-4">
+        <Button 
+          onClick={handlePrevious}
+          disabled={currentQuestionIndex === 0}
+          variant="outline"
+        >
+          Previous Question
+        </Button>
+
+        <div className="flex space-x-4">
+          {hasAnsweredCurrent && !isLastQuestion && (
+            <Button 
+              onClick={onNext}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Next Question
+            </Button>
+          )}
+          {canFinishModule && (
+            <Button 
+              onClick={onFinish}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Finish Module
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
