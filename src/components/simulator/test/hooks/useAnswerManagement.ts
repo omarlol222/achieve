@@ -9,6 +9,13 @@ export function useAnswerManagement(sessionId: string | null) {
   const [currentModuleProgressId, setCurrentModuleProgressId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  // Load existing answers when session changes
+  useEffect(() => {
+    if (sessionId) {
+      loadExistingAnswers();
+    }
+  }, [sessionId]);
+
   const loadExistingAnswers = async () => {
     if (!sessionId) {
       console.log("No session ID provided");
@@ -19,14 +26,13 @@ export function useAnswerManagement(sessionId: string | null) {
       setIsInitializing(true);
       console.log("Loading existing answers for session:", sessionId);
       
-      // First, get the current module progress ID
+      // Get current module progress
       const { data: moduleProgressData, error: moduleError } = await supabase
         .from("module_progress")
         .select("id")
         .eq("session_id", sessionId)
         .is("completed_at", null)
-        .limit(1)
-        .order('created_at', { ascending: false });
+        .single();
 
       if (moduleError) {
         console.error("Error loading module progress:", moduleError);
@@ -38,31 +44,26 @@ export function useAnswerManagement(sessionId: string | null) {
         return;
       }
 
-      if (!moduleProgressData || moduleProgressData.length === 0) {
+      if (!moduleProgressData) {
         console.log("No active module progress found for session:", sessionId);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "No active module progress found"
-        });
         return;
       }
 
-      const currentProgress = moduleProgressData[0];
-      console.log("Found module progress:", currentProgress.id);
-      setCurrentModuleProgressId(currentProgress.id);
+      console.log("Found module progress:", moduleProgressData.id);
+      setCurrentModuleProgressId(moduleProgressData.id);
       
-      const { data: existingAnswers, error } = await supabase
+      // Load existing answers for this module progress
+      const { data: existingAnswers, error: answersError } = await supabase
         .from("module_answers")
         .select("question_id, selected_answer, is_flagged")
-        .eq("module_progress_id", currentProgress.id);
+        .eq("module_progress_id", moduleProgressData.id);
 
-      if (error) {
-        console.error("Error loading answers:", error);
+      if (answersError) {
+        console.error("Error loading answers:", answersError);
         toast({
           variant: "destructive",
           title: "Error loading answers",
-          description: error.message
+          description: answersError.message
         });
         return;
       }
@@ -74,7 +75,7 @@ export function useAnswerManagement(sessionId: string | null) {
         existingAnswers.forEach(answer => {
           if (answer.question_id) {
             answerMap[answer.question_id] = answer.selected_answer;
-            flagMap[answer.question_id] = answer.is_flagged;
+            flagMap[answer.question_id] = answer.is_flagged || false;
           }
         });
         
@@ -94,14 +95,8 @@ export function useAnswerManagement(sessionId: string | null) {
     }
   };
 
-  useEffect(() => {
-    if (sessionId) {
-      loadExistingAnswers();
-    }
-  }, [sessionId]);
-
   const handleAnswer = async (questionId: string, answer: number) => {
-    if (!sessionId) {
+    if (!sessionId || !currentModuleProgressId) {
       toast({
         variant: "destructive",
         title: "Error saving answer",
@@ -110,57 +105,50 @@ export function useAnswerManagement(sessionId: string | null) {
       return;
     }
 
-    if (!currentModuleProgressId) {
-      await loadExistingAnswers();
-      if (!currentModuleProgressId) {
-        toast({
-          variant: "destructive",
-          title: "Error saving answer",
-          description: "No active module progress found"
-        });
-        return;
-      }
-    }
-    
     try {
-      console.log("Saving answer:", { 
-        moduleProgressId: currentModuleProgressId, 
-        questionId, 
-        answer 
-      });
-      
-      // Update local state first for immediate feedback
+      // First update local state for immediate feedback
       setAnswers(prev => ({
         ...prev,
         [questionId]: answer
       }));
 
-      // Then persist to the database using the named constraint
-      const { error } = await supabase
+      // Then save to database
+      const { data, error } = await supabase
         .from("module_answers")
-        .upsert({
+        .insert({
           module_progress_id: currentModuleProgressId,
           question_id: questionId,
           selected_answer: answer,
           is_flagged: flagged[questionId] || false
-        }, {
-          onConflict: 'module_answers_module_progress_question_unique'
-        });
+        })
+        .select()
+        .single();
 
       if (error) {
-        console.error("Supabase error:", error);
-        // If there's an error, revert the local state
-        setAnswers(prev => {
-          const newState = { ...prev };
-          delete newState[questionId];
-          return newState;
-        });
-        throw error;
+        // If insert fails, try update
+        const { error: updateError } = await supabase
+          .from("module_answers")
+          .update({
+            selected_answer: answer,
+            is_flagged: flagged[questionId] || false
+          })
+          .eq("module_progress_id", currentModuleProgressId)
+          .eq("question_id", questionId);
+
+        if (updateError) {
+          throw updateError;
+        }
       }
-      
+
       console.log("Answer saved successfully");
     } catch (err: any) {
       console.error("Error saving answer:", err);
+      // Revert local state on error
+      setAnswers(prev => {
+        const newState = { ...prev };
+        delete newState[questionId];
+        return newState;
+      });
       toast({
         variant: "destructive",
         title: "Error saving answer",
@@ -189,14 +177,11 @@ export function useAnswerManagement(sessionId: string | null) {
 
       const { error } = await supabase
         .from("module_answers")
-        .upsert({
-          module_progress_id: currentModuleProgressId,
-          question_id: questionId,
-          selected_answer: answers[questionId],
+        .update({
           is_flagged: newFlaggedState
-        }, {
-          onConflict: 'module_answers_module_progress_question_unique'
-        });
+        })
+        .eq("module_progress_id", currentModuleProgressId)
+        .eq("question_id", questionId);
 
       if (error) throw error;
     } catch (err: any) {
