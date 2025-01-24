@@ -39,6 +39,105 @@ export type Database = {
         }
         Relationships: []
       }
+      module_answers: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_correct: boolean | null
+          is_flagged: boolean | null
+          module_progress_id: string | null
+          question_id: string | null
+          selected_answer: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          is_flagged?: boolean | null
+          module_progress_id?: string | null
+          question_id?: string | null
+          selected_answer?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          is_flagged?: boolean | null
+          module_progress_id?: string | null
+          question_id?: string | null
+          selected_answer?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_answers_module_progress_id_fkey"
+            columns: ["module_progress_id"]
+            isOneToOne: false
+            referencedRelation: "module_progress"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      module_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          module_id: string | null
+          score: number | null
+          session_id: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["module_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          module_id?: string | null
+          score?: number | null
+          session_id?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["module_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          module_id?: string | null
+          score?: number | null
+          session_id?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["module_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "test_modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "module_progress_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "test_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       module_questions: {
         Row: {
           created_at: string
@@ -577,6 +676,42 @@ export type Database = {
           },
         ]
       }
+      test_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          quantitative_score: number | null
+          started_at: string | null
+          total_score: number | null
+          updated_at: string | null
+          user_id: string | null
+          verbal_score: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          quantitative_score?: number | null
+          started_at?: string | null
+          total_score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          verbal_score?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          quantitative_score?: number | null
+          started_at?: string | null
+          total_score?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          verbal_score?: number | null
+        }
+        Relationships: []
+      }
       test_templates: {
         Row: {
           created_at: string
@@ -802,6 +937,7 @@ export type Database = {
       }
     }
     Enums: {
+      module_status: "pending" | "in_progress" | "completed"
       platform_type: "gat" | "sat" | "act"
       product_status: "active" | "inactive"
       question_difficulty: "Easy" | "Moderate" | "Hard"
