@@ -116,7 +116,7 @@ export function useTestSession(initialModuleIndex = 0) {
   useEffect(() => {
     const init = async () => {
       setIsInitializing(true);
-      await initializeSession(currentModule?.id);
+      await initializeSession();
       setIsInitializing(false);
     };
 
