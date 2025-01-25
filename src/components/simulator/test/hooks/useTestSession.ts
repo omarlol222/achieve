@@ -14,6 +14,7 @@ export function useTestSession(initialModuleIndex = 0) {
   
   const {
     sessionId,
+    moduleProgressId,
     loading: sessionLoading,
     initializeSession,
     completeModule
@@ -31,7 +32,7 @@ export function useTestSession(initialModuleIndex = 0) {
     flagged,
     handleAnswer,
     toggleFlag
-  } = useAnswerManagement(sessionId);
+  } = useAnswerManagement(sessionId, moduleProgressId);
 
   // Load module data
   useEffect(() => {
@@ -126,8 +127,8 @@ export function useTestSession(initialModuleIndex = 0) {
   }, [hasStarted, sessionId, initializeSession, currentModule]);
 
   const handleAnswerSelect = async (questionId: string, answer: number) => {
-    if (!sessionId) {
-      console.error("No active session");
+    if (!sessionId || !moduleProgressId) {
+      console.error("No active session or module progress");
       return;
     }
     await handleAnswer(questionId, answer);

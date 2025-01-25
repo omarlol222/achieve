@@ -4,9 +4,8 @@ import { useAnswers } from "./useAnswers";
 import { useQuestionFlags } from "./useQuestionFlags";
 import { loadExistingAnswers } from "./utils/answerDbOperations";
 
-export function useAnswerManagement(sessionId: string | null) {
+export function useAnswerManagement(sessionId: string | null, moduleProgressId: string | null) {
   const { toast } = useToast();
-  const [currentModuleProgressId, setCurrentModuleProgressId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
   const {
@@ -14,24 +13,24 @@ export function useAnswerManagement(sessionId: string | null) {
     setAnswers,
     handleAnswer: handleAnswerUpdate,
     saveAllAnswers
-  } = useAnswers(currentModuleProgressId);
+  } = useAnswers(moduleProgressId);
 
   const {
     flagged,
     setFlagged,
     toggleFlag: toggleFlagState
-  } = useQuestionFlags(currentModuleProgressId);
+  } = useQuestionFlags(moduleProgressId);
 
   // Load existing answers when session changes
   useEffect(() => {
-    if (sessionId) {
+    if (sessionId && moduleProgressId) {
       loadExistingAnswersData();
     }
-  }, [sessionId]);
+  }, [sessionId, moduleProgressId]);
 
   // Auto-save answers every 30 seconds
   useEffect(() => {
-    if (!sessionId || !currentModuleProgressId) return;
+    if (!sessionId || !moduleProgressId) return;
 
     const interval = setInterval(async () => {
       console.log("Auto-saving answers...");
@@ -39,11 +38,11 @@ export function useAnswerManagement(sessionId: string | null) {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [sessionId, currentModuleProgressId, answers, flagged]);
+  }, [sessionId, moduleProgressId, answers, flagged]);
 
   const loadExistingAnswersData = async () => {
-    if (!sessionId) {
-      console.log("No session ID provided");
+    if (!sessionId || !moduleProgressId) {
+      console.log("No session ID or module progress ID provided");
       return;
     }
 
@@ -51,10 +50,9 @@ export function useAnswerManagement(sessionId: string | null) {
       setIsInitializing(true);
       console.log("Loading existing answers for session:", sessionId);
       
-      const { answers: loadedAnswers, flagged: loadedFlags, moduleProgressId } = 
+      const { answers: loadedAnswers, flagged: loadedFlags } = 
         await loadExistingAnswers(sessionId);
       
-      setCurrentModuleProgressId(moduleProgressId);
       setAnswers(loadedAnswers);
       setFlagged(loadedFlags);
     } catch (err: any) {
@@ -70,6 +68,15 @@ export function useAnswerManagement(sessionId: string | null) {
   };
 
   const handleAnswer = async (questionId: string, answer: number) => {
+    if (!moduleProgressId) {
+      console.error("No active module progress found");
+      toast({
+        variant: "destructive",
+        title: "Error saving answer",
+        description: "No active session found"
+      });
+      return;
+    }
     await handleAnswerUpdate(questionId, answer, flagged[questionId] || false);
   };
 

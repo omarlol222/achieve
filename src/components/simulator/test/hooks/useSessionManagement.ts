@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 export function useSessionManagement(currentModuleIndex: number) {
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [moduleProgressId, setModuleProgressId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -76,6 +77,7 @@ export function useSessionManagement(currentModuleIndex: number) {
       }
 
       console.log("Initialized module progress:", moduleProgress.id);
+      setModuleProgressId(moduleProgress.id);
       
     } catch (error: any) {
       console.error("Error initializing session:", error);
@@ -175,6 +177,7 @@ export function useSessionManagement(currentModuleIndex: number) {
 
   return {
     sessionId,
+    moduleProgressId,
     loading,
     initializeSession,
     completeModule
