@@ -4,8 +4,9 @@ import { useState } from "react";
 import { ScoreHeader } from "./results/ScoreHeader";
 import { TopicPerformance } from "./results/TopicPerformance";
 import { ModuleDetails } from "./results/ModuleDetails";
-import { calculateSubjectScore, calculateTopicPerformance } from "./results/ScoreCalculator";
+import { calculateTopicPerformance } from "./results/ScoreCalculator";
 import { useSessionData } from "./results/hooks/useSessionData";
+import { useSessionScores } from "./results/hooks/useSessionScores";
 
 type TestResultsProps = {
   sessionId: string;
@@ -15,6 +16,7 @@ type TestResultsProps = {
 export function TestResults({ sessionId, onRestart }: TestResultsProps) {
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const { data: session, isLoading: isLoadingSession } = useSessionData(sessionId);
+  const { subjectScores, totalScore } = useSessionScores(session);
 
   if (isLoadingSession) {
     return (
@@ -25,26 +27,6 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
   }
 
   if (!session) return null;
-
-  const subjects = [...new Set(
-    session.module_progress
-      ?.filter(progress => progress.module?.subject)
-      .map(progress => progress.module.subject)
-  )];
-
-  const uniqueSubjects = subjects.filter((subject, index, self) =>
-    index === self.findIndex((s) => s?.id === subject?.id)
-  );
-
-  const subjectScores = uniqueSubjects.map(subject => ({
-    name: subject.name,
-    score: calculateSubjectScore(subject.name, session)
-  }));
-
-  const totalScore = Math.round(
-    subjectScores.reduce((sum, subject) => sum + subject.score, 0) / 
-    (subjectScores.length || 1)
-  );
 
   const topicPerformance = calculateTopicPerformance(session.module_progress || []);
 
