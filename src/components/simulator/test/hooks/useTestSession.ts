@@ -30,8 +30,7 @@ export function useTestSession(initialModuleIndex = 0) {
     answers,
     flagged,
     handleAnswer,
-    toggleFlag,
-    saveAllAnswers
+    toggleFlag
   } = useAnswerManagement(sessionId);
 
   // Load module data
@@ -39,7 +38,9 @@ export function useTestSession(initialModuleIndex = 0) {
     const loadModuleData = async () => {
       try {
         setIsInitializing(true);
+        console.log("Loading module data for index:", initialModuleIndex);
         
+        // Get all modules with a row number based on order_index
         const { data: modules, error: modulesError } = await supabase
           .from("test_modules")
           .select(`
@@ -55,25 +56,53 @@ export function useTestSession(initialModuleIndex = 0) {
           `)
           .order('order_index', { ascending: true });
 
-        if (modulesError) throw modulesError;
-        if (!modules?.length) throw new Error("No modules available");
+        if (modulesError) {
+          console.error("Error loading modules:", modulesError);
+          setError("Failed to load module data");
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to load module data"
+          });
+          return;
+        }
 
+        if (!modules || modules.length === 0) {
+          console.error("No modules found");
+          setError("No modules available");
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No modules available"
+          });
+          return;
+        }
+
+        // Sort modules by order_index and handle any gaps
         const sortedModules = modules.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
         const module = sortedModules[initialModuleIndex];
         
         if (!module) {
-          throw new Error(`No module found at position ${initialModuleIndex + 1}`);
+          console.error("No module found at index:", initialModuleIndex);
+          setError(`No module found at position ${initialModuleIndex + 1}`);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: `No module found at position ${initialModuleIndex + 1}`
+          });
+          return;
         }
 
+        console.log("Loaded module:", module);
         setCurrentModule(module);
         setError(null);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error in loadModuleData:", err);
-        setError(err.message || "An unexpected error occurred");
+        setError("An unexpected error occurred");
         toast({
           variant: "destructive",
           title: "Error",
-          description: err.message || "Failed to load module"
+          description: "An unexpected error occurred while loading the module"
         });
       } finally {
         setIsInitializing(false);
@@ -87,14 +116,14 @@ export function useTestSession(initialModuleIndex = 0) {
   useEffect(() => {
     const init = async () => {
       setIsInitializing(true);
-      await initializeSession();
+      await initializeSession(currentModule?.id);
       setIsInitializing(false);
     };
 
-    if (hasStarted && !sessionId) {
+    if (hasStarted && !sessionId && currentModule?.id) {
       init();
     }
-  }, [hasStarted, sessionId, initializeSession]);
+  }, [hasStarted, sessionId, initializeSession, currentModule]);
 
   const handleAnswerSelect = async (questionId: string, answer: number) => {
     if (!sessionId) {
@@ -109,9 +138,6 @@ export function useTestSession(initialModuleIndex = 0) {
       console.error("No active session");
       return;
     }
-
-    // Save all answers before completing the module
-    await saveAllAnswers();
     await completeModule();
   };
 
@@ -131,7 +157,6 @@ export function useTestSession(initialModuleIndex = 0) {
     toggleFlag,
     hasStarted,
     setHasStarted,
-    currentModule,
-    saveProgress: saveAllAnswers
+    currentModule
   };
 }
