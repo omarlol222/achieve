@@ -9,11 +9,24 @@ export function useAnswerManagement(sessionId: string | null) {
   const [currentModuleProgressId, setCurrentModuleProgressId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  // Load existing answers when session changes
   useEffect(() => {
     if (sessionId) {
       loadExistingAnswers();
     }
   }, [sessionId]);
+
+  // Auto-save answers every 30 seconds
+  useEffect(() => {
+    if (!sessionId || !currentModuleProgressId) return;
+
+    const interval = setInterval(async () => {
+      console.log("Auto-saving answers...");
+      await saveAllAnswers();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [sessionId, currentModuleProgressId, answers]);
 
   const loadExistingAnswers = async () => {
     if (!sessionId) {
@@ -25,7 +38,7 @@ export function useAnswerManagement(sessionId: string | null) {
       setIsInitializing(true);
       console.log("Loading existing answers for session:", sessionId);
       
-      // Get current module progress using maybeSingle to handle no data case
+      // Get current module progress using maybeSingle
       const { data: moduleProgressData, error: moduleError } = await supabase
         .from("module_progress")
         .select("id")
@@ -48,7 +61,6 @@ export function useAnswerManagement(sessionId: string | null) {
         return;
       }
 
-      console.log("Found module progress:", moduleProgressData.id);
       setCurrentModuleProgressId(moduleProgressData.id);
       
       // Load existing answers
@@ -78,7 +90,6 @@ export function useAnswerManagement(sessionId: string | null) {
           }
         });
         
-        console.log("Loaded answers:", answerMap);
         setAnswers(answerMap);
         setFlagged(flagMap);
       }
@@ -94,6 +105,21 @@ export function useAnswerManagement(sessionId: string | null) {
     }
   };
 
+  const saveAllAnswers = async () => {
+    if (!currentModuleProgressId) return;
+
+    const promises = Object.entries(answers).map(([questionId, answer]) => 
+      saveAnswer(questionId, answer)
+    );
+
+    try {
+      await Promise.all(promises);
+      console.log("All answers saved successfully");
+    } catch (err) {
+      console.error("Error saving answers:", err);
+    }
+  };
+
   const handleAnswer = async (questionId: string, answer: number) => {
     if (!sessionId || !currentModuleProgressId) {
       console.error("No active session or module progress found");
@@ -106,61 +132,15 @@ export function useAnswerManagement(sessionId: string | null) {
     }
 
     try {
-      // Update local state immediately for UI responsiveness
       setAnswers(prev => ({
         ...prev,
         [questionId]: answer
       }));
 
-      // Get the correct answer to determine if the selected answer is correct
-      const { data: questionData } = await supabase
-        .from("questions")
-        .select("correct_answer")
-        .eq("id", questionId)
-        .maybeSingle();
-
-      const isCorrect = questionData?.correct_answer === answer;
-
-      // Check if answer already exists
-      const { data: existingAnswer } = await supabase
-        .from("module_answers")
-        .select("id")
-        .eq("module_progress_id", currentModuleProgressId)
-        .eq("question_id", questionId)
-        .maybeSingle();
-
-      if (existingAnswer) {
-        // Update existing answer
-        const { error: updateError } = await supabase
-          .from("module_answers")
-          .update({
-            selected_answer: answer,
-            is_correct: isCorrect,
-            is_flagged: flagged[questionId] || false
-          })
-          .eq("id", existingAnswer.id);
-
-        if (updateError) throw updateError;
-      } else {
-        // Insert new answer
-        const { error: insertError } = await supabase
-          .from("module_answers")
-          .insert({
-            module_progress_id: currentModuleProgressId,
-            question_id: questionId,
-            selected_answer: answer,
-            is_correct: isCorrect,
-            is_flagged: flagged[questionId] || false
-          });
-
-        if (insertError) throw insertError;
-      }
-
-      console.log("Answer saved successfully");
+      await saveAnswer(questionId, answer);
       
     } catch (err: any) {
       console.error("Error saving answer:", err);
-      // Revert local state on error
       setAnswers(prev => {
         const newState = { ...prev };
         delete newState[questionId];
@@ -171,6 +151,46 @@ export function useAnswerManagement(sessionId: string | null) {
         title: "Error saving answer",
         description: err.message
       });
+    }
+  };
+
+  const saveAnswer = async (questionId: string, answer: number) => {
+    if (!currentModuleProgressId) return;
+
+    const { data: questionData } = await supabase
+      .from("questions")
+      .select("correct_answer")
+      .eq("id", questionId)
+      .maybeSingle();
+
+    const isCorrect = questionData?.correct_answer === answer;
+
+    const { data: existingAnswer } = await supabase
+      .from("module_answers")
+      .select("id")
+      .eq("module_progress_id", currentModuleProgressId)
+      .eq("question_id", questionId)
+      .maybeSingle();
+
+    if (existingAnswer) {
+      await supabase
+        .from("module_answers")
+        .update({
+          selected_answer: answer,
+          is_correct: isCorrect,
+          is_flagged: flagged[questionId] || false
+        })
+        .eq("id", existingAnswer.id);
+    } else {
+      await supabase
+        .from("module_answers")
+        .insert({
+          module_progress_id: currentModuleProgressId,
+          question_id: questionId,
+          selected_answer: answer,
+          is_correct: isCorrect,
+          is_flagged: flagged[questionId] || false
+        });
     }
   };
 
@@ -187,13 +207,11 @@ export function useAnswerManagement(sessionId: string | null) {
     const newFlaggedState = !flagged[questionId];
     
     try {
-      // Update local state immediately
       setFlagged(prev => ({
         ...prev,
         [questionId]: newFlaggedState
       }));
 
-      // Check if answer exists
       const { data: existingAnswer } = await supabase
         .from("module_answers")
         .select("id")
@@ -202,27 +220,20 @@ export function useAnswerManagement(sessionId: string | null) {
         .maybeSingle();
 
       if (existingAnswer) {
-        // Update existing answer
-        const { error } = await supabase
+        await supabase
           .from("module_answers")
           .update({ is_flagged: newFlaggedState })
           .eq("id", existingAnswer.id);
-
-        if (error) throw error;
       } else {
-        // Insert new answer with flag
-        const { error } = await supabase
+        await supabase
           .from("module_answers")
           .insert({
             module_progress_id: currentModuleProgressId,
             question_id: questionId,
             is_flagged: newFlaggedState
           });
-
-        if (error) throw error;
       }
     } catch (err: any) {
-      // Revert flag state on error
       setFlagged(prev => ({
         ...prev,
         [questionId]: !newFlaggedState
@@ -241,6 +252,7 @@ export function useAnswerManagement(sessionId: string | null) {
     flagged,
     handleAnswer,
     toggleFlag,
-    isInitializing
+    isInitializing,
+    saveAllAnswers
   };
 }

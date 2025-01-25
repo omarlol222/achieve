@@ -1,7 +1,8 @@
-import React from 'react';
-import { useQuestionManagement } from "./hooks/useQuestionManagement";
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { QuestionContent } from "@/components/practice/QuestionContent";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export function TestModule({ 
   currentModuleIndex,
@@ -9,7 +10,13 @@ export function TestModule({
   answers,
   onNext,
   onFinish,
-  isLastQuestion 
+  isLastQuestion,
+  questions,
+  currentQuestionIndex,
+  loading,
+  error,
+  setCurrentQuestionIndex,
+  saveProgress
 }: {
   currentModuleIndex: number;
   onAnswer: (questionId: string, answer: number) => void;
@@ -17,25 +24,47 @@ export function TestModule({
   onNext: () => void;
   onFinish: () => void;
   isLastQuestion: boolean;
+  questions: any[];
+  currentQuestionIndex: number;
+  loading: boolean;
+  error: string | null;
+  setCurrentQuestionIndex: (index: number) => void;
+  saveProgress: () => Promise<void>;
 }) {
-  const { 
-    questions, 
-    currentQuestionIndex, 
-    loading,
-    error,
-    setCurrentQuestionIndex
-  } = useQuestionManagement(currentModuleIndex);
-
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const currentQuestion = questions[currentQuestionIndex];
   const hasAnsweredCurrent = currentQuestion && answers[currentQuestion.id] !== undefined;
 
-  console.log('Current answers:', answers);
-  console.log('Current question ID:', currentQuestion?.id);
-  console.log('Selected answer:', currentQuestion ? answers[currentQuestion.id] : null);
+  // Auto-save progress when navigating between questions
+  useEffect(() => {
+    if (hasAnsweredCurrent) {
+      saveProgress();
+    }
+  }, [currentQuestionIndex, hasAnsweredCurrent]);
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+
+  const handleNext = async () => {
+    if (!hasAnsweredCurrent) {
+      toast({
+        title: "Please answer the question",
+        description: "You must select an answer before proceeding",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    await saveProgress();
+    
+    if (isLastQuestion) {
+      onFinish();
+    } else {
+      onNext();
     }
   };
 
@@ -72,7 +101,6 @@ export function TestModule({
         question={currentQuestion}
         selectedAnswer={currentQuestion ? answers[currentQuestion.id] : null}
         onAnswerSelect={(answer) => {
-          console.log('Answer selected:', answer);
           if (currentQuestion) {
             onAnswer(currentQuestion.id, answer);
           }
@@ -92,20 +120,12 @@ export function TestModule({
         </Button>
 
         <div className="flex space-x-4">
-          {hasAnsweredCurrent && !isLastQuestion && (
+          {hasAnsweredCurrent && (
             <Button 
-              onClick={onNext}
-              className="bg-primary hover:bg-primary/90"
+              onClick={handleNext}
+              className={isLastQuestion ? "bg-green-600 hover:bg-green-700" : "bg-primary hover:bg-primary/90"}
             >
-              Next Question
-            </Button>
-          )}
-          {hasAnsweredCurrent && isLastQuestion && (
-            <Button 
-              onClick={onFinish}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Finish Module
+              {isLastQuestion ? "Finish Module" : "Next Question"}
             </Button>
           )}
         </div>
