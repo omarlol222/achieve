@@ -7,8 +7,10 @@ import { TestNavigation } from "@/components/simulator/test/TestNavigation";
 import { useTestSession } from "@/components/simulator/test/useTestSession";
 import { StartModule } from "@/components/simulator/StartModule";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function SimulatorTest() {
+  const navigate = useNavigate();
   const {
     questions,
     currentQuestionIndex,
@@ -24,6 +26,8 @@ export default function SimulatorTest() {
     currentModule,
     hasStarted,
     setHasStarted,
+    sessionId,
+    isLastModule
   } = useTestSession();
 
   if (loading) {
@@ -61,6 +65,13 @@ export default function SimulatorTest() {
   const currentQuestion = questions[currentQuestionIndex];
   const progress = (currentQuestionIndex / questions.length) * 100;
 
+  const handleComplete = async () => {
+    await handleModuleComplete();
+    if (isLastModule && sessionId) {
+      navigate(`/gat/simulator/results/${sessionId}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="container py-8">
@@ -97,7 +108,7 @@ export default function SimulatorTest() {
             onPrevious={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
             onNext={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
             onFlag={() => currentQuestion && toggleFlag(currentQuestion.id)}
-            onComplete={handleModuleComplete}
+            onComplete={handleComplete}
           />
         </div>
       </div>

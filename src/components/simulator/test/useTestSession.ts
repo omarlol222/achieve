@@ -11,6 +11,8 @@ export function useTestSession(initialModuleIndex = 0) {
   const [currentModule, setCurrentModule] = useState<any>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [allModules, setAllModules] = useState<any[]>([]);
+  const [currentModuleIndex, setCurrentModuleIndex] = useState(initialModuleIndex);
   
   const {
     sessionId,
@@ -18,14 +20,14 @@ export function useTestSession(initialModuleIndex = 0) {
     loading: sessionLoading,
     initializeSession,
     completeModule
-  } = useSessionManagement(initialModuleIndex);
+  } = useSessionManagement(currentModuleIndex);
 
   const {
     questions,
     currentQuestionIndex,
     setCurrentQuestionIndex,
     loading: questionsLoading
-  } = useQuestionManagement(initialModuleIndex);
+  } = useQuestionManagement(currentModuleIndex);
 
   const {
     answers,
@@ -34,12 +36,12 @@ export function useTestSession(initialModuleIndex = 0) {
     toggleFlag
   } = useAnswerManagement(sessionId, moduleProgressId);
 
-  // Load module data
+  // Load all modules data
   useEffect(() => {
     const loadModuleData = async () => {
       try {
         setIsInitializing(true);
-        console.log("Loading module data for index:", initialModuleIndex);
+        console.log("Loading module data for index:", currentModuleIndex);
         
         // Get all modules with a row number based on order_index
         const { data: modules, error: modulesError } = await supabase
@@ -81,21 +83,22 @@ export function useTestSession(initialModuleIndex = 0) {
 
         // Sort modules by order_index and handle any gaps
         const sortedModules = modules.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-        const module = sortedModules[initialModuleIndex];
+        setAllModules(sortedModules);
         
-        if (!module) {
-          console.error("No module found at index:", initialModuleIndex);
-          setError(`No module found at position ${initialModuleIndex + 1}`);
+        const currentModule = sortedModules[currentModuleIndex];
+        if (!currentModule) {
+          console.error("No module found at index:", currentModuleIndex);
+          setError(`No module found at position ${currentModuleIndex + 1}`);
           toast({
             variant: "destructive",
             title: "Error",
-            description: `No module found at position ${initialModuleIndex + 1}`
+            description: `No module found at position ${currentModuleIndex + 1}`
           });
           return;
         }
 
-        console.log("Loaded module:", module);
-        setCurrentModule(module);
+        console.log("Loaded module:", currentModule);
+        setCurrentModule(currentModule);
         setError(null);
       } catch (err) {
         console.error("Error in loadModuleData:", err);
@@ -111,7 +114,7 @@ export function useTestSession(initialModuleIndex = 0) {
     };
 
     loadModuleData();
-  }, [initialModuleIndex, toast]);
+  }, [currentModuleIndex, toast]);
 
   // Initialize session when component mounts
   useEffect(() => {
@@ -139,12 +142,20 @@ export function useTestSession(initialModuleIndex = 0) {
       console.error("No active session");
       return;
     }
+
     await completeModule();
+
+    // Check if there are more modules
+    if (currentModuleIndex < allModules.length - 1) {
+      // Move to next module
+      setCurrentModuleIndex(prev => prev + 1);
+      setCurrentQuestionIndex(0); // Reset question index for new module
+    }
   };
 
   return {
     sessionId,
-    currentModuleIndex: initialModuleIndex,
+    currentModuleIndex,
     questions,
     currentQuestionIndex,
     setCurrentQuestionIndex,
@@ -158,6 +169,7 @@ export function useTestSession(initialModuleIndex = 0) {
     toggleFlag,
     hasStarted,
     setHasStarted,
-    currentModule
+    currentModule,
+    isLastModule: currentModuleIndex === allModules.length - 1
   };
 }
