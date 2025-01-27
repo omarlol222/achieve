@@ -170,6 +170,7 @@ export function useTestSession(initialModuleIndex = 0) {
     hasStarted,
     setHasStarted,
     currentModule,
-    isLastModule: currentModuleIndex === allModules.length - 1
+    isLastModule: currentModuleIndex === allModules.length - 1,
+    totalModules: allModules.length
   };
 }
