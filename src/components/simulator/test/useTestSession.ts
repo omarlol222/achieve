@@ -85,22 +85,22 @@ export function useTestSession() {
         console.log("Loaded modules:", modules);
         setAllModules(modules);
         
-        // Find the current module based on order_index
-        const currentModule = modules.find(m => m.order_index === currentModuleIndex);
-        
-        if (!currentModule) {
-          console.error("No module found at index:", currentModuleIndex);
-          setError(`No module found at position ${currentModuleIndex + 1}`);
+        // Get the first module by order_index
+        const firstModule = modules[0];
+        if (!firstModule) {
+          console.error("No modules available");
+          setError("No modules available");
           toast({
             variant: "destructive",
             title: "Error",
-            description: `No module found at position ${currentModuleIndex + 1}`
+            description: "No modules available"
           });
           return;
         }
 
-        console.log("Current module:", currentModule);
-        setCurrentModule(currentModule);
+        console.log("Starting with module:", firstModule);
+        setCurrentModule(firstModule);
+        setCurrentModuleIndex(firstModule.order_index);
         setError(null);
       } catch (err) {
         console.error("Error in loadModuleData:", err);
@@ -116,7 +116,7 @@ export function useTestSession() {
     };
 
     loadModuleData();
-  }, [currentModuleIndex, toast]);
+  }, [toast]);
 
   // Initialize session when component mounts
   useEffect(() => {
@@ -146,17 +146,18 @@ export function useTestSession() {
     }
 
     await completeModule();
-    console.log("Current module index:", currentModuleIndex, "Total modules:", allModules.length);
-
+    
     // Find the next module based on order_index
-    const nextModule = allModules.find(m => m.order_index === currentModuleIndex + 1);
+    const currentOrderIndex = currentModule.order_index;
+    const nextModule = allModules.find(m => m.order_index === currentOrderIndex + 1);
 
     if (nextModule) {
       console.log("Moving to next module:", nextModule.name);
       
       // Reset question index for new module
       setCurrentQuestionIndex(0);
-      setCurrentModuleIndex(prev => prev + 1);
+      setCurrentModule(nextModule);
+      setCurrentModuleIndex(nextModule.order_index);
       
       // Show transition message
       toast({
@@ -187,7 +188,7 @@ export function useTestSession() {
     hasStarted,
     setHasStarted,
     currentModule,
-    isLastModule: currentModuleIndex === allModules.length - 1,
+    isLastModule: !allModules.find(m => m.order_index > (currentModule?.order_index ?? 0)),
     totalModules: allModules.length
   };
 }
