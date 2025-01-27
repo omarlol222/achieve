@@ -85,7 +85,9 @@ export function useTestSession() {
         console.log("Loaded modules:", modules);
         setAllModules(modules);
         
-        const currentModule = modules[currentModuleIndex];
+        // Find the current module based on order_index
+        const currentModule = modules.find(m => m.order_index === currentModuleIndex);
+        
         if (!currentModule) {
           console.error("No module found at index:", currentModuleIndex);
           setError(`No module found at position ${currentModuleIndex + 1}`);
@@ -146,19 +148,20 @@ export function useTestSession() {
     await completeModule();
     console.log("Current module index:", currentModuleIndex, "Total modules:", allModules.length);
 
-    // Check if there are more modules
-    if (currentModuleIndex < allModules.length - 1) {
-      // Move to next module
-      const nextModuleIndex = currentModuleIndex + 1;
-      console.log("Moving to next module:", nextModuleIndex);
+    // Find the next module based on order_index
+    const nextModule = allModules.find(m => m.order_index === currentModuleIndex + 1);
+
+    if (nextModule) {
+      console.log("Moving to next module:", nextModule.name);
       
-      setCurrentQuestionIndex(0); // Reset question index for new module
-      setCurrentModuleIndex(nextModuleIndex);
+      // Reset question index for new module
+      setCurrentQuestionIndex(0);
+      setCurrentModuleIndex(prev => prev + 1);
       
       // Show transition message
       toast({
         title: "Module Complete",
-        description: `Moving to module ${nextModuleIndex + 1} of ${allModules.length}...`,
+        description: `Moving to module ${nextModule.name}...`,
       });
     } else {
       console.log("All modules completed, navigating to results");
