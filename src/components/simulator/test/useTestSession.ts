@@ -82,9 +82,10 @@ export function useTestSession() {
           return;
         }
 
+        console.log("Loaded modules:", modules);
         setAllModules(modules);
-        const currentModule = modules[currentModuleIndex];
         
+        const currentModule = modules[currentModuleIndex];
         if (!currentModule) {
           console.error("No module found at index:", currentModuleIndex);
           setError(`No module found at position ${currentModuleIndex + 1}`);
@@ -96,7 +97,7 @@ export function useTestSession() {
           return;
         }
 
-        console.log("Loaded current module:", currentModule);
+        console.log("Current module:", currentModule);
         setCurrentModule(currentModule);
         setError(null);
       } catch (err) {
@@ -143,19 +144,24 @@ export function useTestSession() {
     }
 
     await completeModule();
+    console.log("Current module index:", currentModuleIndex, "Total modules:", allModules.length);
 
     // Check if there are more modules
     if (currentModuleIndex < allModules.length - 1) {
       // Move to next module
+      const nextModuleIndex = currentModuleIndex + 1;
+      console.log("Moving to next module:", nextModuleIndex);
+      
       setCurrentQuestionIndex(0); // Reset question index for new module
-      setCurrentModuleIndex(prev => prev + 1);
+      setCurrentModuleIndex(nextModuleIndex);
       
       // Show transition message
       toast({
         title: "Module Complete",
-        description: "Moving to next module...",
+        description: `Moving to module ${nextModuleIndex + 1} of ${allModules.length}...`,
       });
     } else {
+      console.log("All modules completed, navigating to results");
       // All modules completed, navigate to results
       navigate(`/gat/simulator/results/${sessionId}`);
     }
