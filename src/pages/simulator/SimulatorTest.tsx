@@ -7,10 +7,8 @@ import { TestNavigation } from "@/components/simulator/test/TestNavigation";
 import { useTestSession } from "@/components/simulator/test/useTestSession";
 import { StartModule } from "@/components/simulator/StartModule";
 import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 export default function SimulatorTest() {
-  const navigate = useNavigate();
   const {
     questions,
     currentQuestionIndex,
@@ -26,8 +24,9 @@ export default function SimulatorTest() {
     currentModule,
     hasStarted,
     setHasStarted,
-    sessionId,
-    isLastModule
+    isLastModule,
+    currentModuleIndex,
+    totalModules
   } = useTestSession();
 
   if (loading) {
@@ -59,23 +58,30 @@ export default function SimulatorTest() {
   }
 
   if (!hasStarted) {
-    return <StartModule module={currentModule} onStart={() => setHasStarted(true)} />;
+    return (
+      <StartModule 
+        module={currentModule} 
+        onStart={() => setHasStarted(true)} 
+      />
+    );
   }
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = (currentQuestionIndex / questions.length) * 100;
 
-  const handleComplete = async () => {
-    await handleModuleComplete();
-    if (isLastModule && sessionId) {
-      navigate(`/gat/simulator/results/${sessionId}`);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-white">
       <div className="container py-8">
         <div className="space-y-6 max-w-6xl mx-auto">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">
+              Module {currentModuleIndex + 1} of {totalModules}
+            </h2>
+            <p className="text-gray-600">
+              {currentModule.name}
+            </p>
+          </div>
+
           <TestHeader
             moduleName={currentModule.name}
             timeLeft={timeLeft}
@@ -108,7 +114,7 @@ export default function SimulatorTest() {
             onPrevious={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
             onNext={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
             onFlag={() => currentQuestion && toggleFlag(currentQuestion.id)}
-            onComplete={handleComplete}
+            onComplete={handleModuleComplete}
           />
         </div>
       </div>
