@@ -22,14 +22,24 @@ export async function selectModuleQuestions(
       topicsCount: currentModule.module_topics?.length || 0
     });
 
+    if (!currentModule.module_topics || currentModule.module_topics.length === 0) {
+      throw new Error(`Module ${currentModule.id} has no configured topics`);
+    }
+
     // Clear existing questions for this specific module
     await clearModuleQuestions(currentModule.id);
     console.log(`Cleared existing questions for module ${currentModule.id}`);
 
     const moduleQuestions = new Set(); // Track selected question IDs to ensure uniqueness
+    const topicResults = []; // Track results for each topic
 
     // Process each topic in the module
-    for (const topicConfig of currentModule.module_topics || []) {
+    for (const topicConfig of currentModule.module_topics) {
+      if (!topicConfig.topic_id || !topicConfig.question_count) {
+        console.error("Invalid topic configuration:", topicConfig);
+        continue;
+      }
+
       console.log(`Processing topic configuration:`, {
         topicId: topicConfig.topic_id,
         moduleId: currentModule.id,
@@ -37,57 +47,77 @@ export async function selectModuleQuestions(
         percentage: topicConfig.percentage
       });
       
-      const topicQuestions = await getTopicQuestions(
-        currentModule.id,
-        currentModule.test_type_id,
-        currentModule.subject_id,
-        topicConfig.topic_id
-      );
-
-      // Filter out questions that have already been selected for this module
-      const availableQuestions = topicQuestions.filter(q => !moduleQuestions.has(q.id));
-
-      if (availableQuestions.length < topicConfig.question_count) {
-        console.warn(
-          `Warning: Topic ${topicConfig.topic_id} has insufficient questions:`, {
-            topicId: topicConfig.topic_id,
-            availableQuestions: availableQuestions.length,
-            requestedCount: topicConfig.question_count,
-            totalQuestions: topicQuestions.length
-          }
+      try {
+        const topicQuestions = await getTopicQuestions(
+          currentModule.id,
+          currentModule.test_type_id,
+          currentModule.subject_id,
+          topicConfig.topic_id
         );
-      }
 
-      // Select random questions up to the requested count
-      const shuffledQuestions = [...availableQuestions].sort(() => Math.random() - 0.5);
-      const selectedCount = Math.min(topicConfig.question_count, shuffledQuestions.length);
-      
-      console.log(`Selecting questions for topic:`, {
-        topicId: topicConfig.topic_id,
-        selectedCount,
-        availableCount: availableQuestions.length
-      });
-      
-      // Insert selected questions and track them
-      for (let i = 0; i < selectedCount; i++) {
-        const questionId = shuffledQuestions[i].id;
-        if (!moduleQuestions.has(questionId)) {
-          await insertModuleQuestion(currentModule.id, questionId);
-          moduleQuestions.add(questionId);
+        // Filter out questions that have already been selected for this module
+        const availableQuestions = topicQuestions.filter(q => !moduleQuestions.has(q.id));
+
+        topicResults.push({
+          topicId: topicConfig.topic_id,
+          requested: topicConfig.question_count,
+          available: availableQuestions.length,
+          total: topicQuestions.length
+        });
+
+        if (availableQuestions.length < topicConfig.question_count) {
+          console.warn(
+            `Warning: Topic ${topicConfig.topic_id} has insufficient questions:`, {
+              topicId: topicConfig.topic_id,
+              availableQuestions: availableQuestions.length,
+              requestedCount: topicConfig.question_count,
+              totalQuestions: topicQuestions.length
+            }
+          );
         }
+
+        // Select random questions up to the requested count
+        const shuffledQuestions = [...availableQuestions].sort(() => Math.random() - 0.5);
+        const selectedCount = Math.min(topicConfig.question_count, shuffledQuestions.length);
+        
+        console.log(`Selecting questions for topic:`, {
+          topicId: topicConfig.topic_id,
+          selectedCount,
+          availableCount: availableQuestions.length
+        });
+        
+        // Insert selected questions and track them
+        for (let i = 0; i < selectedCount; i++) {
+          const questionId = shuffledQuestions[i].id;
+          if (!moduleQuestions.has(questionId)) {
+            await insertModuleQuestion(currentModule.id, questionId);
+            moduleQuestions.add(questionId);
+          }
+        }
+      } catch (topicError) {
+        console.error(`Error processing topic ${topicConfig.topic_id}:`, topicError);
       }
     }
+
+    // Log summary of topic processing
+    console.log("Topic processing summary:", topicResults);
 
     // Get final questions for the module
     const finalQuestions = await getFinalModuleQuestions(currentModule.id);
     console.log(`Final question selection results:`, {
       moduleId: currentModule.id,
       questionCount: finalQuestions.length,
-      expectedTotal: currentModule.total_questions
+      expectedTotal: currentModule.total_questions,
+      topicsProcessed: topicResults.length,
+      topicSummary: topicResults
     });
 
     if (finalQuestions.length === 0) {
-      throw new Error(`No questions could be selected for module ${currentModule.id}`);
+      // Provide more detailed error message
+      const errorDetails = topicResults.length > 0 
+        ? `Topics processed: ${JSON.stringify(topicResults)}`
+        : "No topics were successfully processed";
+      throw new Error(`No questions could be selected for module ${currentModule.id}. ${errorDetails}`);
     }
 
     return finalQuestions;
