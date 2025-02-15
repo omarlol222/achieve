@@ -9,6 +9,7 @@ export async function getModuleByIndex(currentModuleIndex: number) {
       name,
       subject_id,
       test_type_id,
+      total_questions,
       subject:subjects (
         id,
         name
