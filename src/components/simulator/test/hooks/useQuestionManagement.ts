@@ -23,6 +23,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
           .select(`
             id,
             subject_id,
+            test_type_id,
             subject:subjects (
               id,
               name
