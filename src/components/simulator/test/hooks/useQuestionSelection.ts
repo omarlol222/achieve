@@ -19,7 +19,8 @@ export async function selectModuleQuestions(
       name: currentModule.name,
       subject: currentModule.subject?.name,
       subjectId: currentModule.subject_id,
-      topicsCount: currentModule.module_topics?.length
+      topicsCount: currentModule.module_topics?.length,
+      totalQuestions: currentModule.total_questions
     });
 
     const moduleTopics = currentModule.module_topics || [];
@@ -43,7 +44,7 @@ export async function selectModuleQuestions(
         continue;
       }
 
-      console.log(`Found ${topicQuestions.length} questions for topic ${topicConfig.topic_id}`);
+      console.log(`Found ${topicQuestions.length} questions for topic ${topicConfig.topic_id}, selecting ${topicConfig.question_count}`);
 
       // Select random questions based on the configured question count
       const selectedQuestions = [...topicQuestions]
@@ -56,7 +57,10 @@ export async function selectModuleQuestions(
       }
     }
 
-    return await getFinalModuleQuestions(currentModule.id);
+    const finalQuestions = await getFinalModuleQuestions(currentModule.id);
+    console.log(`Final question count: ${finalQuestions.length} out of expected ${currentModule.total_questions}`);
+
+    return finalQuestions;
   } catch (error: any) {
     onError(error.message);
     return [];
