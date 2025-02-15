@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -65,5 +66,10 @@ export function useSessionData(sessionId: string) {
       return data;
     },
     enabled: !!sessionId && sessionId !== ":sessionId",
+    staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+    cacheTime: 1000 * 60 * 30, // Cache persists for 30 minutes
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 }

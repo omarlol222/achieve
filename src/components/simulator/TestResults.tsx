@@ -1,12 +1,14 @@
+
 import { Button } from "@/components/ui/button";
 import { ModuleReview } from "./ModuleReview";
-import { useState } from "react";
+import { useMemo } from "react";
 import { ScoreHeader } from "./results/ScoreHeader";
 import { TopicPerformance } from "./results/TopicPerformance";
 import { ModuleDetails } from "./results/ModuleDetails";
 import { calculateTopicPerformance } from "./results/ScoreCalculator";
 import { useSessionData } from "./results/hooks/useSessionData";
 import { useSessionScores } from "./results/hooks/useSessionScores";
+import { useSimulatorResultsStore } from "@/store/useSimulatorResultsStore";
 
 type TestResultsProps = {
   sessionId: string;
@@ -14,9 +16,14 @@ type TestResultsProps = {
 };
 
 export function TestResults({ sessionId, onRestart }: TestResultsProps) {
-  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const { selectedModuleId, setSelectedModule } = useSimulatorResultsStore();
   const { data: session, isLoading: isLoadingSession } = useSessionData(sessionId);
   const { subjectScores, totalScore } = useSessionScores(session);
+
+  const topicPerformance = useMemo(() => 
+    calculateTopicPerformance(session?.module_progress || []),
+    [session?.module_progress]
+  );
 
   if (isLoadingSession) {
     return (
@@ -28,17 +35,15 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
   if (!session) return null;
 
-  const topicPerformance = calculateTopicPerformance(session.module_progress || []);
-
   if (selectedModuleId) {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => setSelectedModuleId(null)}>
+        <Button variant="ghost" onClick={() => setSelectedModule(null)}>
           ← Back to Results
         </Button>
         <ModuleReview
           moduleProgressId={selectedModuleId}
-          onContinue={() => setSelectedModuleId(null)}
+          onContinue={() => setSelectedModule(null)}
         />
       </div>
     );
@@ -56,7 +61,7 @@ export function TestResults({ sessionId, onRestart }: TestResultsProps) {
 
       <ModuleDetails
         modules={session.module_progress}
-        onModuleSelect={setSelectedModuleId}
+        onModuleSelect={setSelectedModule}
       />
 
       <div className="flex justify-center">
