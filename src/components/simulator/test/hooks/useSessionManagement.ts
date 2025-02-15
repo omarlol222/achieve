@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -141,15 +142,20 @@ export function useSessionManagement(currentModuleIndex: number) {
 
       // If there's a next module, initialize it
       if (nextModule) {
-        const { error: nextProgressError } = await supabase
+        const { data: nextProgress, error: nextProgressError } = await supabase
           .from("module_progress")
           .insert({
             session_id: sessionId,
             module_id: nextModule.id,
             started_at: new Date().toISOString()
-          });
+          })
+          .select()
+          .single();
 
         if (nextProgressError) throw nextProgressError;
+        if (!nextProgress) throw new Error("Failed to create next module progress");
+        
+        setModuleProgressId(nextProgress.id);
         console.log("Initialized next module progress");
       } else {
         // If no next module, complete the session
@@ -160,10 +166,10 @@ export function useSessionManagement(currentModuleIndex: number) {
 
         if (sessionError) throw sessionError;
         console.log("Completed test session");
+        
+        // Redirect to results page with session ID
+        navigate(`/gat/simulator/results/${sessionId}`);
       }
-      
-      // Redirect to results page with session ID
-      navigate(`/gat/simulator/results/${sessionId}`);
       
     } catch (error: any) {
       console.error("Error completing module:", error);

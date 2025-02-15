@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSessionManagement } from "./hooks/useSessionManagement";
 import { useQuestionManagement } from "./hooks/useQuestionManagement";
@@ -85,22 +86,21 @@ export function useTestSession() {
         console.log("Loaded modules:", modules);
         setAllModules(modules);
         
-        // Get the first module by order_index
-        const firstModule = modules[0];
-        if (!firstModule) {
-          console.error("No modules available");
-          setError("No modules available");
+        // Get the module at the current index
+        const currentModule = modules[currentModuleIndex];
+        if (!currentModule) {
+          console.error("No module found at index:", currentModuleIndex);
+          setError(`No module found at position ${currentModuleIndex + 1}`);
           toast({
             variant: "destructive",
             title: "Error",
-            description: "No modules available"
+            description: `No module found at position ${currentModuleIndex + 1}`
           });
           return;
         }
 
-        console.log("Starting with module:", firstModule);
-        setCurrentModule(firstModule);
-        setCurrentModuleIndex(firstModule.order_index);
+        console.log("Current module:", currentModule);
+        setCurrentModule(currentModule);
         setError(null);
       } catch (err) {
         console.error("Error in loadModuleData:", err);
@@ -116,7 +116,7 @@ export function useTestSession() {
     };
 
     loadModuleData();
-  }, [toast]);
+  }, [currentModuleIndex, toast]);
 
   // Initialize session when component mounts
   useEffect(() => {
@@ -147,27 +147,16 @@ export function useTestSession() {
 
     await completeModule();
     
-    // Find the next module based on order_index
-    const currentOrderIndex = currentModule.order_index;
-    const nextModule = allModules.find(m => m.order_index === currentOrderIndex + 1);
-
-    if (nextModule) {
-      console.log("Moving to next module:", nextModule.name);
-      
-      // Reset question index for new module
+    // Move to next module if available
+    if (currentModuleIndex < allModules.length - 1) {
+      console.log("Moving to next module");
       setCurrentQuestionIndex(0);
-      setCurrentModule(nextModule);
-      setCurrentModuleIndex(nextModule.order_index);
+      setCurrentModuleIndex(prev => prev + 1);
       
-      // Show transition message
       toast({
         title: "Module Complete",
-        description: `Moving to module ${nextModule.name}...`,
+        description: "Moving to next module...",
       });
-    } else {
-      console.log("All modules completed, navigating to results");
-      // All modules completed, navigate to results
-      navigate(`/gat/simulator/results/${sessionId}`);
     }
   };
 
@@ -188,7 +177,7 @@ export function useTestSession() {
     hasStarted,
     setHasStarted,
     currentModule,
-    isLastModule: !allModules.find(m => m.order_index > (currentModule?.order_index ?? 0)),
+    isLastModule: currentModuleIndex === allModules.length - 1,
     totalModules: allModules.length
   };
 }
