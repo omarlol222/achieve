@@ -105,7 +105,7 @@ export function TestModuleDialog({
         console.log("Created new module with ID:", moduleId);
       }
 
-      // Get all topics for the selected subject to ensure we store all percentages
+      // Get all topics for the selected subject
       const { data: topics, error: topicsError } = await supabase
         .from("topics")
         .select("id")
@@ -113,19 +113,59 @@ export function TestModuleDialog({
 
       if (topicsError) throw topicsError;
 
-      // Calculate question count per topic based on percentages
       const totalQuestions = data.total_questions;
       console.log("Processing topic percentages. Total questions:", totalQuestions);
       
-      // Prepare topic data for all topics, defaulting to 0% if not specified
-      const topicData = topics.map(topic => ({
-        module_id: moduleId,
-        topic_id: topic.id,
-        percentage: data.topic_percentages[topic.id] || 0,
-        question_count: Math.max(1, Math.round(((data.topic_percentages[topic.id] || 0) / 100) * totalQuestions))
-      }));
+      // Calculate total percentage to normalize if it's not 100%
+      const totalPercentage = topics.reduce((sum, topic) => 
+        sum + (data.topic_percentages[topic.id] || 0), 0);
 
-      console.log("Prepared topic data for insertion:", topicData);
+      // Prepare topic data, normalizing percentages if needed
+      const topicData = topics.map(topic => {
+        const rawPercentage = data.topic_percentages[topic.id] || 0;
+        // Normalize percentage if total is not 100%
+        const normalizedPercentage = totalPercentage > 0 
+          ? (rawPercentage / totalPercentage) * 100 
+          : (100 / topics.length); // Equal distribution if no percentages
+
+        // Calculate questions without minimum enforcement
+        const questionCount = Math.round((normalizedPercentage / 100) * totalQuestions);
+
+        return {
+          module_id: moduleId,
+          topic_id: topic.id,
+          percentage: normalizedPercentage,
+          question_count: questionCount
+        };
+      });
+
+      // Adjust question counts to match total
+      let assignedQuestions = topicData.reduce((sum, topic) => sum + topic.question_count, 0);
+      
+      // Distribute any remaining or excess questions
+      while (assignedQuestions !== totalQuestions) {
+        if (assignedQuestions < totalQuestions) {
+          // Find topic with highest percentage that can receive more questions
+          const topicToIncrement = topicData
+            .sort((a, b) => b.percentage - a.percentage)
+            .find(t => t.percentage > 0);
+          if (topicToIncrement) {
+            topicToIncrement.question_count += 1;
+            assignedQuestions += 1;
+          }
+        } else {
+          // Find topic with lowest percentage that can lose questions
+          const topicToDecrement = topicData
+            .sort((a, b) => a.percentage - b.percentage)
+            .find(t => t.question_count > 0);
+          if (topicToDecrement) {
+            topicToDecrement.question_count -= 1;
+            assignedQuestions -= 1;
+          }
+        }
+      }
+
+      console.log("Final topic data for insertion:", topicData);
 
       // Insert all topic percentages
       const { error: topicError } = await supabase
