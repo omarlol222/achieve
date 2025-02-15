@@ -30,23 +30,30 @@ export async function selectModuleQuestions(
     await clearModuleQuestions(currentModule.id);
     console.log(`Cleared existing questions for module ${currentModule.id}`);
 
-    const moduleQuestions = new Set(); // Track selected question IDs to ensure uniqueness
+    const moduleQuestions = new Set(); // Track selected question IDs
     const topicResults = []; // Track results for each topic
+    const validTopics = currentModule.module_topics.filter(topic => 
+      topic.question_count > 0 && topic.percentage > 0
+    );
+
+    if (validTopics.length === 0) {
+      throw new Error("No valid topic configurations found. Topics must have both question count and percentage greater than 0.");
+    }
 
     // Process each topic in the module
-    for (const topicConfig of currentModule.module_topics) {
-      if (!topicConfig.topic_id || !topicConfig.question_count) {
-        console.error("Invalid topic configuration:", topicConfig);
-        continue;
-      }
-
+    for (const topicConfig of validTopics) {
       console.log(`Processing topic configuration:`, {
         topicId: topicConfig.topic_id,
         moduleId: currentModule.id,
         requestedQuestionCount: topicConfig.question_count,
         percentage: topicConfig.percentage
       });
-      
+
+      if (!topicConfig.topic_id || !topicConfig.question_count) {
+        console.error("Invalid topic configuration:", topicConfig);
+        continue;
+      }
+
       try {
         const topicQuestions = await getTopicQuestions(
           currentModule.id,
@@ -86,7 +93,7 @@ export async function selectModuleQuestions(
           availableCount: availableQuestions.length
         });
         
-        // Insert selected questions and track them
+        // Insert selected questions
         for (let i = 0; i < selectedCount; i++) {
           const questionId = shuffledQuestions[i].id;
           if (!moduleQuestions.has(questionId)) {
@@ -113,11 +120,14 @@ export async function selectModuleQuestions(
     });
 
     if (finalQuestions.length === 0) {
-      // Provide more detailed error message
       const errorDetails = topicResults.length > 0 
         ? `Topics processed: ${JSON.stringify(topicResults)}`
         : "No topics were successfully processed";
       throw new Error(`No questions could be selected for module ${currentModule.id}. ${errorDetails}`);
+    }
+
+    if (finalQuestions.length !== currentModule.total_questions) {
+      console.warn(`Warning: Selected question count (${finalQuestions.length}) differs from expected count (${currentModule.total_questions})`);
     }
 
     return finalQuestions;
