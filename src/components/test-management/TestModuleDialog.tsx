@@ -44,7 +44,7 @@ export function TestModuleDialog({
       subject_id: "",
       test_type_id: "",
       topic_percentages: {},
-      total_questions: 1,
+      total_questions: initialData?.total_questions || 1,
       difficulty_levels: ["Easy", "Moderate", "Hard"],
       order_index: 0,
     },
@@ -55,6 +55,10 @@ export function TestModuleDialog({
       console.log("Submitting form data:", data);
       let moduleId;
       
+      // Ensure total_questions is a number
+      const totalQuestions = Number(data.total_questions) || 1;
+      console.log("Total questions:", totalQuestions);
+
       if (initialData) {
         console.log("Updating existing module:", initialData.id);
         // Update test module
@@ -111,9 +115,6 @@ export function TestModuleDialog({
         .eq("subject_id", data.subject_id);
 
       if (topicsError) throw topicsError;
-
-      const totalQuestions = data.total_questions;
-      console.log("Total questions:", totalQuestions);
       
       // Calculate total percentage
       const totalPercentage = topics.reduce((sum, topic) => 
@@ -125,8 +126,7 @@ export function TestModuleDialog({
           ? 100 / topics.length  // Equal distribution if no percentages
           : (data.topic_percentages[topic.id] || 0);
         
-        // Simple calculation - just divide total questions proportionally
-        const questionCount = Math.round((percentage / (totalPercentage || 100)) * totalQuestions);
+        const questionCount = Math.max(1, Math.round((percentage / (totalPercentage || 100)) * totalQuestions));
         
         return {
           module_id: moduleId,
@@ -190,7 +190,13 @@ export function TestModuleDialog({
           topicPercentages[topic.topic_id] = Number(topic.percentage);
         });
 
-        console.log("Converted topic percentages:", topicPercentages);
+        // Calculate total questions from the moduleTopics
+        const totalQuestions = moduleTopics?.reduce(
+          (sum, topic) => sum + (topic.question_count || 0),
+          0
+        ) || 1;
+
+        console.log("Setting total questions to:", totalQuestions);
 
         form.reset({
           name: initialData.name || "",
@@ -199,10 +205,7 @@ export function TestModuleDialog({
           subject_id: initialData.subject_id || "",
           test_type_id: initialData.test_type_id || "",
           topic_percentages: topicPercentages,
-          total_questions: moduleTopics?.reduce(
-            (sum: number, topic: any) => sum + (topic.question_count || 0),
-            0
-          ) || 1,
+          total_questions: totalQuestions,
           difficulty_levels: initialData.difficulty_levels || ["Easy", "Moderate", "Hard"],
           order_index: initialData.order_index || 0,
         });
