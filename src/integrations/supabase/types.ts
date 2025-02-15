@@ -624,7 +624,6 @@ export type Database = {
           test_template_id: string | null
           test_type_id: string | null
           time_limit: number
-          total_questions: number
           updated_at: string
         }
         Insert: {
@@ -638,7 +637,6 @@ export type Database = {
           test_template_id?: string | null
           test_type_id?: string | null
           time_limit: number
-          total_questions?: number
           updated_at?: string
         }
         Update: {
@@ -652,7 +650,6 @@ export type Database = {
           test_template_id?: string | null
           test_type_id?: string | null
           time_limit?: number
-          total_questions?: number
           updated_at?: string
         }
         Relationships: [
@@ -895,7 +892,21 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      module_total_questions: {
+        Row: {
+          module_id: string | null
+          total_questions: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_topics_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "test_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       check_feature_access: {
@@ -928,6 +939,12 @@ export type Database = {
       get_concurrent_sessions: {
         Args: {
           user_id_input: string
+        }
+        Returns: number
+      }
+      get_module_total_questions: {
+        Args: {
+          module_id: string
         }
         Returns: number
       }

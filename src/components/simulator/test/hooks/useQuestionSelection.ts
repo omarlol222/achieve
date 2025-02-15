@@ -14,13 +14,15 @@ export async function selectModuleQuestions(
 ) {
   try {
     const currentModule = await getModuleByIndex(currentModuleIndex);
+    const totalExpectedQuestions = currentModule.total_questions;
+
     console.log("Current module:", {
       id: currentModule.id,
       name: currentModule.name,
       subject: currentModule.subject?.name,
       subjectId: currentModule.subject_id,
       topicsCount: currentModule.module_topics?.length,
-      totalQuestions: currentModule.total_questions
+      totalQuestions: totalExpectedQuestions
     });
 
     const moduleTopics = currentModule.module_topics || [];
@@ -30,7 +32,6 @@ export async function selectModuleQuestions(
 
     await clearModuleQuestions(currentModule.id);
 
-    let totalSelectedQuestions = 0;
     let selectedQuestions = [];
 
     // Select questions per topic based on exact question_count
@@ -56,7 +57,6 @@ export async function selectModuleQuestions(
 
       console.log(`Selected ${topicSelectedQuestions.length} questions for topic ${topicConfig.topic_id}`);
       selectedQuestions = [...selectedQuestions, ...topicSelectedQuestions];
-      totalSelectedQuestions += topicSelectedQuestions.length;
     }
 
     // Insert all selected questions
@@ -72,10 +72,10 @@ export async function selectModuleQuestions(
       throw new Error("No questions could be selected for this module");
     }
 
-    if (finalQuestions.length < currentModule.total_questions) {
+    if (finalQuestions.length < totalExpectedQuestions) {
       console.warn(
         `Warning: Could only find ${finalQuestions.length} questions ` +
-        `out of ${currentModule.total_questions} requested for module ${currentModule.name}`
+        `out of ${totalExpectedQuestions} requested for module ${currentModule.name}`
       );
     }
 

@@ -9,7 +9,6 @@ export async function getModuleByIndex(currentModuleIndex: number) {
       name,
       subject_id,
       test_type_id,
-      total_questions,
       subject:subjects (
         id,
         name
@@ -35,5 +34,14 @@ export async function getModuleByIndex(currentModuleIndex: number) {
     throw new Error(`No module found at position ${currentModuleIndex + 1}`);
   }
 
-  return currentModule;
+  // Calculate total questions from module_topics
+  const totalQuestions = currentModule.module_topics?.reduce(
+    (sum, topic) => sum + topic.question_count,
+    0
+  ) || 0;
+
+  return {
+    ...currentModule,
+    total_questions: totalQuestions
+  };
 }
