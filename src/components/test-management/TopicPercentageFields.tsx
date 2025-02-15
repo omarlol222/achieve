@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { UseFormReturn } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,10 +40,33 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
   const currentValues = form.getValues();
   console.log("Current form values:", currentValues);
   console.log("Current topic_percentages:", currentValues.topic_percentages);
+  console.log("Current total_questions:", currentValues.total_questions);
 
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-lg">Topic Configuration</h3>
+      <FormField
+        control={form.control}
+        name="total_questions"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Total Questions</FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                min="1"
+                {...field}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 1;
+                  field.onChange(value);
+                  console.log("Total questions changed to:", value);
+                }}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       <div className="grid grid-cols-2 gap-4">
         {topics.map((topic) => (
           <FormField
