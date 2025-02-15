@@ -12,15 +12,20 @@ export async function selectModuleQuestions(
   onError: (message: string) => void
 ) {
   try {
+    // Get current module info
     const currentModule = await getModuleByIndex(currentModuleIndex);
-    console.log(`Selecting questions for module ${currentModule.id} (index: ${currentModuleIndex})`);
+    console.log(`Starting question selection for module ${currentModule.id} (index: ${currentModuleIndex})`);
 
-    // Clear existing questions for this module
+    // Clear existing questions for this specific module
     await clearModuleQuestions(currentModule.id);
     console.log(`Cleared existing questions for module ${currentModule.id}`);
 
+    const moduleQuestions = new Set(); // Track selected question IDs to ensure uniqueness
+
     // Process each topic in the module
     for (const topicConfig of currentModule.module_topics || []) {
+      console.log(`Processing topic ${topicConfig.topic_id} for module ${currentModule.id}`);
+      
       const topicQuestions = await getTopicQuestions(
         currentModule.id,
         currentModule.test_type_id,
@@ -28,22 +33,29 @@ export async function selectModuleQuestions(
         topicConfig.topic_id
       );
 
-      if (topicQuestions.length < topicConfig.question_count) {
+      // Filter out questions that have already been selected for this module
+      const availableQuestions = topicQuestions.filter(q => !moduleQuestions.has(q.id));
+
+      if (availableQuestions.length < topicConfig.question_count) {
         console.warn(
-          `Warning: Topic ${topicConfig.topic_id} has only ${topicQuestions.length} ` +
-          `questions available, but ${topicConfig.question_count} were requested`
+          `Warning: Topic ${topicConfig.topic_id} has only ${availableQuestions.length} ` +
+          `unique questions available, but ${topicConfig.question_count} were requested`
         );
       }
 
       // Select random questions up to the requested count
-      const shuffledQuestions = [...topicQuestions].sort(() => Math.random() - 0.5);
+      const shuffledQuestions = [...availableQuestions].sort(() => Math.random() - 0.5);
       const selectedCount = Math.min(topicConfig.question_count, shuffledQuestions.length);
       
       console.log(`Selecting ${selectedCount} questions for topic ${topicConfig.topic_id}`);
       
-      // Insert selected questions
+      // Insert selected questions and track them
       for (let i = 0; i < selectedCount; i++) {
-        await insertModuleQuestion(currentModule.id, shuffledQuestions[i].id);
+        const questionId = shuffledQuestions[i].id;
+        if (!moduleQuestions.has(questionId)) {
+          await insertModuleQuestion(currentModule.id, questionId);
+          moduleQuestions.add(questionId);
+        }
       }
     }
 
@@ -52,7 +64,7 @@ export async function selectModuleQuestions(
     console.log(`Final question count for module ${currentModule.id}: ${finalQuestions.length}`);
 
     if (finalQuestions.length === 0) {
-      throw new Error("No questions could be selected for this module");
+      throw new Error(`No questions could be selected for module ${currentModule.id}`);
     }
 
     return finalQuestions;
