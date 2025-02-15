@@ -76,66 +76,71 @@ export function useQuestionManagement(currentModuleIndex: number) {
           throw new Error("No topics configured for this module");
         }
 
-        // Fetch available questions first to ensure we have questions before proceeding
+        // First, clear any existing module questions to ensure fresh selection
+        const { error: deleteError } = await supabase
+          .from("module_questions")
+          .delete()
+          .eq("module_id", currentModule.id);
+
+        if (deleteError) {
+          console.error("Error clearing existing module questions:", deleteError);
+          throw new Error("Failed to reset module questions");
+        }
+
+        // Fetch available questions with correct subject and topic filtering
         const { data: availableQuestions, error: availableQuestionsError } = await supabase
           .from("questions")
           .select(`
             id,
             topic_id,
-            test_type_id
+            test_type_id,
+            topics!inner (
+              id,
+              subject_id
+            )
           `)
           .eq("test_type_id", currentModule.test_type_id)
+          .eq("topics.subject_id", currentModule.subject_id)
           .in("topic_id", topicIds);
 
         if (availableQuestionsError) {
-          console.error("Error checking available questions:", availableQuestionsError);
-          throw new Error("Failed to check available questions");
+          console.error("Error fetching available questions:", availableQuestionsError);
+          throw new Error("Failed to fetch available questions");
         }
 
-        console.log(`Found ${availableQuestions?.length || 0} available questions`);
+        console.log(`Found ${availableQuestions?.length || 0} available questions for subject ${currentModule.subject?.name}`);
 
-        // Initialize module questions if none exist
-        const { data: existingModuleQuestions, error: existingError } = await supabase
-          .from("module_questions")
-          .select("*")
-          .eq("module_id", currentModule.id);
-
-        if (existingError) {
-          console.error("Error checking existing module questions:", existingError);
-          throw new Error("Failed to check existing module questions");
+        if (!availableQuestions?.length) {
+          throw new Error(`No questions available for ${currentModule.subject?.name} subject`);
         }
 
-        if (!existingModuleQuestions?.length && availableQuestions?.length) {
-          console.log("Initializing module questions...");
+        // Group questions by topic
+        const questionsByTopic = availableQuestions.reduce((acc, q) => {
+          if (!acc[q.topic_id]) acc[q.topic_id] = [];
+          acc[q.topic_id].push(q);
+          return acc;
+        }, {} as Record<string, any[]>);
+
+        // Insert questions for each topic based on module_topics configuration
+        for (const mt of moduleTopics) {
+          const topicQuestions = questionsByTopic[mt.topic_id] || [];
+          const numQuestions = Math.min(mt.question_count, topicQuestions.length);
           
-          // Group questions by topic
-          const questionsByTopic = availableQuestions.reduce((acc, q) => {
-            if (!acc[q.topic_id]) acc[q.topic_id] = [];
-            acc[q.topic_id].push(q);
-            return acc;
-          }, {} as Record<string, any[]>);
+          if (numQuestions > 0) {
+            const selectedQuestions = [...topicQuestions]
+              .sort(() => 0.5 - Math.random())
+              .slice(0, numQuestions);
 
-          // Insert questions for each topic based on module_topics configuration
-          for (const mt of moduleTopics) {
-            const topicQuestions = questionsByTopic[mt.topic_id] || [];
-            const numQuestions = Math.min(mt.question_count, topicQuestions.length);
-            
-            if (numQuestions > 0) {
-              const selectedQuestions = [...topicQuestions]
-                .sort(() => 0.5 - Math.random())
-                .slice(0, numQuestions);
+            for (const question of selectedQuestions) {
+              const { error: insertError } = await supabase
+                .from("module_questions")
+                .insert({
+                  module_id: currentModule.id,
+                  question_id: question.id
+                });
 
-              for (const question of selectedQuestions) {
-                const { error: insertError } = await supabase
-                  .from("module_questions")
-                  .insert({
-                    module_id: currentModule.id,
-                    question_id: question.id
-                  });
-
-                if (insertError) {
-                  console.error("Error inserting module question:", insertError);
-                }
+              if (insertError) {
+                console.error("Error inserting module question:", insertError);
               }
             }
           }
@@ -164,7 +169,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
               comparison_value2,
               topic_id,
               difficulty,
-              topics (
+              topics!inner (
                 id,
                 subject_id,
                 name
