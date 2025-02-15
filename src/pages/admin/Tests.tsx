@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,20 +38,6 @@ const Tests = () => {
     },
   });
 
-  // Fetch test templates
-  const { data: testTemplates } = useQuery({
-    queryKey: ["test-templates"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("test_templates")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
   // Fetch subjects
   const { data: subjects } = useQuery({
     queryKey: ["subjects"],
@@ -74,7 +61,6 @@ const Tests = () => {
         .select(`
           *,
           subjects (name),
-          test_templates (name),
           test_types (name)
         `)
         .order("created_at", { ascending: false });
@@ -222,7 +208,6 @@ const Tests = () => {
             open={moduleDialogOpen}
             onOpenChange={setModuleDialogOpen}
             subjects={subjects || []}
-            testTemplates={testTemplates || []}
             testTypes={testTypes || []}
             initialData={selectedModule}
             onSuccess={() => {
