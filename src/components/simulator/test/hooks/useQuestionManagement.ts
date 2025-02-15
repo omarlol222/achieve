@@ -54,6 +54,8 @@ export function useQuestionManagement(currentModuleIndex: number) {
         }
 
         console.log("Found module:", currentModule.id);
+        console.log("Module subject:", currentModule.subject?.name);
+        console.log("Module subject ID:", currentModule.subject_id);
 
         // Get topic IDs for this module
         const moduleTopics = currentModule.module_topics || [];
@@ -85,7 +87,11 @@ export function useQuestionManagement(currentModuleIndex: number) {
               comparison_value1,
               comparison_value2,
               topic_id,
-              difficulty
+              difficulty,
+              topic:topics!inner (
+                id,
+                subject_id
+              )
             )
           `)
           .eq("module_id", currentModule.id)
@@ -104,7 +110,8 @@ export function useQuestionManagement(currentModuleIndex: number) {
             .from("questions")
             .select(`
               *,
-              topic:topics (
+              topic:topics!inner (
+                id,
                 subject_id
               )
             `)
@@ -112,6 +119,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
             .eq("test_type_id", currentModule.test_type_id);
 
           if (availableQuestionsError) {
+            console.error("Error fetching available questions:", availableQuestionsError);
             throw new Error("Failed to fetch available questions");
           }
 
@@ -123,6 +131,8 @@ export function useQuestionManagement(currentModuleIndex: number) {
           const subjectQuestions = availableQuestions.filter(q => 
             q.topic?.subject_id === currentModule.subject_id
           );
+
+          console.log(`Found ${subjectQuestions.length} questions for subject ${currentModule.subject?.name}`);
 
           if (subjectQuestions.length === 0) {
             throw new Error(`No questions available for ${currentModule.subject?.name} subject`);
@@ -176,7 +186,11 @@ export function useQuestionManagement(currentModuleIndex: number) {
                 comparison_value1,
                 comparison_value2,
                 topic_id,
-                difficulty
+                difficulty,
+                topic:topics!inner (
+                  id,
+                  subject_id
+                )
               )
             `)
             .eq("module_id", currentModule.id)
@@ -190,14 +204,16 @@ export function useQuestionManagement(currentModuleIndex: number) {
           console.log(`Created ${newModuleQuestions.length} new module questions`);
           const formattedQuestions = newModuleQuestions
             .map(mq => mq.question)
-            .filter((q): q is NonNullable<typeof q> => q !== null);
+            .filter((q): q is NonNullable<typeof q> => q !== null)
+            .filter(q => q.topic?.subject_id === currentModule.subject_id);
 
           setQuestions(formattedQuestions);
         } else {
           // Transform the nested data structure and filter out any null questions
           const formattedQuestions = moduleQuestions
             .map(mq => mq.question)
-            .filter((q): q is NonNullable<typeof q> => q !== null);
+            .filter((q): q is NonNullable<typeof q> => q !== null)
+            .filter(q => q.topic?.subject_id === currentModule.subject_id);
 
           if (formattedQuestions.length === 0) {
             throw new Error("No valid questions found for this module");
