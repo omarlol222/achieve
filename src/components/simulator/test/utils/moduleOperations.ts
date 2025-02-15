@@ -2,6 +2,8 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export async function getModuleByIndex(currentModuleIndex: number) {
+  console.log("Getting module at index:", currentModuleIndex);
+  
   const { data: modules, error: modulesError } = await supabase
     .from("test_modules")
     .select(`
@@ -22,6 +24,7 @@ export async function getModuleByIndex(currentModuleIndex: number) {
     .order("order_index", { ascending: true });
 
   if (modulesError) {
+    console.error("Error loading modules:", modulesError);
     throw new Error("Failed to load test modules");
   }
 
@@ -33,6 +36,14 @@ export async function getModuleByIndex(currentModuleIndex: number) {
   if (!currentModule) {
     throw new Error(`No module found at position ${currentModuleIndex + 1}`);
   }
+
+  console.log("Selected module:", {
+    id: currentModule.id,
+    name: currentModule.name,
+    subjectId: currentModule.subject_id,
+    testTypeId: currentModule.test_type_id,
+    topicsCount: currentModule.module_topics?.length
+  });
 
   // Calculate total questions from module_topics
   const totalQuestions = currentModule.module_topics?.reduce(

@@ -27,6 +27,12 @@ export async function clearModuleQuestions(moduleId: string) {
 }
 
 export async function getTopicQuestions(moduleId: string, testTypeId: string, subjectId: string, topicId: string) {
+  console.log("Fetching questions with params:", {
+    testTypeId,
+    subjectId,
+    topicId
+  });
+
   const { data: questions, error } = await supabase
     .from("questions")
     .select(`
@@ -44,9 +50,11 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
     .eq("topic_id", topicId);
 
   if (error) {
+    console.error("Error fetching questions:", error);
     throw new Error(`Failed to fetch questions for topic ${topicId}`);
   }
 
+  console.log(`Found ${questions?.length || 0} questions for topic ${topicId}`);
   return questions || [];
 }
 
@@ -115,7 +123,11 @@ export async function getFinalModuleQuestions(moduleId: string) {
     throw new Error("Failed to load module questions");
   }
 
-  return moduleQuestions
-    ?.map(mq => mq.question)
-    .filter(q => q !== null) || [];
+  // Ensure we're not returning null questions
+  const validQuestions = moduleQuestions
+    ?.filter(mq => mq.question !== null)
+    ?.map(mq => mq.question) || [];
+
+  console.log(`Retrieved ${validQuestions.length} questions for module ${moduleId}`);
+  return validQuestions;
 }
