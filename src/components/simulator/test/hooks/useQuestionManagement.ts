@@ -88,7 +88,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
               comparison_value2,
               topic_id,
               difficulty,
-              topic:topics!inner (
+              topic:topics (
                 id,
                 subject_id
               )
@@ -105,12 +105,12 @@ export function useQuestionManagement(currentModuleIndex: number) {
         if (!moduleQuestions || moduleQuestions.length === 0) {
           console.error("No questions found for module:", currentModule.id);
           
-          // Get available questions based on module configuration
+          // Get available questions with topics
           const { data: availableQuestions, error: availableQuestionsError } = await supabase
             .from("questions")
             .select(`
               *,
-              topic:topics!inner (
+              topic:topics (
                 id,
                 subject_id
               )
@@ -155,12 +155,16 @@ export function useQuestionManagement(currentModuleIndex: number) {
           // Insert selected questions into module_questions
           for (const [topicId, questions] of questionsByTopic.entries()) {
             for (const question of questions) {
-              await supabase
+              const { error: insertError } = await supabase
                 .from("module_questions")
                 .insert({
                   module_id: currentModule.id,
                   question_id: question.id
                 });
+                
+              if (insertError) {
+                console.error("Error inserting question:", insertError);
+              }
             }
           }
 
@@ -187,7 +191,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
                 comparison_value2,
                 topic_id,
                 difficulty,
-                topic:topics!inner (
+                topic:topics (
                   id,
                   subject_id
                 )
@@ -196,7 +200,11 @@ export function useQuestionManagement(currentModuleIndex: number) {
             .eq("module_id", currentModule.id)
             .order("created_at", { ascending: true });
 
-          if (newQuestionsError) throw newQuestionsError;
+          if (newQuestionsError) {
+            console.error("Error fetching new questions:", newQuestionsError);
+            throw newQuestionsError;
+          }
+          
           if (!newModuleQuestions || newModuleQuestions.length === 0) {
             throw new Error("Failed to create module questions");
           }
@@ -207,6 +215,11 @@ export function useQuestionManagement(currentModuleIndex: number) {
             .filter((q): q is NonNullable<typeof q> => q !== null)
             .filter(q => q.topic?.subject_id === currentModule.subject_id);
 
+          if (formattedQuestions.length === 0) {
+            throw new Error("No valid questions found after creation");
+          }
+
+          console.log(`Final formatted questions count: ${formattedQuestions.length}`);
           setQuestions(formattedQuestions);
         } else {
           // Transform the nested data structure and filter out any null questions
