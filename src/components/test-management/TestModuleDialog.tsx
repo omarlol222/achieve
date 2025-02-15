@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,6 @@ type TestModuleDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   subjects: any[];
-  testTemplates: any[];
   testTypes: any[];
   onSuccess: () => void;
   initialData?: any;
@@ -72,7 +72,6 @@ export function TestModuleDialog({
             test_type_id: data.test_type_id,
             difficulty_levels: data.difficulty_levels,
             order_index: data.order_index,
-            total_questions: totalQuestions, // Add this line to save total_questions
           })
           .eq("id", initialData.id);
 
@@ -100,7 +99,6 @@ export function TestModuleDialog({
             test_type_id: data.test_type_id,
             difficulty_levels: data.difficulty_levels,
             order_index: data.order_index,
-            total_questions: totalQuestions, // Add this line to save total_questions
           }])
           .select()
           .single();
@@ -122,12 +120,13 @@ export function TestModuleDialog({
       const totalPercentage = topics.reduce((sum, topic) => 
         sum + (data.topic_percentages[topic.id] || 0), 0);
 
-      // Prepare topic data
+      // Prepare topic data with exact question counts
       const topicData = topics.map(topic => {
         const percentage = totalPercentage === 0 
           ? 100 / topics.length  // Equal distribution if no percentages
           : (data.topic_percentages[topic.id] || 0);
         
+        // Calculate exact question count for this topic
         const questionCount = Math.round((percentage / (totalPercentage || 100)) * totalQuestions);
         
         return {
@@ -137,6 +136,16 @@ export function TestModuleDialog({
           question_count: questionCount
         };
       });
+
+      // Adjust question counts to ensure they sum exactly to total_questions
+      let currentSum = topicData.reduce((sum, topic) => sum + topic.question_count, 0);
+      if (currentSum !== totalQuestions) {
+        const diff = totalQuestions - currentSum;
+        // Add or subtract the difference from the topic with the highest percentage
+        const maxPercentageTopic = topicData.reduce((max, topic) => 
+          topic.percentage > max.percentage ? topic : max, topicData[0]);
+        maxPercentageTopic.question_count += diff;
+      }
 
       console.log("Topic data for insertion:", topicData);
 
@@ -192,6 +201,10 @@ export function TestModuleDialog({
           topicPercentages[topic.topic_id] = Number(topic.percentage);
         });
 
+        // Calculate total questions from module_topics
+        const totalQuestions = moduleTopics?.reduce((sum, topic) => 
+          sum + topic.question_count, 0) || 1;
+
         form.reset({
           name: initialData.name || "",
           description: initialData.description || "",
@@ -199,7 +212,7 @@ export function TestModuleDialog({
           subject_id: initialData.subject_id || "",
           test_type_id: initialData.test_type_id || "",
           topic_percentages: topicPercentages,
-          total_questions: initialData.total_questions || 1,
+          total_questions: totalQuestions,
           difficulty_levels: initialData.difficulty_levels || ["Easy", "Moderate", "Hard"],
           order_index: initialData.order_index || 0,
         });
