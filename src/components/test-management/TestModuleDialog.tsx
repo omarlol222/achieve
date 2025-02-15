@@ -72,6 +72,7 @@ export function TestModuleDialog({
             test_type_id: data.test_type_id,
             difficulty_levels: data.difficulty_levels,
             order_index: data.order_index,
+            total_questions: totalQuestions, // Add this line to save total_questions
           })
           .eq("id", initialData.id);
 
@@ -99,6 +100,7 @@ export function TestModuleDialog({
             test_type_id: data.test_type_id,
             difficulty_levels: data.difficulty_levels,
             order_index: data.order_index,
+            total_questions: totalQuestions, // Add this line to save total_questions
           }])
           .select()
           .single();

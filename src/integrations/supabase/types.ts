@@ -624,6 +624,7 @@ export type Database = {
           test_template_id: string | null
           test_type_id: string | null
           time_limit: number
+          total_questions: number
           updated_at: string
         }
         Insert: {
@@ -637,6 +638,7 @@ export type Database = {
           test_template_id?: string | null
           test_type_id?: string | null
           time_limit: number
+          total_questions?: number
           updated_at?: string
         }
         Update: {
@@ -650,6 +652,7 @@ export type Database = {
           test_template_id?: string | null
           test_type_id?: string | null
           time_limit?: number
+          total_questions?: number
           updated_at?: string
         }
         Relationships: [
