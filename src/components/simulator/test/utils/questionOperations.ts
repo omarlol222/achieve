@@ -41,10 +41,7 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
       id,
       name,
       subject_id,
-      subjects!inner (
-        id,
-        name
-      )
+      test_type_id
     `)
     .eq("id", topicId)
     .single();
@@ -62,7 +59,7 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
     throw new Error(`Topic ${topicId} does not belong to subject ${subjectId}`);
   }
 
-  // Get all questions for this topic - simplified query to ensure we get all questions
+  // Get questions for this topic with correct test type
   const { data: questions, error } = await supabase
     .from("questions")
     .select("*")
@@ -82,6 +79,10 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
     topic: topicData,
     questions: questions
   });
+
+  if (!questions || questions.length === 0) {
+    console.warn(`No questions found for topic ${topicId} with test type ${testTypeId}`);
+  }
 
   return questions || [];
 }
@@ -139,7 +140,9 @@ export async function getFinalModuleQuestions(moduleId: string) {
         difficulty,
         topics!inner (
           id,
-          name
+          name,
+          subject_id,
+          test_type_id
         )
       )
     `)
