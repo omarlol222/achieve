@@ -64,15 +64,14 @@ export function useQuestionManagement(currentModuleIndex: number) {
 
         // Get topic IDs for this module
         const moduleTopics = currentModule.module_topics || [];
-        const topicIds = moduleTopics.map((mt: any) => mt.topic_id);
 
-        console.log("Module topics:", moduleTopics.map(mt => ({
+        console.log("Module topics configuration:", moduleTopics.map(mt => ({
           topicId: mt.topic_id,
           percentage: mt.percentage,
           questionCount: mt.question_count
         })));
 
-        if (!topicIds.length) {
+        if (!moduleTopics.length) {
           throw new Error("No topics configured for this module");
         }
 
@@ -87,61 +86,53 @@ export function useQuestionManagement(currentModuleIndex: number) {
           throw new Error("Failed to reset module questions");
         }
 
-        // Fetch available questions with correct subject and topic filtering
-        const { data: availableQuestions, error: availableQuestionsError } = await supabase
-          .from("questions")
-          .select(`
-            id,
-            topic_id,
-            test_type_id,
-            topics!inner (
+        // Process each topic according to its configuration
+        for (const topicConfig of moduleTopics) {
+          // Fetch available questions for this specific topic
+          const { data: topicQuestions, error: topicQuestionsError } = await supabase
+            .from("questions")
+            .select(`
               id,
-              subject_id
-            )
-          `)
-          .eq("test_type_id", currentModule.test_type_id)
-          .eq("topics.subject_id", currentModule.subject_id)
-          .in("topic_id", topicIds);
+              topic_id,
+              test_type_id,
+              topics!inner (
+                id,
+                subject_id,
+                name
+              )
+            `)
+            .eq("test_type_id", currentModule.test_type_id)
+            .eq("topics.subject_id", currentModule.subject_id)
+            .eq("topic_id", topicConfig.topic_id);
 
-        if (availableQuestionsError) {
-          console.error("Error fetching available questions:", availableQuestionsError);
-          throw new Error("Failed to fetch available questions");
-        }
+          if (topicQuestionsError) {
+            console.error("Error fetching topic questions:", topicQuestionsError);
+            continue;
+          }
 
-        console.log(`Found ${availableQuestions?.length || 0} available questions for subject ${currentModule.subject?.name}`);
+          if (!topicQuestions?.length) {
+            console.warn(`No questions available for topic ${topicConfig.topic_id}`);
+            continue;
+          }
 
-        if (!availableQuestions?.length) {
-          throw new Error(`No questions available for ${currentModule.subject?.name} subject`);
-        }
+          console.log(`Found ${topicQuestions.length} questions for topic ${topicConfig.topic_id}`);
 
-        // Group questions by topic
-        const questionsByTopic = availableQuestions.reduce((acc, q) => {
-          if (!acc[q.topic_id]) acc[q.topic_id] = [];
-          acc[q.topic_id].push(q);
-          return acc;
-        }, {} as Record<string, any[]>);
+          // Select random questions based on the configured question count
+          const selectedQuestions = [...topicQuestions]
+            .sort(() => 0.5 - Math.random())
+            .slice(0, topicConfig.question_count);
 
-        // Insert questions for each topic based on module_topics configuration
-        for (const mt of moduleTopics) {
-          const topicQuestions = questionsByTopic[mt.topic_id] || [];
-          const numQuestions = Math.min(mt.question_count, topicQuestions.length);
-          
-          if (numQuestions > 0) {
-            const selectedQuestions = [...topicQuestions]
-              .sort(() => 0.5 - Math.random())
-              .slice(0, numQuestions);
+          // Insert selected questions into module_questions
+          for (const question of selectedQuestions) {
+            const { error: insertError } = await supabase
+              .from("module_questions")
+              .insert({
+                module_id: currentModule.id,
+                question_id: question.id
+              });
 
-            for (const question of selectedQuestions) {
-              const { error: insertError } = await supabase
-                .from("module_questions")
-                .insert({
-                  module_id: currentModule.id,
-                  question_id: question.id
-                });
-
-              if (insertError) {
-                console.error("Error inserting module question:", insertError);
-              }
+            if (insertError) {
+              console.error("Error inserting module question:", insertError);
             }
           }
         }
