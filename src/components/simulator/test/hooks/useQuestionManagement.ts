@@ -15,6 +15,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
       try {
         setLoading(true);
         setError(null);
+        setQuestions([]); // Clear existing questions before loading new ones
         
         const selectedQuestions = await selectModuleQuestions(
           currentModuleIndex,
@@ -29,6 +30,7 @@ export function useQuestionManagement(currentModuleIndex: number) {
         );
 
         if (selectedQuestions.length > 0) {
+          console.log(`Loaded ${selectedQuestions.length} questions for module ${currentModuleIndex}`);
           setQuestions(selectedQuestions);
           setCurrentQuestionIndex(0);
         }
@@ -46,8 +48,10 @@ export function useQuestionManagement(currentModuleIndex: number) {
       }
     };
 
+    // Reset state and load new questions whenever module index changes
+    setCurrentQuestionIndex(0);
     loadQuestions();
-  }, [currentModuleIndex, toast]);
+  }, [currentModuleIndex, toast]); // Add currentModuleIndex as a dependency
 
   return {
     questions,
