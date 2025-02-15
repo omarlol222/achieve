@@ -34,39 +34,43 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
     topicId
   });
 
-  // First verify the topic belongs to the correct subject
+  // First verify the topic exists and get its details
   const { data: topicData, error: topicError } = await supabase
     .from("topics")
-    .select("subject_id")
+    .select(`
+      id,
+      name,
+      subject_id,
+      subjects!inner (
+        id,
+        name
+      )
+    `)
     .eq("id", topicId)
     .single();
 
   if (topicError || !topicData) {
+    console.error("Failed to verify topic:", topicError);
     throw new Error(`Failed to verify topic ${topicId}`);
   }
 
   if (topicData.subject_id !== subjectId) {
     console.error("Topic subject mismatch:", {
-      topicSubject: topicData.subject_id,
-      expectedSubject: subjectId
+      topic: topicData,
+      expectedSubjectId: subjectId
     });
     throw new Error(`Topic ${topicId} does not belong to subject ${subjectId}`);
   }
 
+  // Get all questions for this topic
   const { data: questions, error } = await supabase
     .from("questions")
     .select(`
-      id,
-      topic_id,
-      test_type_id,
+      *,
       topics!inner (
         id,
-        subject_id,
         name,
-        subject:subjects (
-          id,
-          name
-        )
+        subject_id
       )
     `)
     .eq("test_type_id", testTypeId)
@@ -77,16 +81,28 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
     throw new Error(`Failed to fetch questions for topic ${topicId}`);
   }
 
-  // Verify each question's topic belongs to the correct subject
+  // Log detailed information about the query results
+  console.log("Question query results:", {
+    topicName: topicData.name,
+    totalQuestionsFound: questions?.length || 0,
+    testTypeId,
+    subjectId,
+    topic: topicData
+  });
+
+  // Verify each question meets our criteria
   const filteredQuestions = questions?.filter(q => 
     q.topics?.subject_id === subjectId
   ) || [];
 
-  if (filteredQuestions.length === 0) {
-    console.warn(`No questions found for topic ${topicId} in subject ${subjectId}`);
-  } else {
-    console.log(`Found ${filteredQuestions.length} valid questions for topic ${topicId} in subject ${subjectId}`);
-  }
+  // Log the filtering results
+  console.log("Question filtering results:", {
+    topicName: topicData.name,
+    totalQuestions: questions?.length || 0,
+    filteredQuestions: filteredQuestions.length,
+    subjectId,
+    testTypeId
+  });
 
   return filteredQuestions;
 }
