@@ -30,7 +30,10 @@ export async function selectModuleQuestions(
 
     await clearModuleQuestions(currentModule.id);
 
-    // Process each topic according to its configuration
+    // Collect all available questions first
+    const availableQuestionsByTopic = new Map();
+    let totalAvailableQuestions = 0;
+
     for (const topicConfig of moduleTopics) {
       const topicQuestions = await getTopicQuestions(
         currentModule.id,
@@ -39,26 +42,68 @@ export async function selectModuleQuestions(
         topicConfig.topic_id
       );
 
-      if (!topicQuestions.length) {
+      if (topicQuestions.length > 0) {
+        availableQuestionsByTopic.set(topicConfig.topic_id, topicQuestions);
+        totalAvailableQuestions += topicQuestions.length;
+      } else {
         console.warn(`No questions available for topic ${topicConfig.topic_id}`);
-        continue;
       }
+    }
 
-      console.log(`Found ${topicQuestions.length} questions for topic ${topicConfig.topic_id}, selecting ${topicConfig.question_count}`);
+    if (totalAvailableQuestions === 0) {
+      throw new Error("No questions available for any topics in this module");
+    }
 
-      // Select random questions based on the configured question count
-      const selectedQuestions = [...topicQuestions]
-        .sort(() => 0.5 - Math.random())
-        .slice(0, topicConfig.question_count);
+    // Adjust question distribution based on available questions
+    const targetTotal = currentModule.total_questions;
+    let remainingQuestions = targetTotal;
+    let selectedQuestions = [];
 
-      // Insert selected questions
-      for (const question of selectedQuestions) {
-        await insertModuleQuestion(currentModule.id, question.id);
+    // First pass: select questions up to the minimum of available or requested count
+    for (const topicConfig of moduleTopics) {
+      const availableQuestions = availableQuestionsByTopic.get(topicConfig.topic_id) || [];
+      if (availableQuestions.length === 0) continue;
+
+      const requestedCount = topicConfig.question_count;
+      const possibleCount = Math.min(availableQuestions.length, requestedCount);
+      
+      // Randomly select questions
+      const shuffled = [...availableQuestions].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, possibleCount);
+      
+      selectedQuestions = [...selectedQuestions, ...selected];
+      remainingQuestions -= selected.length;
+    }
+
+    // If we still need more questions and have available ones, distribute them
+    if (remainingQuestions > 0) {
+      const allAvailableQuestions = Array.from(availableQuestionsByTopic.values())
+        .flat()
+        .filter(q => !selectedQuestions.find(sq => sq.id === q.id));
+
+      if (allAvailableQuestions.length > 0) {
+        const additional = allAvailableQuestions
+          .sort(() => 0.5 - Math.random())
+          .slice(0, remainingQuestions);
+        
+        selectedQuestions = [...selectedQuestions, ...additional];
       }
+    }
+
+    // Insert selected questions
+    for (const question of selectedQuestions) {
+      await insertModuleQuestion(currentModule.id, question.id);
     }
 
     const finalQuestions = await getFinalModuleQuestions(currentModule.id);
     console.log(`Final question count: ${finalQuestions.length} out of expected ${currentModule.total_questions}`);
+
+    if (finalQuestions.length < currentModule.total_questions) {
+      console.warn(
+        `Warning: Could only find ${finalQuestions.length} questions ` +
+        `out of ${currentModule.total_questions} requested for module ${currentModule.name}`
+      );
+    }
 
     return finalQuestions;
   } catch (error: any) {
