@@ -45,28 +45,34 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-lg">Topic Configuration</h3>
-      <FormField
-        control={form.control}
-        name="total_questions"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Total Questions</FormLabel>
-            <FormControl>
-              <Input
-                type="number"
-                min="1"
-                {...field}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || 1;
-                  field.onChange(value);
-                  console.log("Total questions changed to:", value);
-                }}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      
+      <div className="border p-4 rounded-lg mb-4">
+        <FormField
+          control={form.control}
+          name="total_questions"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Total Questions</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="1"
+                  {...field}
+                  value={field.value || ""}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 1;
+                    console.log("Setting total questions to:", value);
+                    field.onChange(value);
+                    form.setValue("total_questions", value);
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         {topics.map((topic) => (
           <FormField
@@ -75,8 +81,6 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
             name={`topic_percentages.${topic.id}`}
             render={({ field }) => {
               const currentValue = Number(field.value) || 0;
-              console.log(`Topic ${topic.name} (${topic.id}) current value:`, currentValue);
-              
               return (
                 <div className="space-y-4 border p-4 rounded-lg">
                   <h4 className="font-medium">{topic.name}</h4>
@@ -92,8 +96,6 @@ export function TopicPercentageFields({ form, subjectId }: TopicPercentageFields
                         onChange={(e) => {
                           const value = e.target.value === "" ? 0 : parseInt(e.target.value);
                           field.onChange(value);
-                          console.log(`Setting ${topic.name} (${topic.id}) to ${value}%`);
-                          console.log("Form state after change:", form.getValues());
                         }}
                       />
                     </FormControl>
