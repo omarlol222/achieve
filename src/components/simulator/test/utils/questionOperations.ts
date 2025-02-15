@@ -28,10 +28,30 @@ export async function clearModuleQuestions(moduleId: string) {
 
 export async function getTopicQuestions(moduleId: string, testTypeId: string, subjectId: string, topicId: string) {
   console.log("Fetching questions with params:", {
+    moduleId,
     testTypeId,
     subjectId,
     topicId
   });
+
+  // First verify the topic belongs to the correct subject
+  const { data: topicData, error: topicError } = await supabase
+    .from("topics")
+    .select("subject_id")
+    .eq("id", topicId)
+    .single();
+
+  if (topicError || !topicData) {
+    throw new Error(`Failed to verify topic ${topicId}`);
+  }
+
+  if (topicData.subject_id !== subjectId) {
+    console.error("Topic subject mismatch:", {
+      topicSubject: topicData.subject_id,
+      expectedSubject: subjectId
+    });
+    throw new Error(`Topic ${topicId} does not belong to subject ${subjectId}`);
+  }
 
   const { data: questions, error } = await supabase
     .from("questions")
@@ -50,7 +70,6 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
       )
     `)
     .eq("test_type_id", testTypeId)
-    .eq("topics.subject_id", subjectId)
     .eq("topic_id", topicId);
 
   if (error) {
@@ -58,12 +77,17 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
     throw new Error(`Failed to fetch questions for topic ${topicId}`);
   }
 
-  // Double check subject match
+  // Verify each question's topic belongs to the correct subject
   const filteredQuestions = questions?.filter(q => 
     q.topics?.subject_id === subjectId
   ) || [];
 
-  console.log(`Found ${filteredQuestions.length}/${questions?.length || 0} questions for topic ${topicId} in subject ${subjectId}`);
+  if (filteredQuestions.length === 0) {
+    console.warn(`No questions found for topic ${topicId} in subject ${subjectId}`);
+  } else {
+    console.log(`Found ${filteredQuestions.length} valid questions for topic ${topicId} in subject ${subjectId}`);
+  }
+
   return filteredQuestions;
 }
 
@@ -96,12 +120,23 @@ export async function insertModuleQuestion(moduleId: string, questionId: string)
 }
 
 export async function getFinalModuleQuestions(moduleId: string) {
+  // First get the module's subject
+  const { data: moduleData, error: moduleError } = await supabase
+    .from("test_modules")
+    .select("subject_id")
+    .eq("id", moduleId)
+    .single();
+
+  if (moduleError || !moduleData) {
+    throw new Error("Failed to get module subject");
+  }
+
   const { data: moduleQuestions, error } = await supabase
     .from("module_questions")
     .select(`
       id,
       module_id,
-      question:questions (
+      question:questions!inner (
         id,
         question_text,
         choice1,
@@ -122,7 +157,7 @@ export async function getFinalModuleQuestions(moduleId: string) {
           id,
           subject_id,
           name,
-          subject:subjects (
+          subject:subjects!inner (
             id,
             name
           )
@@ -138,9 +173,9 @@ export async function getFinalModuleQuestions(moduleId: string) {
 
   // Filter out questions that don't match the module's subject
   const validQuestions = moduleQuestions
-    ?.filter(mq => mq.question !== null)
+    ?.filter(mq => mq.question.topics.subject_id === moduleData.subject_id)
     ?.map(mq => mq.question) || [];
 
-  console.log(`Retrieved ${validQuestions.length} questions for module ${moduleId}`);
+  console.log(`Retrieved ${validQuestions.length} valid questions for module ${moduleId} (subject: ${moduleData.subject_id})`);
   return validQuestions;
 }
