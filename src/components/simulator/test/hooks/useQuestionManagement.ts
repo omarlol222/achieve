@@ -102,7 +102,12 @@ export function useQuestionManagement(currentModuleIndex: number) {
           // Get available questions based on module configuration
           const { data: availableQuestions, error: availableQuestionsError } = await supabase
             .from("questions")
-            .select("*")
+            .select(`
+              *,
+              topic:topics (
+                subject_id
+              )
+            `)
             .in("topic_id", topicIds)
             .eq("test_type_id", currentModule.test_type_id);
 
@@ -114,10 +119,19 @@ export function useQuestionManagement(currentModuleIndex: number) {
             throw new Error("No questions available for this module's configuration");
           }
 
+          // Filter questions to ensure they match the module's subject
+          const subjectQuestions = availableQuestions.filter(q => 
+            q.topic?.subject_id === currentModule.subject_id
+          );
+
+          if (subjectQuestions.length === 0) {
+            throw new Error(`No questions available for ${currentModule.subject?.name} subject`);
+          }
+
           // Calculate how many questions we need from each topic based on percentages
           const questionsByTopic = new Map();
           moduleTopics.forEach((mt: any) => {
-            const topicQuestions = availableQuestions.filter(q => q.topic_id === mt.topic_id);
+            const topicQuestions = subjectQuestions.filter(q => q.topic_id === mt.topic_id);
             const numQuestions = Math.min(mt.question_count, topicQuestions.length);
             
             // Randomly select the required number of questions
