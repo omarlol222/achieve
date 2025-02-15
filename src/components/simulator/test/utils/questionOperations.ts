@@ -42,7 +42,11 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
       topics!inner (
         id,
         subject_id,
-        name
+        name,
+        subject:subjects (
+          id,
+          name
+        )
       )
     `)
     .eq("test_type_id", testTypeId)
@@ -54,8 +58,13 @@ export async function getTopicQuestions(moduleId: string, testTypeId: string, su
     throw new Error(`Failed to fetch questions for topic ${topicId}`);
   }
 
-  console.log(`Found ${questions?.length || 0} questions for topic ${topicId}`);
-  return questions || [];
+  // Double check subject match
+  const filteredQuestions = questions?.filter(q => 
+    q.topics?.subject_id === subjectId
+  ) || [];
+
+  console.log(`Found ${filteredQuestions.length}/${questions?.length || 0} questions for topic ${topicId} in subject ${subjectId}`);
+  return filteredQuestions;
 }
 
 export async function insertModuleQuestion(moduleId: string, questionId: string) {
@@ -112,7 +121,11 @@ export async function getFinalModuleQuestions(moduleId: string) {
         topics!inner (
           id,
           subject_id,
-          name
+          name,
+          subject:subjects (
+            id,
+            name
+          )
         )
       )
     `)
@@ -123,7 +136,7 @@ export async function getFinalModuleQuestions(moduleId: string) {
     throw new Error("Failed to load module questions");
   }
 
-  // Ensure we're not returning null questions
+  // Filter out questions that don't match the module's subject
   const validQuestions = moduleQuestions
     ?.filter(mq => mq.question !== null)
     ?.map(mq => mq.question) || [];

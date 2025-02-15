@@ -18,7 +18,12 @@ export async function getModuleByIndex(currentModuleIndex: number) {
       module_topics:module_topics (
         topic_id,
         percentage,
-        question_count
+        question_count,
+        topic:topics (
+          id,
+          name,
+          subject_id
+        )
       )
     `)
     .order("order_index", { ascending: true });
@@ -35,6 +40,22 @@ export async function getModuleByIndex(currentModuleIndex: number) {
   const currentModule = modules[currentModuleIndex];
   if (!currentModule) {
     throw new Error(`No module found at position ${currentModuleIndex + 1}`);
+  }
+
+  // Validate that module topics belong to the correct subject
+  const invalidTopics = currentModule.module_topics?.filter(
+    mt => mt.topic?.subject_id !== currentModule.subject_id
+  );
+
+  if (invalidTopics && invalidTopics.length > 0) {
+    console.error("Module contains topics from wrong subject:", {
+      moduleSubject: currentModule.subject_id,
+      invalidTopics: invalidTopics.map(t => ({
+        topicId: t.topic_id,
+        subjectId: t.topic?.subject_id
+      }))
+    });
+    throw new Error("Module contains topics from incorrect subject");
   }
 
   console.log("Selected module:", {
