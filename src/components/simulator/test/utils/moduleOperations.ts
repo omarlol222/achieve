@@ -11,11 +11,14 @@ export async function getModuleByIndex(currentModuleIndex: number) {
       name,
       subject_id,
       test_type_id,
+      time_limit,
+      description,
       subject:subjects (
         id,
         name
       ),
-      module_topics:module_topics (
+      module_topics (
+        id,
         topic_id,
         percentage,
         question_count,
@@ -42,38 +45,19 @@ export async function getModuleByIndex(currentModuleIndex: number) {
     throw new Error(`No module found at position ${currentModuleIndex + 1}`);
   }
 
-  // Validate that module topics belong to the correct subject
-  const invalidTopics = currentModule.module_topics?.filter(
-    mt => mt.topic?.subject_id !== currentModule.subject_id
-  );
-
-  if (invalidTopics && invalidTopics.length > 0) {
-    console.error("Module contains topics from wrong subject:", {
-      moduleSubject: currentModule.subject_id,
-      invalidTopics: invalidTopics.map(t => ({
-        topicId: t.topic_id,
-        subjectId: t.topic?.subject_id
-      }))
-    });
-    throw new Error("Module contains topics from incorrect subject");
-  }
-
-  console.log("Selected module:", {
+  console.log("Selected module with topics:", {
     id: currentModule.id,
     name: currentModule.name,
     subjectId: currentModule.subject_id,
     testTypeId: currentModule.test_type_id,
-    topicsCount: currentModule.module_topics?.length
+    topics: currentModule.module_topics
   });
-
-  // Calculate total questions from module_topics
-  const totalQuestions = currentModule.module_topics?.reduce(
-    (sum, topic) => sum + topic.question_count,
-    0
-  ) || 0;
 
   return {
     ...currentModule,
-    total_questions: totalQuestions
+    total_questions: currentModule.module_topics?.reduce(
+      (sum, topic) => sum + (topic.question_count || 0), 
+      0
+    ) || 0
   };
 }
