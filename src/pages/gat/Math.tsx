@@ -78,7 +78,7 @@ export default function Math() {
                   </span>
                 </div>
                 <Progress 
-                  value={Math.min((topic.user_progress?.[0]?.points || 0) / 10, 100)} 
+                  value={window.Math.min((topic.user_progress?.[0]?.points || 0) / 10, 100)} 
                   className="h-2"
                 />
               </Card>
