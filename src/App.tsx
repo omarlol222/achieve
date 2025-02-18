@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import SignIn from "@/pages/SignIn";
@@ -17,6 +18,8 @@ import Simulator from "@/pages/Simulator";
 import SimulatorTest from "@/pages/simulator/SimulatorTest";
 import SimulatorResults from "@/pages/simulator/SimulatorResults";
 import AllTests from "@/pages/simulator/AllTests";
+import Math from "@/pages/gat/Math";
+import English from "@/pages/gat/English";
 
 export default function App() {
   return (
@@ -32,6 +35,8 @@ export default function App() {
         <Route path="simulator/test" element={<SimulatorTest />} />
         <Route path="simulator/results/:sessionId" element={<SimulatorResults />} />
         <Route path="simulator/all-tests" element={<AllTests />} />
+        <Route path="math" element={<Math />} />
+        <Route path="english" element={<English />} />
       </Route>
 
       <Route path="/dashboard" element={<Dashboard />} />

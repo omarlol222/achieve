@@ -1,10 +1,12 @@
+
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, BookOpen, PenTool } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 export default function English() {
   const navigate = useNavigate();
@@ -24,35 +26,28 @@ export default function English() {
     },
   });
 
-  // Then fetch progress using the subject ID
-  const { data: progress } = useQuery({
-    queryKey: ["english-progress", subject?.id],
+  // Then fetch progress for all English topics
+  const { data: topics } = useQuery({
+    queryKey: ["english-topics", subject?.id],
     queryFn: async () => {
       if (!subject?.id) return null;
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
       const { data, error } = await supabase
-        .from("user_progress")
+        .from("topics")
         .select(`
-          points,
-          topic:topics (
-            id,
-            name
+          id,
+          name,
+          user_progress (
+            points
           )
         `)
-        .eq("user_id", user.id)
-        .eq("topics.subject_id", subject.id);
+        .eq("subject_id", subject.id);
 
       if (error) throw error;
       return data;
     },
-    enabled: !!subject?.id, // Only run this query when we have the subject ID
+    enabled: !!subject?.id,
   });
-
-  const totalProgress = progress?.reduce((acc, curr) => acc + (curr.points || 0), 0) || 0;
-  const progressPercentage = Math.min((totalProgress / 1000) * 100, 100);
 
   return (
     <div className="min-h-screen bg-white">
@@ -69,37 +64,34 @@ export default function English() {
 
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="text-center space-y-4">
-            <h1 className="text-4xl font-bold text-[#1B2B2B]">English Progress</h1>
-            <p className="text-lg text-gray-600">Track your learning journey</p>
+            <h1 className="text-4xl font-bold text-[#1B2B2B]">English Topics</h1>
+            <p className="text-lg text-gray-600">Track your progress in each topic</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
-            <h2 className="text-xl font-semibold">Overall Progress</h2>
-            <Progress value={progressPercentage} className="h-2" />
-            <p className="text-sm text-gray-600">
-              {totalProgress} points earned
-            </p>
+          <div className="space-y-6">
+            {topics?.map((topic) => (
+              <Card key={topic.id} className="p-6 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">{topic.name}</h3>
+                  <span className="text-sm text-gray-500">
+                    {topic.user_progress?.[0]?.points || 0} points
+                  </span>
+                </div>
+                <Progress 
+                  value={Math.min((topic.user_progress?.[0]?.points || 0) / 10, 100)} 
+                  className="h-2"
+                />
+              </Card>
+            ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Button
-              size="lg"
-              className="h-32 flex flex-col items-center justify-center gap-3 text-lg bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-              onClick={() => navigate("/gat/practice")}
-            >
-              <PenTool className="h-8 w-8" />
-              Practice Mode
-            </Button>
-
-            <Button
-              size="lg"
-              className="h-32 flex flex-col items-center justify-center gap-3 text-lg bg-[#1B2B2B] hover:bg-[#2C3C3C]"
-              onClick={() => navigate("/gat/course")}
-            >
-              <BookOpen className="h-8 w-8" />
-              Course Content
-            </Button>
-          </div>
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={() => navigate("/gat/english/practice")}
+          >
+            Start Practice
+          </Button>
         </div>
       </div>
     </div>
