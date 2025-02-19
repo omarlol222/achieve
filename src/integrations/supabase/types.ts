@@ -308,6 +308,7 @@ export type Database = {
           id: string
           questions_answered: number | null
           status: Database["public"]["Enums"]["practice_status"] | null
+          subject: string | null
           total_points: number | null
           total_questions: number
           updated_at: string | null
@@ -320,6 +321,7 @@ export type Database = {
           id?: string
           questions_answered?: number | null
           status?: Database["public"]["Enums"]["practice_status"] | null
+          subject?: string | null
           total_points?: number | null
           total_questions: number
           updated_at?: string | null
@@ -332,6 +334,7 @@ export type Database = {
           id?: string
           questions_answered?: number | null
           status?: Database["public"]["Enums"]["practice_status"] | null
+          subject?: string | null
           total_points?: number | null
           total_questions?: number
           updated_at?: string | null
