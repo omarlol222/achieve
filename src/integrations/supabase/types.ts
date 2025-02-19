@@ -246,6 +246,99 @@ export type Database = {
         }
         Relationships: []
       }
+      practice_answers: {
+        Row: {
+          created_at: string | null
+          hint_used: boolean | null
+          id: string
+          is_correct: boolean | null
+          points_earned: number | null
+          question_id: string | null
+          selected_answer: number | null
+          session_id: string | null
+          streak_at_answer: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hint_used?: boolean | null
+          id?: string
+          is_correct?: boolean | null
+          points_earned?: number | null
+          question_id?: string | null
+          selected_answer?: number | null
+          session_id?: string | null
+          streak_at_answer?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hint_used?: boolean | null
+          id?: string
+          is_correct?: boolean | null
+          points_earned?: number | null
+          question_id?: string | null
+          selected_answer?: number | null
+          session_id?: string | null
+          streak_at_answer?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "practice_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practice_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          questions_answered: number | null
+          status: Database["public"]["Enums"]["practice_status"] | null
+          total_points: number | null
+          total_questions: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          questions_answered?: number | null
+          status?: Database["public"]["Enums"]["practice_status"] | null
+          total_points?: number | null
+          total_questions: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          questions_answered?: number | null
+          status?: Database["public"]["Enums"]["practice_status"] | null
+          total_points?: number | null
+          total_questions?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       product_media: {
         Row: {
           created_at: string | null
@@ -890,6 +983,44 @@ export type Database = {
           },
         ]
       }
+      user_subtopic_progress: {
+        Row: {
+          created_at: string | null
+          current_score: number | null
+          id: string
+          last_practiced: string | null
+          subtopic_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_score?: number | null
+          id?: string
+          last_practiced?: string | null
+          subtopic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_score?: number | null
+          id?: string
+          last_practiced?: string | null
+          subtopic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subtopic_progress_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "subtopics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       module_total_questions: {
@@ -909,6 +1040,10 @@ export type Database = {
       }
     }
     Functions: {
+      apply_progress_decay: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       check_feature_access: {
         Args: {
           user_id: string
@@ -957,8 +1092,10 @@ export type Database = {
       }
     }
     Enums: {
+      difficulty_level: "Easy" | "Moderate" | "Hard"
       module_status: "pending" | "in_progress" | "completed"
       platform_type: "gat" | "sat" | "act"
+      practice_status: "in_progress" | "completed" | "abandoned"
       product_status: "active" | "inactive"
       question_difficulty: "Easy" | "Moderate" | "Hard"
     }
