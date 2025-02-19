@@ -65,7 +65,7 @@ export default function English() {
         .select(`
           id,
           name,
-          user_progress!inner (
+          user_progress (
             points
           )
         `)
@@ -83,25 +83,30 @@ export default function English() {
             .select(`
               id,
               name,
-              user_progress!inner (
+              user_progress (
                 points
               )
             `)
-            .eq("topic_id", topic.id)
-            .eq("user_progress.user_id", userId);
+            .eq("topic_id", topic.id);
 
           if (subtopicsError) throw subtopicsError;
 
           // Transform the data to match our types
+          const transformedSubtopics: SubtopicType[] = (subtopicsData || []).map(st => ({
+            id: st.id,
+            name: st.name,
+            user_progress: (st.user_progress || []).filter(up => up !== null).map(up => ({
+              points: up.points || 0
+            }))
+          }));
+
           const transformedTopic: TopicType = {
             id: topic.id,
             name: topic.name,
-            user_progress: topic.user_progress || [],
-            subtopics: (subtopicsData || []).map(st => ({
-              id: st.id,
-              name: st.name,
-              user_progress: st.user_progress || []
-            }))
+            user_progress: (topic.user_progress || []).filter(up => up !== null).map(up => ({
+              points: up.points || 0
+            })),
+            subtopics: transformedSubtopics
           };
 
           return transformedTopic;
