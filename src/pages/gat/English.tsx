@@ -14,15 +14,21 @@ type SubjectType = {
   name: string;
 }
 
+type UserProgress = {
+  points: number;
+}
+
+type SubtopicType = {
+  id: string;
+  name: string;
+  user_progress: UserProgress[];
+}
+
 type TopicType = {
   id: string;
   name: string;
-  user_progress: { points: number }[];
-  subtopics: {
-    id: string;
-    name: string;
-    user_progress: { points: number }[];
-  }[];
+  user_progress: UserProgress[];
+  subtopics: SubtopicType[];
 }
 
 export default function English() {
@@ -50,15 +56,21 @@ export default function English() {
     queryFn: async () => {
       if (!subject?.id) return [];
 
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      if (!userId) return [];
+
       // First get topics with their progress
       const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
         .select(`
           id,
           name,
-          user_progress (points)
+          user_progress!inner (
+            points
+          )
         `)
-        .eq("subject_id", subject.id);
+        .eq("subject_id", subject.id)
+        .eq("user_progress.user_id", userId);
 
       if (topicsError) throw topicsError;
       if (!topicsData) return [];
@@ -71,16 +83,28 @@ export default function English() {
             .select(`
               id,
               name,
-              user_progress (points)
+              user_progress!inner (
+                points
+              )
             `)
-            .eq("topic_id", topic.id);
+            .eq("topic_id", topic.id)
+            .eq("user_progress.user_id", userId);
 
           if (subtopicsError) throw subtopicsError;
 
-          return {
-            ...topic,
-            subtopics: subtopicsData || []
+          // Transform the data to match our types
+          const transformedTopic: TopicType = {
+            id: topic.id,
+            name: topic.name,
+            user_progress: topic.user_progress || [],
+            subtopics: (subtopicsData || []).map(st => ({
+              id: st.id,
+              name: st.name,
+              user_progress: st.user_progress || []
+            }))
           };
+
+          return transformedTopic;
         })
       );
 
