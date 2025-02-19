@@ -9,12 +9,28 @@ import { Card } from "@/components/ui/card";
 import { SubjectProgress } from "@/components/gat/progress/SubjectProgress";
 import { useState } from "react";
 
+type SubjectType = {
+  id: string;
+  name: string;
+}
+
+type TopicType = {
+  id: string;
+  name: string;
+  user_progress: { points: number }[];
+  subtopics: {
+    id: string;
+    name: string;
+    user_progress: { points: number }[];
+  }[];
+}
+
 export default function English() {
   const navigate = useNavigate();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
   // First, fetch the English subject
-  const { data: subject } = useQuery({
+  const { data: subject } = useQuery<SubjectType>({
     queryKey: ["english-subject"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,7 +45,7 @@ export default function English() {
   });
 
   // Then fetch progress for all English topics and their subtopics
-  const { data: topics } = useQuery({
+  const { data: topics } = useQuery<TopicType[]>({
     queryKey: ["english-topics", subject?.id],
     queryFn: async () => {
       if (!subject?.id) return null;

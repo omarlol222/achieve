@@ -9,12 +9,28 @@ import { Card } from "@/components/ui/card";
 import { SubjectProgress } from "@/components/gat/progress/SubjectProgress";
 import { useState } from "react";
 
+type SubjectType = {
+  id: string;
+  name: string;
+}
+
+type TopicType = {
+  id: string;
+  name: string;
+  user_progress: { points: number }[];
+  subtopics: {
+    id: string;
+    name: string;
+    user_progress: { points: number }[];
+  }[];
+}
+
 export default function Math() {
   const navigate = useNavigate();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
   // First, fetch the Math subject
-  const { data: subject } = useQuery({
+  const { data: subject } = useQuery<SubjectType>({
     queryKey: ["math-subject"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,7 +45,7 @@ export default function Math() {
   });
 
   // Then fetch progress for all math topics and their subtopics
-  const { data: topics } = useQuery({
+  const { data: topics } = useQuery<TopicType[]>({
     queryKey: ["math-topics", subject?.id],
     queryFn: async () => {
       if (!subject?.id) return null;
