@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import Index from "@/pages/Index";
 import SignIn from "@/pages/SignIn";
@@ -19,10 +20,10 @@ import SimulatorResults from "@/pages/simulator/SimulatorResults";
 import AllTests from "@/pages/simulator/AllTests";
 import Math from "@/pages/gat/Math";
 import English from "@/pages/gat/English";
-import MathPracticeSetup from "@/pages/gat/MathPracticeSetup";
-import MathPractice from "@/pages/gat/MathPractice";
-import EnglishPracticeSetup from "@/pages/gat/EnglishPracticeSetup";
-import EnglishPractice from "@/pages/gat/EnglishPractice";
+import MathPracticeSetup from "@/pages/gat/math/MathPracticeSetup";
+import MathPractice from "@/pages/gat/math/MathPractice";
+import EnglishPracticeSetup from "@/pages/gat/english/EnglishPracticeSetup";
+import EnglishPractice from "@/pages/gat/english/EnglishPractice";
 
 export default function App() {
   return (
