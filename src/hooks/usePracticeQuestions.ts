@@ -70,7 +70,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       // Get a random question of appropriate difficulty
       // that hasn't been answered in this session
-      const { data: questions, error } = await supabase
+      const { data: question, error } = await supabase
         .from("questions")
         .select("*")
         .eq("difficulty", currentDifficulty)
@@ -84,7 +84,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         .single();
 
       if (error) throw error;
-      setCurrentQuestion(questions);
+      
+      // Cast the question_type to the correct type
+      const typedQuestion: PracticeQuestion = {
+        ...question,
+        question_type: question.question_type as 'normal' | 'passage' | 'analogy' | 'comparison'
+      };
+      
+      setCurrentQuestion(typedQuestion);
       setQuestionsAnswered(prev => prev + 1);
     } catch (error: any) {
       console.error("Error fetching next question:", error);

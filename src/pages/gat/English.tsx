@@ -90,7 +90,8 @@ export default function English() {
   });
 
   const calculateTopicProgress = (topicId: string) => {
-    const topic = topics?.find(t => t.id === topicId);
+    if (!topics) return { points: 0, percentage: 0 };
+    const topic = topics.find(t => t.id === topicId);
     const points = topic?.user_progress?.[0]?.points || 0;
     return {
       points,
