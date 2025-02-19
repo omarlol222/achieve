@@ -72,7 +72,7 @@ export default function Math() {
       // Then for each topic, get its subtopics
       const topicsWithSubtopics = await Promise.all(
         topicsData.map(async (topic) => {
-          // Get subtopics
+          // Get subtopics for this topic
           const { data: subtopicsData, error: subtopicsError } = await supabase
             .from("subtopics")
             .select(`
@@ -87,15 +87,22 @@ export default function Math() {
           // For each subtopic, get its progress
           const subtopicsWithProgress = await Promise.all(
             subtopicsData.map(async (subtopic) => {
-              const { data: progressData } = await supabase
+              const { data: progressData, error: progressError } = await supabase
                 .from("user_progress")
                 .select("points")
-                .eq("topic_id", subtopic.id)
-                .maybeSingle();
+                .eq("topic_id", subtopic.id);
+
+              if (progressError) {
+                console.error('Error fetching progress:', progressError);
+                return {
+                  ...subtopic,
+                  user_progress: [{ points: 0 }]
+                };
+              }
 
               return {
                 ...subtopic,
-                user_progress: progressData ? [{ points: progressData.points }] : [{ points: 0 }]
+                user_progress: progressData?.length ? progressData.map(p => ({ points: p.points })) : [{ points: 0 }]
               };
             })
           );
