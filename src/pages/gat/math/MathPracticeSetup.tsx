@@ -1,5 +1,4 @@
 
-// Move existing code from src/pages/gat/math/practice/index.tsx to here
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -20,43 +19,31 @@ export default function MathPracticeSetup() {
   const [questionCount, setQuestionCount] = useState<QuestionCount>(10);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: topics } = useQuery({
-    queryKey: ["math-practice-topics"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("topics")
-        .select(`
-          id,
-          name,
-          subtopics (
-            id,
-            name
-          )
-        `)
-        .eq("subject_id", (await supabase
-          .from("subjects")
-          .select("id")
-          .eq("name", "Math")
-          .single()).data?.id);
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const handleStartPractice = async () => {
     try {
       setIsLoading(true);
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+
+      if (!userId) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to start practice",
+          variant: "destructive",
+        });
+        return;
+      }
 
       // Create a new practice session
       const { data: session, error: sessionError } = await supabase
         .from("practice_sessions")
         .insert({
+          user_id: userId,
           total_questions: questionCount === -1 ? 999 : questionCount,
           questions_answered: 0,
           current_streak: 0,
           total_points: 0,
-          status: "in_progress"
+          status: "in_progress",
+          subject: "Math" // Add this to differentiate between Math and English practice
         })
         .select()
         .single();
@@ -146,7 +133,7 @@ export default function MathPracticeSetup() {
               onClick={handleStartPractice}
               disabled={isLoading}
             >
-              Start Practice
+              {isLoading ? "Creating session..." : "Start Practice"}
             </Button>
           </Card>
         </div>
