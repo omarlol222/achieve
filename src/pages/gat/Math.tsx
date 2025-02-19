@@ -14,15 +14,21 @@ type SubjectType = {
   name: string;
 }
 
+type UserProgressType = {
+  points: number;
+}
+
+type SubtopicType = {
+  id: string;
+  name: string;
+  user_progress: UserProgressType[];
+}
+
 type TopicType = {
   id: string;
   name: string;
-  user_progress: { points: number }[];
-  subtopics: {
-    id: string;
-    name: string;
-    user_progress: { points: number }[];
-  }[];
+  user_progress: UserProgressType[];
+  subtopics: SubtopicType[];
 }
 
 export default function Math() {
@@ -63,23 +69,40 @@ export default function Math() {
       if (topicsError) throw topicsError;
       if (!topicsData) return [];
 
-      // Then for each topic, get its subtopics with their progress
+      // Then for each topic, get its subtopics
       const topicsWithSubtopics = await Promise.all(
         topicsData.map(async (topic) => {
+          // Get subtopics
           const { data: subtopicsData, error: subtopicsError } = await supabase
             .from("subtopics")
             .select(`
               id,
-              name,
-              user_progress (points)
+              name
             `)
             .eq("topic_id", topic.id);
 
           if (subtopicsError) throw subtopicsError;
+          if (!subtopicsData) return { ...topic, subtopics: [] };
+
+          // For each subtopic, get its progress
+          const subtopicsWithProgress = await Promise.all(
+            subtopicsData.map(async (subtopic) => {
+              const { data: progressData } = await supabase
+                .from("user_progress")
+                .select("points")
+                .eq("topic_id", subtopic.id)
+                .maybeSingle();
+
+              return {
+                ...subtopic,
+                user_progress: progressData ? [{ points: progressData.points }] : [{ points: 0 }]
+              };
+            })
+          );
 
           return {
             ...topic,
-            subtopics: subtopicsData || []
+            subtopics: subtopicsWithProgress
           };
         })
       );
