@@ -44,28 +44,47 @@ export default function Math() {
     },
   });
 
-  // Then fetch progress for all math topics and their subtopics
+  // Then fetch progress for all math topics
   const { data: topics } = useQuery<TopicType[]>({
     queryKey: ["math-topics", subject?.id],
     queryFn: async () => {
-      if (!subject?.id) return null;
+      if (!subject?.id) return [];
 
-      const { data, error } = await supabase
+      // First get topics with their progress
+      const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
         .select(`
           id,
           name,
-          user_progress (points),
-          subtopics (
-            id,
-            name,
-            user_progress (points)
-          )
+          user_progress (points)
         `)
         .eq("subject_id", subject.id);
 
-      if (error) throw error;
-      return data;
+      if (topicsError) throw topicsError;
+      if (!topicsData) return [];
+
+      // Then for each topic, get its subtopics with their progress
+      const topicsWithSubtopics = await Promise.all(
+        topicsData.map(async (topic) => {
+          const { data: subtopicsData, error: subtopicsError } = await supabase
+            .from("subtopics")
+            .select(`
+              id,
+              name,
+              user_progress (points)
+            `)
+            .eq("topic_id", topic.id);
+
+          if (subtopicsError) throw subtopicsError;
+
+          return {
+            ...topic,
+            subtopics: subtopicsData || []
+          };
+        })
+      );
+
+      return topicsWithSubtopics;
     },
     enabled: !!subject?.id,
   });
