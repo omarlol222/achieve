@@ -4,12 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { SubjectProgress } from "@/components/gat/progress/SubjectProgress";
+import { useState } from "react";
 
 export default function Math() {
   const navigate = useNavigate();
+  const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
   // First, fetch the Math subject
   const { data: subject } = useQuery({
@@ -26,7 +28,7 @@ export default function Math() {
     },
   });
 
-  // Then fetch progress for all math topics
+  // Then fetch progress for all math topics and their subtopics
   const { data: topics } = useQuery({
     queryKey: ["math-topics", subject?.id],
     queryFn: async () => {
@@ -37,8 +39,11 @@ export default function Math() {
         .select(`
           id,
           name,
-          user_progress (
-            points
+          user_progress (points),
+          subtopics (
+            id,
+            name,
+            user_progress (points)
           )
         `)
         .eq("subject_id", subject.id);
@@ -48,6 +53,19 @@ export default function Math() {
     },
     enabled: !!subject?.id,
   });
+
+  const calculateTopicProgress = (topicId: string) => {
+    const topic = topics?.find(t => t.id === topicId);
+    const points = topic?.user_progress?.[0]?.points || 0;
+    return {
+      points,
+      percentage: (points / 1000) * 100
+    };
+  };
+
+  if (!subject || !topics) {
+    return null; // or loading state
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -69,17 +87,28 @@ export default function Math() {
           </div>
 
           <div className="space-y-6">
-            {topics?.map((topic) => (
-              <Card key={topic.id} className="p-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">{topic.name}</h3>
-                  <span className="text-sm text-gray-500">
-                    {topic.user_progress?.[0]?.points || 0} points
-                  </span>
-                </div>
-                <Progress 
-                  value={window.Math.min((topic.user_progress?.[0]?.points || 0) / 10, 100)} 
-                  className="h-2"
+            {topics.map((topic) => (
+              <Card key={topic.id} className="p-6">
+                <SubjectProgress
+                  subject={{
+                    id: topic.id,
+                    name: topic.name,
+                    topics: [{
+                      id: topic.id,
+                      name: topic.name,
+                      progress: { points: topic.user_progress?.[0]?.points || 0 },
+                      subtopics: topic.subtopics?.map(st => ({
+                        id: st.id,
+                        name: st.name,
+                        progress: { points: st.user_progress?.[0]?.points || 0 }
+                      }))
+                    }]
+                  }}
+                  calculateTopicProgress={calculateTopicProgress}
+                  isExpanded={expandedTopic === topic.id}
+                  onToggleExpand={() => setExpandedTopic(
+                    expandedTopic === topic.id ? null : topic.id
+                  )}
                 />
               </Card>
             ))}
