@@ -68,30 +68,51 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         }
       }
 
+      // Get already answered question IDs
+      const { data: answeredQuestions } = await supabase
+        .from("practice_answers")
+        .select("question_id")
+        .eq("session_id", sessionId);
+
+      const answeredIds = answeredQuestions?.map(a => a.question_id) || [];
+
       // Get a random question of appropriate difficulty
       // that hasn't been answered in this session
       const { data: question, error } = await supabase
         .from("questions")
         .select("*")
         .eq("difficulty", currentDifficulty)
-        .not("id", "in", (
-          await supabase
-            .from("practice_answers")
-            .select("question_id")
-            .eq("session_id", sessionId)
-        ).data?.map(a => a.question_id) || [])
+        .not(answeredIds.length > 0 ? "id" : "id", answeredIds.length > 0 ? `in.(${answeredIds.join(',')})` : 'is.null')
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       
-      // Cast the question_type to the correct type
-      const typedQuestion: PracticeQuestion = {
-        ...question,
-        question_type: question.question_type as 'normal' | 'passage' | 'analogy' | 'comparison'
-      };
+      if (!question) {
+        // If no questions available at current difficulty, try easier ones
+        const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
+        const { data: fallbackQuestion, error: fallbackError } = await supabase
+          .from("questions")
+          .select("*")
+          .eq("difficulty", fallbackDifficulty)
+          .not(answeredIds.length > 0 ? "id" : "id", answeredIds.length > 0 ? `in.(${answeredIds.join(',')})` : 'is.null')
+          .limit(1)
+          .maybeSingle();
+
+        if (fallbackError) throw fallbackError;
+        if (!fallbackQuestion) {
+          toast({
+            title: "No more questions available",
+            description: "You've completed all available questions at this difficulty level.",
+            variant: "destructive",
+          });
+          return;
+        }
+        setCurrentQuestion(fallbackQuestion as PracticeQuestion);
+      } else {
+        setCurrentQuestion(question as PracticeQuestion);
+      }
       
-      setCurrentQuestion(typedQuestion);
       setQuestionsAnswered(prev => prev + 1);
     } catch (error: any) {
       console.error("Error fetching next question:", error);
