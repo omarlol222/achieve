@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,28 +13,10 @@ type SubjectType = {
   name: string;
 }
 
-type UserProgress = {
-  points: number;
-}
-
-type SubtopicType = {
-  id: string;
-  name: string;
-  user_progress: UserProgress[];
-}
-
-type TopicType = {
-  id: string;
-  name: string;
-  user_progress: UserProgress[];
-  subtopics: SubtopicType[];
-}
-
-export default function English() {
+const EnglishComponent = () => {
   const navigate = useNavigate();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
-  // First, fetch the English subject
   const { data: subject } = useQuery<SubjectType>({
     queryKey: ["english-subject"],
     queryFn: async () => {
@@ -50,90 +31,68 @@ export default function English() {
     },
   });
 
-  // Then fetch progress for all English topics
-  const { data: topics } = useQuery<TopicType[]>({
+  const { data: topics } = useQuery({
     queryKey: ["english-topics", subject?.id],
     queryFn: async () => {
       if (!subject?.id) return [];
 
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) return [];
-
-      // First get topics with their progress
       const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
         .select(`
           id,
           name,
-          user_progress (
-            points
+          subtopics (
+            id,
+            name,
+            user_subtopic_progress (
+              current_score
+            )
           )
         `)
-        .eq("subject_id", subject.id)
-        .eq("user_progress.user_id", userId);
+        .eq("subject_id", subject.id);
 
       if (topicsError) throw topicsError;
       if (!topicsData) return [];
 
-      // Then for each topic, get its subtopics with their progress
-      const topicsWithSubtopics = await Promise.all(
-        topicsData.map(async (topic) => {
-          const { data: subtopicsData, error: subtopicsError } = await supabase
-            .from("subtopics")
-            .select(`
-              id,
-              name,
-              user_progress (
-                points
-              )
-            `)
-            .eq("topic_id", topic.id);
-
-          if (subtopicsError) throw subtopicsError;
-
-          // Transform the data to match our types
-          const transformedSubtopics: SubtopicType[] = (subtopicsData || []).map(st => ({
-            id: st.id,
-            name: st.name,
-            user_progress: Array.isArray(st.user_progress) 
-              ? st.user_progress.filter(up => up !== null).map(up => ({
-                  points: up?.points || 0
-                }))
-              : []
-          }));
-
-          const transformedTopic: TopicType = {
-            id: topic.id,
-            name: topic.name,
-            user_progress: Array.isArray(topic.user_progress)
-              ? topic.user_progress.filter(up => up !== null).map(up => ({
-                  points: up?.points || 0
-                }))
-              : [],
-            subtopics: transformedSubtopics
-          };
-
-          return transformedTopic;
-        })
-      );
-
-      return topicsWithSubtopics;
+      return topicsData.map(topic => ({
+        id: topic.id,
+        name: topic.name,
+        progress: { percentage: 0 },
+        subtopics: (topic.subtopics || []).map(st => ({
+          id: st.id,
+          name: st.name,
+          progress: {
+            points: st.user_subtopic_progress?.[0]?.current_score || 0
+          }
+        }))
+      }));
     },
     enabled: !!subject?.id,
   });
 
   const calculateTopicProgress = (topicId: string) => {
-    if (!topics) return { points: 0, percentage: 0 };
-    const topic = topics.find(t => t.id === topicId);
-    const points = topic?.user_progress?.[0]?.points || 0;
+    const topic = topics?.find(t => t.id === topicId);
+    if (!topic || !topic.subtopics) return { percentage: 0 };
+
+    const validSubtopics = topic.subtopics.filter(st => st && st.progress && typeof st.progress.points === 'number');
+    if (validSubtopics.length === 0) return { percentage: 0 };
+
+    // Calculate completion percentage for each subtopic (out of 500 points max)
+    const subtopicPercentages = validSubtopics.map(st => 
+      Math.min((st.progress.points / 500) * 100, 100)
+    );
+
+    // Calculate the average completion percentage
+    const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
+    const averagePercentage = totalPercentage / validSubtopics.length;
+    
     return {
-      points,
-      percentage: (points / 1000) * 100
+      percentage: averagePercentage
     };
   };
 
   if (!subject || !topics) {
-    return null; // or loading state
+    return null;
   }
 
   return (
@@ -165,12 +124,8 @@ export default function English() {
                     topics: [{
                       id: topic.id,
                       name: topic.name,
-                      progress: { points: topic.user_progress?.[0]?.points || 0 },
-                      subtopics: topic.subtopics?.map(st => ({
-                        id: st.id,
-                        name: st.name,
-                        progress: { points: st.user_progress?.[0]?.points || 0 }
-                      }))
+                      progress: { percentage: calculateTopicProgress(topic.id).percentage },
+                      subtopics: topic.subtopics
                     }]
                   }}
                   calculateTopicProgress={calculateTopicProgress}
@@ -195,3 +150,5 @@ export default function English() {
     </div>
   );
 }
+
+export default EnglishComponent;

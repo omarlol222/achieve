@@ -14,7 +14,7 @@ type TopicProgressProps = {
 export const TopicProgress = memo(({ name, value, variant = "default", isPercentage = false }: TopicProgressProps) => {
   // If value is points, convert to percentage, otherwise use directly
   const progressPercentage = useMemo(() => 
-    isPercentage ? value : Math.min((value / 1000) * 100, 100), 
+    isPercentage ? value : Math.min((value / 500) * 100, 100), 
     [value, isPercentage]
   );
 

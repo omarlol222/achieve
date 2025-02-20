@@ -50,19 +50,19 @@ export function PracticeSession() {
     let basePoints = 0;
     switch (difficulty) {
       case 'Easy':
-        basePoints = 10;
+        basePoints = 5; // Reduced from 10
         break;
       case 'Moderate':
-        basePoints = 20;
+        basePoints = 10; // Reduced from 20
         break;
       case 'Hard':
-        basePoints = 30;
+        basePoints = 15; // Reduced from 30
         break;
       default:
-        basePoints = 10;
+        basePoints = 5;
     }
 
-    const streakBonus = currentStreak >= 3 ? Math.min(currentStreak - 2, 5) : 0;
+    const streakBonus = currentStreak >= 3 ? Math.min(currentStreak - 2, 3) : 0; // Reduced max streak bonus
     
     return basePoints + streakBonus;
   };

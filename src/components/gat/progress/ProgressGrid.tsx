@@ -1,4 +1,5 @@
-import { memo, useMemo } from "react";
+
+import { Card } from "@/components/ui/card";
 import { SubjectProgress } from "./SubjectProgress";
 
 type ProgressGridProps = {
@@ -9,7 +10,7 @@ type ProgressGridProps = {
       id: string;
       name: string;
       progress: {
-        points: number;
+        percentage: number;
       };
       subtopics?: {
         id: string;
@@ -22,32 +23,29 @@ type ProgressGridProps = {
   }[];
   calculateTopicProgress: (topicId: string) => {
     percentage: number;
-    points: number;
   };
   expandedSubject: string | null;
-  onToggleExpand: (subjectId: string | null) => void;
+  onToggleExpand: (subjectId: string) => void;
 };
 
-export const ProgressGrid = memo(({ subjects, calculateTopicProgress, expandedSubject, onToggleExpand }: ProgressGridProps) => {
-  const isEmpty = useMemo(() => !subjects || subjects.length === 0, [subjects]);
-
-  if (isEmpty) {
-    return <p className="text-muted-foreground">No subjects available.</p>;
-  }
-
+export function ProgressGrid({ 
+  subjects, 
+  calculateTopicProgress, 
+  expandedSubject, 
+  onToggleExpand 
+}: ProgressGridProps) {
   return (
-    <div className="grid md:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 gap-6">
       {subjects.map((subject) => (
-        <SubjectProgress
-          key={subject.id}
-          subject={subject}
-          calculateTopicProgress={calculateTopicProgress}
-          isExpanded={expandedSubject === subject.id}
-          onToggleExpand={() => onToggleExpand(expandedSubject === subject.id ? null : subject.id)}
-        />
+        <Card key={subject.id} className="p-6">
+          <SubjectProgress
+            subject={subject}
+            calculateTopicProgress={calculateTopicProgress}
+            isExpanded={expandedSubject === subject.id}
+            onToggleExpand={() => onToggleExpand(subject.id)}
+          />
+        </Card>
       ))}
     </div>
   );
-});
-
-ProgressGrid.displayName = "ProgressGrid";
+}

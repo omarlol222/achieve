@@ -78,7 +78,7 @@ const MathComponent = () => {
     if (validSubtopics.length === 0) return { percentage: 0 };
 
     const subtopicPercentages = validSubtopics.map(st => 
-      Math.min((st.progress.points / 1000) * 100, 100)
+      Math.min((st.progress.points / 500) * 100, 100)
     );
 
     const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
