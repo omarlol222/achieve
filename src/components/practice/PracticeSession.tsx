@@ -96,7 +96,7 @@ export function PracticeSession() {
       }
       setConsecutiveMistakes(newMistakes);
 
-      // Record the answer with the new fields
+      // Record the answer
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
