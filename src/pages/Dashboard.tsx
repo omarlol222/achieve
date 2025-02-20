@@ -1,21 +1,26 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ArrowLeft, BookOpen, Calculator, BrainCircuit, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-
 const Dashboard = () => {
-  const { data: testTypes, isLoading } = useQuery({
+  const {
+    data: testTypes,
+    isLoading
+  } = useQuery({
     queryKey: ["user-test-types"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: {
+          session
+        }
+      } = await supabase.auth.getSession();
       if (!session) throw new Error("No session");
-
-      const { data, error } = await supabase
-        .from("user_product_access")
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from("user_product_access").select(`
           products (
             test_type:test_types (
               id,
@@ -23,10 +28,7 @@ const Dashboard = () => {
               description
             )
           )
-        `)
-        .eq("user_id", session.user.id)
-        .is("expires_at", null);
-
+        `).eq("user_id", session.user.id).is("expires_at", null);
       if (error) throw error;
 
       // Transform and deduplicate test types
@@ -37,19 +39,14 @@ const Dashboard = () => {
         }
         return acc;
       }, []);
-
       return uniqueTestTypes;
-    },
+    }
   });
-
   if (isLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
+    return <div className="flex h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+      </div>;
   }
-
   const getTestTypeIcon = (name: string) => {
     switch (name.toLowerCase()) {
       case 'gat':
@@ -60,13 +57,10 @@ const Dashboard = () => {
         return <BookOpen className="h-12 w-12" />;
     }
   };
-
   const getTestTypeUrl = (name: string) => {
     return name.toLowerCase() === 'gat' ? '/gat' : `/gat/${name.toLowerCase()}`;
   };
-
-  return (
-    <div className="container py-8">
+  return <div className="container py-8">
       <div className="mb-8 flex items-center gap-4">
         <Button variant="outline" size="icon" asChild>
           <Link to="/gat">
@@ -81,25 +75,13 @@ const Dashboard = () => {
       <div className="grid gap-8 mb-8">
         <Card className="group relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
           <Link to="/gat/leaderboard" className="block">
-            <CardHeader className="flex flex-row items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10 text-primary">
-                <Trophy className="h-8 w-8" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Leaderboard</CardTitle>
-                <CardDescription>See where you rank among other users</CardDescription>
-              </div>
-            </CardHeader>
+            
           </Link>
         </Card>
       </div>
       
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-        {testTypes?.map((testType) => (
-          <Card 
-            key={testType.id} 
-            className="group relative flex flex-col justify-between min-h-[300px] transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-          >
+        {testTypes?.map(testType => <Card key={testType.id} className="group relative flex flex-col justify-between min-h-[300px] transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             
             <CardHeader className="flex-1 text-center">
@@ -117,22 +99,14 @@ const Dashboard = () => {
             </CardHeader>
 
             <CardContent className="pt-4">
-              <Link 
-                to={getTestTypeUrl(testType.name)}
-                className="block w-full"
-              >
-                <Button 
-                  className="w-full py-6 text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
-                >
+              <Link to={getTestTypeUrl(testType.name)} className="block w-full">
+                <Button className="w-full py-6 text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity">
                   Access {testType.name} Platform
                 </Button>
               </Link>
             </CardContent>
-          </Card>
-        ))}
+          </Card>)}
       </div>
-    </div>
-  );
-}
-
+    </div>;
+};
 export default Dashboard;
