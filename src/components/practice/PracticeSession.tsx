@@ -92,20 +92,17 @@ export function PracticeSession() {
       }
       setConsecutiveMistakes(newMistakes);
 
-      // Simple insert without conflict handling
+      // Basic insert without any special options
       const { error: answerError } = await supabase
         .from("practice_answers")
-        .insert([{
+        .insert({
           session_id: sessionId,
           question_id: currentQuestion.id,
           selected_answer: selectedAnswer,
           is_correct: isCorrect,
           user_id: userId,
-          subtopic_id: currentQuestion.subtopic_id,
-          difficulty_used: currentQuestion.difficulty || 'Easy',
-          attempt_number: currentAttempts + 1,
-          consecutive_mistakes: newMistakes[subtopicId]
-        }]);
+          subtopic_id: subtopicId
+        });
 
       if (answerError) throw answerError;
 
