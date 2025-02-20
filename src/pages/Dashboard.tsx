@@ -1,7 +1,8 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, BookOpen, Calculator, BrainCircuit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -49,6 +50,17 @@ const Dashboard = () => {
     );
   }
 
+  const getTestTypeIcon = (name: string) => {
+    switch (name.toLowerCase()) {
+      case 'gat':
+        return <BrainCircuit className="h-12 w-12" />;
+      case 'math':
+        return <Calculator className="h-12 w-12" />;
+      default:
+        return <BookOpen className="h-12 w-12" />;
+    }
+  };
+
   return (
     <div className="container py-8">
       <div className="mb-8 flex items-center gap-4">
@@ -57,18 +69,38 @@ const Dashboard = () => {
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <h1 className="text-3xl font-bold">My Dashboard</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+          My Dashboard
+        </h1>
       </div>
       
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {testTypes?.map((testType) => (
-          <Card key={testType.id} className="flex flex-col justify-between min-h-[300px]">
-            <CardHeader className="flex-1">
-              <CardTitle className="text-2xl mb-4 text-center">{testType.name}</CardTitle>
-              <CardDescription className="text-base text-center">{testType.description}</CardDescription>
+          <Card 
+            key={testType.id} 
+            className="group relative flex flex-col justify-between min-h-[300px] transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            
+            <CardHeader className="flex-1 text-center">
+              <div className="mb-6 flex justify-center">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
+                  {getTestTypeIcon(testType.name)}
+                </div>
+              </div>
+              <CardTitle className="text-2xl mb-4 text-gray-800">
+                {testType.name}
+              </CardTitle>
+              <CardDescription className="text-base text-gray-600">
+                {testType.description}
+              </CardDescription>
             </CardHeader>
+
             <CardContent className="pt-4">
-              <Button asChild className="w-full py-6 text-lg">
+              <Button 
+                asChild 
+                className="w-full py-6 text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+              >
                 <Link to={`/${testType.name.toLowerCase()}`}>
                   Access {testType.name} Platform
                 </Link>
