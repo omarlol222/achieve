@@ -32,16 +32,29 @@ export function useSubtopics(subject: string | undefined) {
 
       console.log("Found subject:", subjectData);
 
-      // Get subtopics directly
+      // First get topic IDs
+      const { data: topicsData, error: topicsError } = await supabase
+        .from("topics")
+        .select("id")
+        .eq("subject_id", subjectData.id);
+
+      if (topicsError) {
+        console.error("Topics fetch error:", topicsError);
+        throw topicsError;
+      }
+
+      const topicIds = topicsData.map(topic => topic.id);
+
+      if (topicIds.length === 0) {
+        console.log("No topics found for subject");
+        return [];
+      }
+
+      // Then get subtopics for these topics
       const { data: subtopicsData, error: subtopicsError } = await supabase
         .from("subtopics")
         .select("id")
-        .in("topic_id", (
-          supabase
-            .from("topics")
-            .select("id")
-            .eq("subject_id", subjectData.id)
-        ));
+        .in("topic_id", topicIds);
 
       if (subtopicsError) {
         console.error("Subtopics fetch error:", subtopicsError);
