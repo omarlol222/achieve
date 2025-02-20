@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -140,12 +141,18 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       for (const subtopicId of subtopicIds) {
         const difficulty = subtopicDifficulties.get(subtopicId) || 'Easy';
         
-        const { data: questions } = await supabase
+        const query = supabase
           .from('questions')
           .select('*')
           .eq('subtopic_id', subtopicId)
-          .eq('difficulty', difficulty)
-          .not('id', 'in', `(${answeredIds.length > 0 ? answeredIds.join(',') : '0'})`);
+          .eq('difficulty', difficulty);
+
+        // Only add the not-in filter if there are answered questions
+        if (answeredIds.length > 0) {
+          query.not('id', 'in', answeredIds);
+        }
+
+        const { data: questions } = await query;
 
         if (questions) {
           availableQuestions.push(...questions as PracticeQuestion[]);
@@ -154,12 +161,18 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       if (availableQuestions.length === 0) {
         // Fallback to questions of any difficulty if no questions at current difficulty
-        const { data: fallbackQuestions } = await supabase
+        const query = supabase
           .from('questions')
           .select('*')
           .in('subtopic_id', subtopicIds)
-          .not('id', 'in', `(${answeredIds.length > 0 ? answeredIds.join(',') : '0'})`)
           .limit(10);
+
+        // Only add the not-in filter if there are answered questions
+        if (answeredIds.length > 0) {
+          query.not('id', 'in', answeredIds);
+        }
+
+        const { data: fallbackQuestions } = await query;
 
         if (!fallbackQuestions || fallbackQuestions.length === 0) {
           toast({
