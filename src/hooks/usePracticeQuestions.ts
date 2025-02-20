@@ -7,6 +7,7 @@ import { useSession } from "./practice/useSession";
 import { useAnsweredQuestions } from "./practice/useAnsweredQuestions";
 import { fetchQuestionsForSubtopic, fetchFallbackQuestions } from "./practice/useQuestionFetcher";
 import { useAchievementNotification } from "@/components/achievements/AchievementNotification";
+import { useQuery } from "react-query";
 
 export type PracticeQuestion = {
   id: string;
@@ -62,14 +63,31 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
   } = usePracticeStore();
 
-  const { data: session } = useSession(sessionId);
-  console.log("Session data in usePracticeQuestions:", session);
-  
+  const { data: session, isLoading: isSessionLoading } = useQuery({
+    queryKey: ["practice-session", sessionId],
+    queryFn: async () => {
+      if (!sessionId) return null;
+      
+      const { data, error } = await supabase
+        .from("practice_sessions")
+        .select("*")
+        .eq("id", sessionId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching session:", error);
+        throw error;
+      }
+
+      console.log("Session data:", data);
+      return data;
+    },
+    enabled: !!sessionId
+  });
+
   const subtopicIds = (session?.subtopic_attempts as SubtopicAttempts)?.subtopics || [];
-  console.log("Subtopic IDs:", subtopicIds);
   
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
-  console.log("Answered IDs:", answeredIds);
 
   useEffect(() => {
     if (!session?.user_id) return;
@@ -103,21 +121,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     };
   }, [session?.user_id, showAchievementNotification]);
 
-  const completeSession = useCallback(async (currentAnsweredCount: number) => {
-    if (!sessionId) return;
-    
-    await supabase
-      .from("practice_sessions")
-      .update({ 
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-        questions_answered: currentAnsweredCount
-      })
-      .eq("id", sessionId);
-    
-    setCurrentQuestion(null);
-  }, [sessionId, setCurrentQuestion]);
-
   const getNextQuestion = useCallback(async () => {
     if (!sessionId || !session?.subject || subtopicIds.length === 0) {
       console.log("Early return conditions:", {
@@ -129,22 +132,11 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
 
     try {
-      const currentAnsweredCount = answeredIds.length;
-      console.log("Current answered count:", currentAnsweredCount);
-
-      if (session.total_questions && currentAnsweredCount >= session.total_questions) {
-        console.log("Session completed, all questions answered");
-        await completeSession(currentAnsweredCount);
-        return;
-      }
-
       const { data: statisticsData } = await supabase
         .from('user_subtopic_statistics')
         .select('subtopic_id, accuracy')
         .in('subtopic_id', subtopicIds)
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-
-      console.log("Statistics data:", statisticsData);
 
       const subtopicDifficulties = new Map(
         statisticsData?.map(stat => [
@@ -154,11 +146,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         ]) || []
       );
 
-      console.log("Subtopic difficulties:", Object.fromEntries(subtopicDifficulties));
-
       const questionPromises = subtopicIds.map(subtopicId => {
         const difficulty = subtopicDifficulties.get(subtopicId) || 'Easy';
-        console.log(`Fetching questions for subtopic ${subtopicId} with difficulty ${difficulty}`);
         return fetchQuestionsForSubtopic(
           subtopicId,
           difficulty,
@@ -167,18 +156,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       });
 
       const questionsArrays = await Promise.all(questionPromises);
-      console.log("Questions arrays:", questionsArrays);
-      
       let availableQuestions = questionsArrays.flat();
-      console.log("Available questions after flattening:", availableQuestions);
 
       if (availableQuestions.length === 0) {
-        console.log("No questions found, trying fallback");
         availableQuestions = await fetchFallbackQuestions(subtopicIds, answeredIds);
-        console.log("Fallback questions:", availableQuestions);
 
         if (availableQuestions.length === 0) {
-          console.log("No questions available even after fallback");
           toast({
             title: "No more questions available",
             description: "You've completed all available questions.",
@@ -189,9 +172,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       }
 
       const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-      const selectedQuestion = availableQuestions[randomIndex];
-      console.log("Selected question:", selectedQuestion);
-      setCurrentQuestion(selectedQuestion);
+      setCurrentQuestion(availableQuestions[randomIndex]);
+      incrementQuestionsAnswered();
 
     } catch (error: any) {
       console.error("Error fetching next question:", error);
@@ -201,17 +183,10 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         variant: "destructive",
       });
     }
-  }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, completeSession, toast]);
+  }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, toast]);
 
   useEffect(() => {
-    console.log("useEffect conditions:", {
-      session: !!session,
-      currentQuestion: !!currentQuestion,
-      subtopicIdsLength: subtopicIds.length
-    });
-    
     if (session && !currentQuestion && subtopicIds.length > 0) {
-      console.log("Calling getNextQuestion from useEffect");
       getNextQuestion();
     }
   }, [session, currentQuestion, subtopicIds, getNextQuestion]);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,28 +54,35 @@ export function PracticeSession() {
     checkAuth();
   }, [navigate, toast]);
 
-  if (!currentQuestion && !isComplete) {
-    return (
-      <div className="container py-8 text-center">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto"></div>
-          <div className="h-32 bg-gray-200 rounded max-w-2xl mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
+  const completeSession = async () => {
+    if (!sessionId) return;
 
-  if (isComplete) {
-    return (
-      <div className="container py-8 text-center">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Practice Complete!</h2>
-        <p className="text-gray-600 mb-6">You've completed all questions in this session.</p>
-        <Button onClick={() => navigate("/gat/english")}>
-          Return to English Practice
-        </Button>
-      </div>
-    );
-  }
+    try {
+      console.log("Starting session completion...");
+      
+      const { error: completeError } = await supabase
+        .from("practice_sessions")
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          questions_answered: totalQuestions,
+          total_points: pointsEarned
+        })
+        .eq("id", sessionId)
+        .select();
+
+      if (completeError) {
+        console.error("Complete session error:", completeError);
+        throw completeError;
+      }
+
+      console.log("Session completed successfully, navigating to results...");
+      navigate(`/gat/practice/results/${sessionId}`);
+    } catch (error: any) {
+      console.error("Error in completeSession:", error);
+      throw error;
+    }
+  };
 
   const calculatePointsForAnswer = (isCorrect: boolean, difficulty: string, streak: number) => {
     if (!isCorrect) return 0;
@@ -120,6 +126,17 @@ export function PracticeSession() {
       setConsecutiveMistakes(newConsecutiveMistakes);
       setPointsEarned(prev => prev + newPoints);
 
+      // Update session streak and points
+      const { error: streakError } = await supabase
+        .from("practice_sessions")
+        .update({ 
+          current_streak: newStreak,
+          total_points: pointsEarned + newPoints
+        })
+        .eq("id", sessionId);
+
+      if (streakError) throw streakError;
+
       // Record the answer
       const { error: answerError } = await supabase
         .from("practice_answers")
@@ -140,12 +157,22 @@ export function PracticeSession() {
 
       setShowFeedback(true);
 
-      setTimeout(() => {
+      setTimeout(async () => {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
         if (questionsAnswered >= totalQuestions - 1) {
-          navigate(`/gat/practice/results/${sessionId}`);
+          try {
+            console.log("Attempting to complete session...");
+            await completeSession();
+          } catch (error: any) {
+            console.error("Failed to complete session:", error);
+            toast({
+              title: "Error completing session",
+              description: "Failed to complete the practice session. Please try again.",
+              variant: "destructive",
+            });
+          }
         } else {
           getNextQuestion();
         }
@@ -162,6 +189,29 @@ export function PracticeSession() {
       });
     }
   };
+
+  if (!currentQuestion && !isComplete) {
+    return (
+      <div className="container py-8 text-center">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto"></div>
+          <div className="h-32 bg-gray-200 rounded max-w-2xl mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isComplete) {
+    return (
+      <div className="container py-8 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Practice Complete!</h2>
+        <p className="text-gray-600 mb-6">You've completed all questions in this session.</p>
+        <Button onClick={() => navigate("/gat/english")}>
+          Return to English Practice
+        </Button>
+      </div>
+    );
+  }
 
   if (!currentQuestion) {
     return <div>Loading...</div>;
