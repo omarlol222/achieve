@@ -1,5 +1,6 @@
+
 import { useQuery } from "@tanstack/react-query";
-import { Award, Trophy, User } from "lucide-react";
+import { Award, Trophy, Medal, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Table,
@@ -9,22 +10,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { startTransition, useState, useTransition } from "react";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type LeaderboardEntry = {
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+  total_points: number;
+  weekly_points: number;
+  rank: number;
+};
 
 export default function Leaderboard() {
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
-  const today = new Date().toISOString().split('T')[0];
 
-  const { data: leaderboardData, isLoading, error } = useQuery({
-    queryKey: ["leaderboard", today],
+  // Query for overall leaderboard
+  const { data: overallLeaderboard, isLoading: isLoadingOverall } = useQuery({
+    queryKey: ["overall-leaderboard"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("daily_attempts")
+        .from("overall_leaderboard")
         .select("*")
-        .eq("date", today)
-        .order("questions_answered", { ascending: false })
         .limit(10);
 
       if (error) {
@@ -35,81 +44,179 @@ export default function Leaderboard() {
         });
         throw error;
       }
-      return data;
+      return data as LeaderboardEntry[];
     },
-    staleTime: 1000 * 60, // Cache data for 1 minute
   });
 
-  const handleRefresh = () => {
-    startTransition(() => {
-      // Wrap the state update in startTransition
-      // Your refresh logic here if needed
-    });
+  // Query for weekly leaderboard
+  const { data: weeklyLeaderboard, isLoading: isLoadingWeekly } = useQuery({
+    queryKey: ["weekly-leaderboard"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("weekly_leaderboard")
+        .select("*")
+        .limit(10);
+
+      if (error) {
+        toast({
+          title: "Error fetching weekly leaderboard",
+          description: error.message,
+          variant: "destructive",
+        });
+        throw error;
+      }
+      return data as LeaderboardEntry[];
+    },
+  });
+
+  // Query for current user's rank
+  const { data: currentUser } = useQuery({
+    queryKey: ["current-user-rank"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return null;
+
+      const [overallRank, weeklyRank] = await Promise.all([
+        supabase
+          .from("overall_leaderboard")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single(),
+        supabase
+          .from("weekly_leaderboard")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .single(),
+      ]);
+
+      return {
+        overall: overallRank.data,
+        weekly: weeklyRank.data,
+      };
+    },
+  });
+
+  const getRankIcon = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return <Trophy className="h-6 w-6 text-yellow-500" />;
+      case 2:
+        return <Medal className="h-6 w-6 text-gray-400" />;
+      case 3:
+        return <Award className="h-6 w-6 text-amber-600" />;
+      default:
+        return <span className="font-mono text-lg">{rank}</span>;
+    }
+  };
+
+  const LeaderboardTable = ({ data, isLoading, type }: { 
+    data: LeaderboardEntry[] | undefined; 
+    isLoading: boolean;
+    type: 'overall' | 'weekly';
+  }) => {
+    if (isLoading) {
+      return (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[100px]">Rank</TableHead>
+            <TableHead>User</TableHead>
+            <TableHead className="text-right">Points</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data?.map((entry) => (
+            <TableRow key={entry.user_id}>
+              <TableCell className="font-medium">
+                <div className="flex items-center gap-2">
+                  {getRankIcon(entry.rank)}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {entry.avatar_url ? (
+                    <img
+                      src={entry.avatar_url}
+                      alt={entry.username}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
+                  <span>{entry.username}</span>
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                {type === 'overall' ? entry.total_points : entry.weekly_points}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
   };
 
   return (
-    <div className="min-h-screen bg-white py-12">
-      <div className="container px-8 max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Daily Leaderboard</h1>
-        </div>
+    <div className="container py-8">
+      <h1 className="mb-8 text-3xl font-bold">Leaderboard</h1>
 
-        <div className="bg-gray-100 rounded-lg p-6">
-          {isLoading || isPending ? (
-            <div className="animate-pulse space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-12 bg-gray-200 rounded" />
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-12 text-red-500">
-              Error loading leaderboard data
-            </div>
-          ) : !leaderboardData?.length ? (
-            <div className="text-center py-12 text-gray-500">
-              No attempts recorded today
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16">Rank</TableHead>
-                  <TableHead>User</TableHead>
-                  <TableHead className="text-right">Questions Answered</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {leaderboardData.map((entry, index) => (
-                  <TableRow key={entry.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {index === 0 ? (
-                          <Trophy className="h-5 w-5 text-yellow-500" />
-                        ) : index === 1 ? (
-                          <Award className="h-5 w-5 text-gray-400" />
-                        ) : index === 2 ? (
-                          <Award className="h-5 w-5 text-amber-600" />
-                        ) : (
-                          <span className="pl-7">{index + 1}</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-500" />
-                        {entry.username || "Anonymous User"}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {entry.questions_answered}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      <Tabs defaultValue="overall" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overall">Overall</TabsTrigger>
+          <TabsTrigger value="weekly">Weekly</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overall">
+          <Card className="p-6">
+            <LeaderboardTable 
+              data={overallLeaderboard} 
+              isLoading={isLoadingOverall}
+              type="overall"
+            />
+          </Card>
+          {currentUser?.overall && currentUser.overall.rank > 10 && (
+            <Card className="mt-4 p-6">
+              <h2 className="mb-4 text-lg font-semibold">Your Rank</h2>
+              <LeaderboardTable 
+                data={[currentUser.overall]} 
+                isLoading={false}
+                type="overall"
+              />
+            </Card>
           )}
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="weekly">
+          <Card className="p-6">
+            <LeaderboardTable 
+              data={weeklyLeaderboard} 
+              isLoading={isLoadingWeekly}
+              type="weekly"
+            />
+          </Card>
+          {currentUser?.weekly && currentUser.weekly.rank > 10 && (
+            <Card className="mt-4 p-6">
+              <h2 className="mb-4 text-lg font-semibold">Your Rank</h2>
+              <LeaderboardTable 
+                data={[currentUser.weekly]} 
+                isLoading={false}
+                type="weekly"
+              />
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
