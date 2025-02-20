@@ -61,7 +61,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       // Get a random unanswered question
       const { data: questions } = await supabase
         .from("questions")
-        .select("*")
+        .select("*, subtopics!inner(*)")
         .not("id", "in", `(${answeredIds.join(",")})`)
         .limit(1)
         .single();

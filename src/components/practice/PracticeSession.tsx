@@ -70,13 +70,24 @@ export function PracticeSession() {
 
       if (answerError) throw answerError;
 
+      // Update the session's questions_answered count
+      const { error: sessionError } = await supabase
+        .from("practice_sessions")
+        .update({ 
+          questions_answered: questionsAnswered + 1,
+          status: questionsAnswered + 1 >= totalQuestions ? 'completed' : 'in_progress'
+        })
+        .eq("id", sessionId);
+
+      if (sessionError) throw sessionError;
+
       setShowFeedback(true);
 
       setTimeout(() => {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
-        if (questionsAnswered >= totalQuestions) {
+        if (questionsAnswered + 1 >= totalQuestions) {
           navigate(`/gat/practice/results/${sessionId}`);
         } else {
           getNextQuestion();
@@ -101,8 +112,8 @@ export function PracticeSession() {
     <div className="container py-8 space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <p className="text-sm text-gray-500">Question {questionsAnswered} of {totalQuestions}</p>
-          <Progress value={(questionsAnswered / totalQuestions) * 100} className="w-[200px]" />
+          <p className="text-sm text-gray-500">Question {questionsAnswered + 1} of {totalQuestions}</p>
+          <Progress value={((questionsAnswered + 1) / totalQuestions) * 100} className="w-[200px]" />
         </div>
       </div>
 
@@ -112,7 +123,7 @@ export function PracticeSession() {
           selectedAnswer={selectedAnswer}
           showFeedback={showFeedback}
           onAnswerSelect={setSelectedAnswer}
-          questionNumber={questionsAnswered}
+          questionNumber={questionsAnswered + 1}
           totalQuestions={totalQuestions}
         />
         
