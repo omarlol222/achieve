@@ -11,6 +11,7 @@ interface PracticeState {
   actions: {
     setCurrentQuestion: (question: PracticeQuestion | null) => void;
     setQuestionsAnswered: (count: number) => void;
+    incrementQuestionsAnswered: () => void;
     setSelectedAnswer: (answer: number | null) => void;
     setStreak: (streak: number) => void;
     setShowFeedback: (show: boolean) => void;
@@ -27,6 +28,7 @@ export const usePracticeStore = create<PracticeState>((set) => ({
   actions: {
     setCurrentQuestion: (question) => set({ currentQuestion: question }),
     setQuestionsAnswered: (count) => set({ questionsAnswered: count }),
+    incrementQuestionsAnswered: () => set((state) => ({ questionsAnswered: state.questionsAnswered + 1 })),
     setSelectedAnswer: (answer) => set({ selectedAnswer: answer }),
     setStreak: (streak) => set({ streak: streak }),
     setShowFeedback: (show) => set({ showFeedback: show }),

@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +42,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     questionsAnswered,
     actions: { 
       setCurrentQuestion,
-      setQuestionsAnswered 
+      setQuestionsAnswered,
+      incrementQuestionsAnswered
     }
   } = usePracticeStore();
 
@@ -108,8 +110,9 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
 
     try {
+      // Increment the questions answered count here, before fetching the next question
       const currentAnsweredCount = answeredIds.length;
-      setQuestionsAnswered(currentAnsweredCount + 1);
+      incrementQuestionsAnswered();
 
       if (session.total_questions && currentAnsweredCount >= session.total_questions) {
         await completeSession(currentAnsweredCount);
@@ -161,7 +164,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         variant: "destructive",
       });
     }
-  }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, setQuestionsAnswered, completeSession, toast]);
+  }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, completeSession, toast]);
 
   useEffect(() => {
     if (session && !currentQuestion && subtopicIds.length > 0) {
