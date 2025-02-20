@@ -7,7 +7,7 @@ import { useSession } from "./practice/useSession";
 import { useAnsweredQuestions } from "./practice/useAnsweredQuestions";
 import { fetchQuestionsForSubtopic, fetchFallbackQuestions } from "./practice/useQuestionFetcher";
 import { useAchievementNotification } from "@/components/achievements/AchievementNotification";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 
 export type PracticeQuestion = {
   id: string;
