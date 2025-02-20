@@ -15,6 +15,14 @@ type PracticeSession = {
   subtopic_attempts: SubtopicAttempts;
   questions_answered?: number;
   practice_answers?: Array<{ points_earned: number }>;
+  completed_at?: string;
+  created_at: string;
+  current_streak?: number;
+  session_points?: unknown;
+};
+
+type SupabaseSession = Omit<PracticeSession, 'subtopic_attempts'> & {
+  subtopic_attempts: unknown;
 };
 
 export function useSession(sessionId: string | undefined) {
@@ -38,8 +46,17 @@ export function useSession(sessionId: string | undefined) {
         console.error("Session fetch error:", error);
         throw error;
       }
+
       console.log("Session data:", data);
-      return data as PracticeSession;
+
+      // Handle the conversion from Supabase JSON to our type
+      const supabaseData = data as SupabaseSession;
+      const sessionData: PracticeSession = {
+        ...supabaseData,
+        subtopic_attempts: supabaseData.subtopic_attempts as SubtopicAttempts
+      };
+
+      return sessionData;
     },
     enabled: !!sessionId
   });
