@@ -8,7 +8,7 @@ import SignUp from "@/pages/SignUp";
 import GAT from "@/pages/GAT";
 import English from "@/pages/gat/English";
 import EnglishPracticeSetup from "@/pages/gat/english/EnglishPracticeSetup";
-import { PracticeResults } from "@/pages/gat/practice/PracticeResults";
+import PracticeResults from "@/pages/gat/practice/PracticeResults";
 import EnglishPractice from "@/pages/gat/english/EnglishPractice";
 
 function App() {

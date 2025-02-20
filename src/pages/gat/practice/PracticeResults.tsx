@@ -13,7 +13,7 @@ type SubtopicScore = {
   total: number;
 };
 
-export default function PracticeResults() {
+export function PracticeResults() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
 
@@ -145,3 +145,5 @@ export default function PracticeResults() {
     </div>
   );
 }
+
+export default PracticeResults;
