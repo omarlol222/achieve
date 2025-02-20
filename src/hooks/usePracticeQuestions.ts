@@ -33,6 +33,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { showAchievementNotification } = useAchievementNotification();
+
   const { 
     currentQuestion,
     questionsAnswered,
@@ -115,14 +116,20 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         return;
       }
 
-      const { data: progressData } = await supabase
-        .from('user_subtopic_progress')
-        .select('subtopic_id, difficulty_level')
+      // Get subtopic statistics for difficulty selection
+      const { data: statisticsData } = await supabase
+        .from('user_subtopic_statistics')
+        .select('subtopic_id, accuracy')
         .in('subtopic_id', subtopicIds)
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
+      // Map statistics to difficulties
       const subtopicDifficulties = new Map(
-        progressData?.map(p => [p.subtopic_id, p.difficulty_level || 'Easy']) || []
+        statisticsData?.map(stat => [
+          stat.subtopic_id,
+          stat.accuracy && stat.accuracy >= 0.8 ? 'Hard' :
+          stat.accuracy && stat.accuracy >= 0.6 ? 'Moderate' : 'Easy'
+        ]) || []
       );
 
       const questionPromises = subtopicIds.map(subtopicId => 
@@ -162,67 +169,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
   }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, completeSession, toast]);
 
-  const handleAnswerSubmit = async () => {
-    if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
-      toast({
-        title: "Error",
-        description: "Please select an answer and ensure you're logged in.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const isCorrect = selectedAnswer === currentQuestion.correct_answer;
-
-      // Insert the answer - points calculation is now handled by database trigger
-      const { error: answerError } = await supabase
-        .from("practice_answers")
-        .insert({
-          session_id: sessionId,
-          question_id: currentQuestion.id,
-          selected_answer: selectedAnswer,
-          is_correct: isCorrect,
-          user_id: userId,
-          subtopic_id: currentQuestion.subtopic_id
-        });
-
-      if (answerError) throw answerError;
-
-      // Get updated progress for streak
-      const { data: progress } = await supabase
-        .from("user_subtopic_progress")
-        .select('streak_count')
-        .eq("user_id", userId)
-        .eq("subtopic_id", currentQuestion.subtopic_id)
-        .single();
-
-      // Update local state
-      setStreak(progress?.streak_count || 0);
-      incrementQuestionsAnswered();
-      setShowFeedback(true);
-
-      setTimeout(() => {
-        setShowFeedback(false);
-        setSelectedAnswer(null);
-        
-        if (questionsAnswered >= session?.total_questions) {
-          navigate(`/gat/practice/results/${sessionId}`);
-        } else {
-          getNextQuestion();
-        }
-      }, 2000);
-
-    } catch (error: any) {
-      console.error("Error submitting answer:", error);
-      toast({
-        title: "Error submitting answer",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   useEffect(() => {
     if (session && !currentQuestion && subtopicIds.length > 0) {
       getNextQuestion();
@@ -234,8 +180,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     questionsAnswered,
     totalQuestions: session?.total_questions || 0,
     getNextQuestion,
-    handleAnswerSubmit,
     isComplete: session?.status === 'completed' || 
-                (session?.total_questions && questionsAnswered >= session.total_questions)
+                (session?.total_questions && questionsAnswered >= session.total_questions),
+    setQuestionsAnswered
   };
 }
