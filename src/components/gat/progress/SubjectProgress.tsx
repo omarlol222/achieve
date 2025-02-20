@@ -33,12 +33,17 @@ type SubjectProgressProps = {
 export const SubjectProgress = memo(({ subject, calculateTopicProgress, isExpanded, onToggleExpand }: SubjectProgressProps) => {
   const topicsList = useMemo(() => 
     subject.topics.map((topic) => {
-      const progress = calculateTopicProgress(topic.id);
+      // Calculate average progress from subtopics
+      const subtopicsPoints = topic.subtopics?.map(st => st.progress.points) || [];
+      const topicPoints = subtopicsPoints.length > 0
+        ? Math.round(subtopicsPoints.reduce((sum, points) => sum + points, 0) / subtopicsPoints.length)
+        : topic.progress.points;
+
       return (
         <div key={topic.id} className="space-y-4">
           <TopicProgress
             name={topic.name}
-            value={progress.points}
+            value={topicPoints}
           />
           {isExpanded && topic.subtopics && topic.subtopics.length > 0 && (
             <div className="ml-4 space-y-3">
