@@ -56,6 +56,23 @@ export function PracticeSession() {
     }
 
     try {
+      // Verify that the question has a valid subtopic
+      const { data: questionData, error: questionError } = await supabase
+        .from("questions")
+        .select("subtopic_id")
+        .eq("id", currentQuestion.id)
+        .single();
+
+      if (questionError || !questionData?.subtopic_id) {
+        console.error("Question subtopic error:", questionError || "No subtopic found");
+        toast({
+          title: "Error processing answer",
+          description: "Unable to process this answer. Please try another question.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
       
       // Update streak
