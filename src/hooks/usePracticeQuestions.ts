@@ -61,7 +61,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       // Check if we've reached the total questions limit
       if (session.total_questions && currentAnsweredCount >= session.total_questions) {
-        // Update session status to completed
         await supabase
           .from("practice_sessions")
           .update({ status: 'completed' })
@@ -119,37 +118,37 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       const answeredIds = answeredQuestions?.map(a => a.question_id) || [];
 
-      // Get a random question of appropriate difficulty
-      const query = supabase
+      // Base query for getting questions
+      let query = supabase
         .from("questions")
         .select("*")
         .eq("difficulty", currentDifficulty)
         .in("topic_id", topicIds)
         .limit(1);
 
-      // Only add the not.in filter if there are answered questions
+      // Add filter for answered questions if there are any
       if (answeredIds.length > 0) {
-        query.not('id', 'in', `(${answeredIds.join(',')})`);
+        query = query.filter('id', 'not.in', `(${answeredIds.join(',')})`);
       }
 
+      // Execute the query
       const { data: questions, error: questionsError } = await query;
 
       if (questionsError) throw questionsError;
 
       if (!questions || questions.length === 0) {
-        // If no questions available at current difficulty, try easier ones
+        // Try fallback difficulty if no questions available
         const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
         
-        const fallbackQuery = supabase
+        let fallbackQuery = supabase
           .from("questions")
           .select("*")
           .eq("difficulty", fallbackDifficulty)
           .in("topic_id", topicIds)
           .limit(1);
 
-        // Only add the not.in filter if there are answered questions
         if (answeredIds.length > 0) {
-          fallbackQuery.not('id', 'in', `(${answeredIds.join(',')})`);
+          fallbackQuery = fallbackQuery.filter('id', 'not.in', `(${answeredIds.join(',')})`);
         }
 
         const { data: fallbackQuestions, error: fallbackError } = await fallbackQuery;
