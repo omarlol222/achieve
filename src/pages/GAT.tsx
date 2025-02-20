@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,8 @@ import {
   MonitorPlay, 
   BookOpen, 
   Calculator, 
-  HelpCircle 
+  HelpCircle,
+  Trophy 
 } from "lucide-react";
 
 export default function GAT() {
@@ -24,7 +26,18 @@ export default function GAT() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mt-12">
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => navigate("/gat/leaderboard")}
+            className="hover:bg-primary/10"
+          >
+            <Trophy className="h-5 w-5" />
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           <Button
             variant="outline"
             size="lg"
