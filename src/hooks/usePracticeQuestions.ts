@@ -28,14 +28,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const [currentDifficulty, setCurrentDifficulty] = useState<'Easy' | 'Moderate' | 'Hard'>('Easy');
   const { toast } = useToast();
 
-  // Get session details to know total questions
+  // Get session details to know total questions and subject
   const { data: session } = useQuery({
     queryKey: ["practice-session", sessionId],
     queryFn: async () => {
       if (!sessionId) return null;
       const { data, error } = await supabase
         .from("practice_sessions")
-        .select("*")
+        .select("*, subjects!inner(*)")
         .eq("id", sessionId)
         .single();
 
@@ -47,7 +47,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
   // Get next question based on current performance
   const getNextQuestion = async () => {
-    if (!sessionId) return;
+    if (!sessionId || !session?.subject) return;
 
     try {
       // Get answers for this session to calculate performance
@@ -68,6 +68,17 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         }
       }
 
+      // First get the subject ID for Math
+      const { data: subjectData } = await supabase
+        .from("subjects")
+        .select("id")
+        .eq("name", session.subject)
+        .single();
+
+      if (!subjectData?.id) {
+        throw new Error("Subject not found");
+      }
+
       // Get already answered question IDs
       const { data: answeredQuestions } = await supabase
         .from("practice_answers")
@@ -76,12 +87,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       const answeredIds = answeredQuestions?.map(a => a.question_id) || [];
 
-      // Get a random question of appropriate difficulty
-      // that hasn't been answered in this session
+      // Get a random question of appropriate difficulty for the subject
       let query = supabase
         .from("questions")
         .select("*")
-        .eq("difficulty", currentDifficulty);
+        .eq("difficulty", currentDifficulty)
+        .eq("topic_id", subjectData.id);
 
       // Only add the not-in filter if there are answered questions
       if (answeredIds.length > 0) {
@@ -100,7 +111,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         let fallbackQuery = supabase
           .from("questions")
           .select("*")
-          .eq("difficulty", fallbackDifficulty);
+          .eq("difficulty", fallbackDifficulty)
+          .eq("topic_id", subjectData.id);
 
         // Only add the not-in filter if there are answered questions
         if (answeredIds.length > 0) {
