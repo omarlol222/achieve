@@ -15,6 +15,8 @@ export function PracticeSession() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const [consecutiveMistakes, setConsecutiveMistakes] = useState(0);
 
   const {
     selectedAnswer,
@@ -63,8 +65,21 @@ export function PracticeSession() {
 
     try {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+      
+      // Update streak and consecutive mistakes
+      let newStreak = isCorrect ? currentStreak + 1 : 0;
+      let newConsecutiveMistakes = isCorrect ? 0 : consecutiveMistakes + 1;
+      
+      setCurrentStreak(newStreak);
+      setConsecutiveMistakes(newConsecutiveMistakes);
 
-      // Record the answer
+      // Update session streak
+      await supabase
+        .from("practice_sessions")
+        .update({ current_streak: newStreak })
+        .eq("id", sessionId);
+
+      // Record the answer with new point system data
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -74,7 +89,9 @@ export function PracticeSession() {
           is_correct: isCorrect,
           user_id: userId,
           subtopic_id: currentQuestion.subtopic_id,
-          difficulty_used: currentQuestion.difficulty || 'Easy'
+          difficulty_used: currentQuestion.difficulty || 'Easy',
+          streak_at_answer: newStreak,
+          consecutive_mistakes: newConsecutiveMistakes
         });
 
       if (answerError) {
@@ -84,11 +101,29 @@ export function PracticeSession() {
 
       setShowFeedback(true);
 
+      // Check if this was the last question
+      if (questionsAnswered >= totalQuestions - 1) {
+        // Complete the session to trigger point calculation
+        const { error: sessionError } = await supabase
+          .from("practice_sessions")
+          .update({ 
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            questions_answered: totalQuestions
+          })
+          .eq("id", sessionId);
+
+        if (sessionError) {
+          console.error("Error completing session:", sessionError);
+          throw sessionError;
+        }
+      }
+
       setTimeout(() => {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
-        if (questionsAnswered >= totalQuestions) {
+        if (questionsAnswered >= totalQuestions - 1) {
           navigate(`/gat/practice/results/${sessionId}`);
         } else {
           getNextQuestion();
@@ -113,8 +148,11 @@ export function PracticeSession() {
     <div className="container py-8 space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <p className="text-sm text-gray-500">Question {questionsAnswered} of {totalQuestions}</p>
-          <Progress value={(questionsAnswered / totalQuestions) * 100} className="w-[200px]" />
+          <p className="text-sm text-gray-500">Question {questionsAnswered + 1} of {totalQuestions}</p>
+          <Progress value={((questionsAnswered + 1) / totalQuestions) * 100} className="w-[200px]" />
+        </div>
+        <div className="text-sm text-gray-500">
+          Current Streak: {currentStreak}
         </div>
       </div>
 
@@ -124,7 +162,7 @@ export function PracticeSession() {
           selectedAnswer={selectedAnswer}
           showFeedback={showFeedback}
           onAnswerSelect={setSelectedAnswer}
-          questionNumber={questionsAnswered}
+          questionNumber={questionsAnswered + 1}
           totalQuestions={totalQuestions}
         />
         
