@@ -20,6 +20,7 @@ export type PracticeQuestion = {
   passage_text?: string;
   comparison_value1?: string;
   comparison_value2?: string;
+  subtopic_id?: string;
 };
 
 export function usePracticeQuestions(sessionId: string | undefined) {
@@ -34,7 +35,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       if (!sessionId) return null;
       const { data, error } = await supabase
         .from("practice_sessions")
-        .select("*")
+        .select(`
+          *,
+          practice_answers (
+            points_earned
+          )
+        `)
         .eq("id", sessionId)
         .maybeSingle();
 
@@ -62,12 +68,18 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       // Check if we've completed all questions
       if (session.total_questions && currentAnsweredCount >= session.total_questions) {
+        const totalPoints = (session.practice_answers || []).reduce(
+          (sum: number, answer: any) => sum + (answer.points_earned || 0), 
+          0
+        );
+
         await supabase
           .from("practice_sessions")
           .update({ 
             status: 'completed',
             completed_at: new Date().toISOString(),
-            questions_answered: currentAnsweredCount 
+            questions_answered: currentAnsweredCount,
+            total_points: totalPoints
           })
           .eq("id", sessionId);
         setCurrentQuestion(null);
@@ -100,7 +112,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       // Fetch all available questions for the current difficulty and topics
       const { data: availableQuestions, error: questionsError } = await supabase
         .from('questions')
-        .select('*')
+        .select('*, subtopics (id)')
         .eq('difficulty', currentDifficulty)
         .in('topic_id', topicIds);
 
@@ -117,7 +129,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         
         const { data: fallbackQuestions, error: fallbackError } = await supabase
           .from('questions')
-          .select('*')
+          .select('*, subtopics (id)')
           .eq('difficulty', fallbackDifficulty)
           .in('topic_id', topicIds);
 
@@ -138,12 +150,20 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
         // Select a random question from the fallback questions
         const randomIndex = Math.floor(Math.random() * unansweredFallbackQuestions.length);
-        setCurrentQuestion(unansweredFallbackQuestions[randomIndex] as PracticeQuestion);
+        const selectedQuestion = unansweredFallbackQuestions[randomIndex];
+        setCurrentQuestion({
+          ...selectedQuestion,
+          subtopic_id: selectedQuestion.subtopics?.id
+        } as PracticeQuestion);
         setCurrentDifficulty(fallbackDifficulty);
       } else {
         // Select a random question from the available questions
         const randomIndex = Math.floor(Math.random() * unansweredQuestions.length);
-        setCurrentQuestion(unansweredQuestions[randomIndex] as PracticeQuestion);
+        const selectedQuestion = unansweredQuestions[randomIndex];
+        setCurrentQuestion({
+          ...selectedQuestion,
+          subtopic_id: selectedQuestion.subtopics?.id
+        } as PracticeQuestion);
       }
     } catch (error: any) {
       console.error("Error fetching next question:", error);
