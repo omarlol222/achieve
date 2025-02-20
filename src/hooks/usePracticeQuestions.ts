@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,12 +89,15 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       const topicIds = topicsData.map(t => t.id);
       const answeredIds = (answersData || []).map(a => a.question_id);
 
+      // Fetch a random unanswered question using a direct query instead of RPC
       const { data: questions, error: questionsError } = await supabase
-        .rpc('get_random_unanswered_question', {
-          p_difficulty: currentDifficulty,
-          p_topic_ids: topicIds,
-          p_answered_ids: answeredIds
-        });
+        .from('questions')
+        .select('*')
+        .eq('difficulty', currentDifficulty)
+        .in('topic_id', topicIds)
+        .not('id', 'in', answeredIds)
+        .order('random()')
+        .limit(1);
 
       if (questionsError) throw questionsError;
 
@@ -101,14 +105,16 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
         
         const { data: fallbackQuestions, error: fallbackError } = await supabase
-          .rpc('get_random_unanswered_question', {
-            p_difficulty: fallbackDifficulty,
-            p_topic_ids: topicIds,
-            p_answered_ids: answeredIds
-          });
+          .from('questions')
+          .select('*')
+          .eq('difficulty', fallbackDifficulty)
+          .in('topic_id', topicIds)
+          .not('id', 'in', answeredIds)
+          .order('random()')
+          .limit(1);
 
         if (fallbackError) throw fallbackError;
-        if (!fallbackQuestions || !fallbackQuestions[0]) {
+        if (!fallbackQuestions || fallbackQuestions.length === 0) {
           toast({
             title: "No more questions available",
             description: "You've completed all available questions at this difficulty level.",

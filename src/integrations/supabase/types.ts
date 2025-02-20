@@ -1179,6 +1179,35 @@ export type Database = {
         }
         Returns: number
       }
+      get_random_unanswered_question: {
+        Args: {
+          p_difficulty: string
+          p_topic_ids: string[]
+          p_answered_ids: string[]
+        }
+        Returns: {
+          choice1: string
+          choice2: string
+          choice3: string
+          choice4: string
+          comparison_value1: string | null
+          comparison_value2: string | null
+          correct_answer: number
+          created_at: string
+          difficulty: Database["public"]["Enums"]["question_difficulty"] | null
+          explanation: string | null
+          explanation_image_url: string | null
+          id: string
+          image_url: string | null
+          passage_text: string | null
+          question_text: string
+          question_type: string
+          subtopic_id: string | null
+          test_type_id: string | null
+          topic_id: string | null
+          updated_at: string
+        }[]
+      }
       grant_platform_access: {
         Args: {
           user_id_input: string
