@@ -54,6 +54,40 @@ export function PracticeSession() {
     checkAuth();
   }, [navigate, toast]);
 
+  const completeSession = async () => {
+    if (!sessionId) return;
+
+    try {
+      // Update questions_answered first
+      const { error: updateError } = await supabase
+        .from("practice_sessions")
+        .update({ questions_answered: totalQuestions })
+        .eq("id", sessionId);
+
+      if (updateError) throw updateError;
+
+      // Wait a moment before completing the session to ensure the previous update is processed
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Then complete the session
+      const { error: completeError } = await supabase
+        .from("practice_sessions")
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq("id", sessionId);
+
+      if (completeError) throw completeError;
+
+      // Navigate to results
+      navigate(`/gat/practice/results/${sessionId}`);
+    } catch (error: any) {
+      console.error("Error completing session:", error);
+      throw error;
+    }
+  };
+
   const handleAnswerSubmit = async () => {
     if (!selectedAnswer || !currentQuestion || !sessionId || !userId || isSubmitting) {
       toast({
@@ -81,10 +115,7 @@ export function PracticeSession() {
         .update({ current_streak: newStreak })
         .eq("id", sessionId);
 
-      if (streakError) {
-        console.error("Error updating streak:", streakError);
-        throw streakError;
-      }
+      if (streakError) throw streakError;
 
       // Record the answer
       const { error: answerError } = await supabase
@@ -101,10 +132,7 @@ export function PracticeSession() {
           consecutive_mistakes: newConsecutiveMistakes
         });
 
-      if (answerError) {
-        console.error("Error inserting answer:", answerError);
-        throw answerError;
-      }
+      if (answerError) throw answerError;
 
       setShowFeedback(true);
 
@@ -115,29 +143,8 @@ export function PracticeSession() {
         
         if (questionsAnswered >= totalQuestions - 1) {
           try {
-            // First update questions_answered
-            const { error: updateError } = await supabase
-              .from("practice_sessions")
-              .update({ questions_answered: totalQuestions })
-              .eq("id", sessionId);
-
-            if (updateError) throw updateError;
-
-            // Then complete the session in a separate update
-            const { error: completeError } = await supabase
-              .from("practice_sessions")
-              .update({ 
-                status: 'completed',
-                completed_at: new Date().toISOString()
-              })
-              .eq("id", sessionId);
-
-            if (completeError) throw completeError;
-
-            // Navigate to results
-            navigate(`/gat/practice/results/${sessionId}`);
+            await completeSession();
           } catch (error: any) {
-            console.error("Error completing session:", error);
             toast({
               title: "Error completing session",
               description: "Failed to complete the practice session. Please try again.",
