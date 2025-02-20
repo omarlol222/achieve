@@ -17,15 +17,20 @@ export async function fetchQuestionsForSubtopic(
   
   const validDifficulty = isValidDifficulty(difficulty) ? difficulty : 'Easy';
   
-  // Fetch a batch of questions in one query
-  const { data: questions, error } = await supabase
+  let query = supabase
     .from('questions')
     .select('*')
     .eq('subtopic_id', subtopicId)
     .eq('difficulty', validDifficulty)
-    .not('id', 'in', answeredIds)
     .order('created_at')
-    .limit(5); // Limit to reduce data transfer
+    .limit(5);
+
+  // Only add the not.in filter if there are answered questions
+  if (answeredIds.length > 0) {
+    query = query.not('id', 'in', answeredIds);
+  }
+  
+  const { data: questions, error } = await query;
   
   if (error) {
     console.error("Error fetching questions for subtopic:", error);
@@ -41,14 +46,19 @@ export async function fetchFallbackQuestions(
 ) {
   if (!subtopicIds.length) return [];
 
-  // Fetch a diverse set of questions across different difficulties
-  const { data: questions, error } = await supabase
+  let query = supabase
     .from('questions')
     .select('*')
     .in('subtopic_id', subtopicIds)
-    .not('id', 'in', answeredIds)
     .order('created_at')
     .limit(10);
+
+  // Only add the not.in filter if there are answered questions
+  if (answeredIds.length > 0) {
+    query = query.not('id', 'in', answeredIds);
+  }
+  
+  const { data: questions, error } = await query;
   
   if (error) {
     console.error("Error fetching fallback questions:", error);
