@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,7 @@ export function useQuestionSubmit(onSuccess: () => void, onOpenChange: (open: bo
         ...data,
         correct_answer: parseInt(data.correct_answer),
         topic_id: data.topic_id || null,
+        subtopic_id: data.subtopic_id || null,  // Added this line
         test_type_id: data.test_type_id || null,
         explanation: data.explanation || null,
         passage_text: data.passage_text || null,
