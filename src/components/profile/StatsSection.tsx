@@ -9,8 +9,8 @@ type StatsSectionProps = {
 };
 
 export function StatsSection({ statistics }: StatsSectionProps) {
-  const { mathData, englishData } = useMemo(() => {
-    if (!statistics || !Array.isArray(statistics)) return { mathData: [], englishData: [] };
+  const topicData = useMemo(() => {
+    if (!statistics || !Array.isArray(statistics)) return [];
     
     const tenDaysAgo = subDays(new Date(), 10);
     
@@ -23,32 +23,23 @@ export function StatsSection({ statistics }: StatsSectionProps) {
                stat?.subtopic?.topic?.subject?.name;
       });
 
-    console.log("Filtered statistics:", filteredStats); // Debug log
+    console.log("Filtered statistics:", filteredStats);
 
-    return {
-      mathData: filteredStats
-        .filter(stat => stat.subtopic.topic.subject.name === 'Math')
-        .map(stat => ({
-          subtopic: stat.subtopic.name,
-          accuracy: (stat.accuracy || 0) * 100,
-        })),
-      englishData: filteredStats
-        .filter(stat => stat.subtopic.topic.subject.name === 'English')
-        .map(stat => ({
-          subtopic: stat.subtopic.name,
-          accuracy: (stat.accuracy || 0) * 100,
-        }))
-    };
+    // Combine all topics into a single dataset
+    const data = filteredStats.map(stat => ({
+      subtopic: `${stat.subtopic.name} (${stat.subtopic.topic.subject.name})`,
+      accuracy: (stat.accuracy || 0) * 100,
+    }));
+
+    console.log("Combined topic data:", data);
+    return data;
   }, [statistics]);
 
-  console.log("Math data:", mathData); // Debug log
-  console.log("English data:", englishData); // Debug log
-
-  const renderRadarChart = (data: any[], title: string) => {
+  const renderRadarChart = (data: any[]) => {
     if (!data || data.length === 0) {
       return (
         <div className="h-full flex items-center justify-center text-muted-foreground">
-          No performance data available for {title} in the last 10 days. Try practicing some questions!
+          No performance data available for the last 10 days. Try practicing some questions!
         </div>
       );
     }
@@ -59,7 +50,7 @@ export function StatsSection({ statistics }: StatsSectionProps) {
         keys={["accuracy"]}
         indexBy="subtopic"
         maxValue={100}
-        margin={{ top: 70, right: 80, bottom: 40, left: 80 }}
+        margin={{ top: 70, right: 120, bottom: 40, left: 120 }}
         borderWidth={2}
         gridLabelOffset={36}
         dotSize={10}
@@ -75,16 +66,9 @@ export function StatsSection({ statistics }: StatsSectionProps) {
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Math Performance (Last 10 Days)</h2>
-        <div className="h-[400px]">
-          {renderRadarChart(mathData, 'Math')}
-        </div>
-      </Card>
-
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">English Performance (Last 10 Days)</h2>
-        <div className="h-[400px]">
-          {renderRadarChart(englishData, 'English')}
+        <h2 className="text-lg font-semibold mb-4">Topic Mastery (Last 10 Days)</h2>
+        <div className="h-[500px]">
+          {renderRadarChart(topicData)}
         </div>
       </Card>
     </div>
