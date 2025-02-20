@@ -78,11 +78,17 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       // Get a random question of appropriate difficulty
       // that hasn't been answered in this session
-      const { data: question, error } = await supabase
+      let query = supabase
         .from("questions")
         .select("*")
-        .eq("difficulty", currentDifficulty)
-        .not(answeredIds.length > 0 ? "id" : "id", answeredIds.length > 0 ? `in.(${answeredIds.join(',')})` : 'is.null')
+        .eq("difficulty", currentDifficulty);
+
+      // Only add the not-in filter if there are answered questions
+      if (answeredIds.length > 0) {
+        query = query.not('id', 'in', `(${answeredIds.join(',')})`);
+      }
+
+      const { data: question, error } = await query
         .limit(1)
         .maybeSingle();
 
@@ -91,11 +97,17 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       if (!question) {
         // If no questions available at current difficulty, try easier ones
         const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
-        const { data: fallbackQuestion, error: fallbackError } = await supabase
+        let fallbackQuery = supabase
           .from("questions")
           .select("*")
-          .eq("difficulty", fallbackDifficulty)
-          .not(answeredIds.length > 0 ? "id" : "id", answeredIds.length > 0 ? `in.(${answeredIds.join(',')})` : 'is.null')
+          .eq("difficulty", fallbackDifficulty);
+
+        // Only add the not-in filter if there are answered questions
+        if (answeredIds.length > 0) {
+          fallbackQuery = fallbackQuery.not('id', 'in', `(${answeredIds.join(',')})`);
+        }
+
+        const { data: fallbackQuestion, error: fallbackError } = await fallbackQuery
           .limit(1)
           .maybeSingle();
 
