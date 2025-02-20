@@ -127,7 +127,7 @@ const MathComponent = () => {
 
     // Calculate total points and max possible points
     let totalPoints = 0;
-    const maxPointsPerSubtopic = 500; // Maximum points possible per subtopic
+    const maxPointsPerSubtopic = 1000; // Updated to 1000 points max per subtopic
     const maxTotalPoints = validSubtopics.length * maxPointsPerSubtopic;
 
     // Sum up all points
