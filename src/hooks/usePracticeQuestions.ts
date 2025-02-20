@@ -26,7 +26,6 @@ export type PracticeQuestion = {
 export function usePracticeQuestions(sessionId: string | undefined) {
   const [currentQuestion, setCurrentQuestion] = useState<PracticeQuestion | null>(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
-  const [currentDifficulty, setCurrentDifficulty] = useState<'Easy' | 'Moderate' | 'Hard'>('Easy');
   const { toast } = useToast();
 
   const { data: session } = useQuery({
@@ -99,7 +98,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       // Get topic IDs for the subject
       const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
-        .select("id")
+        .select("id, subtopics(id)")
         .eq("subject_id", subjectData.id);
 
       if (topicsError) throw topicsError;
@@ -107,64 +106,65 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         throw new Error(`No topics found for subject "${session.subject}"`);
       }
 
-      const topicIds = topicsData.map(t => t.id);
+      // Get all subtopic IDs
+      const subtopicIds = topicsData.flatMap(t => 
+        (t.subtopics || []).map(st => st.id)
+      ).filter(Boolean);
 
-      // Fetch all available questions for the current difficulty and topics
-      const { data: availableQuestions, error: questionsError } = await supabase
-        .from('questions')
-        .select('*, subtopics (id)')
-        .eq('difficulty', currentDifficulty)
-        .in('topic_id', topicIds);
+      // Get current difficulty levels for each subtopic
+      const { data: progressData } = await supabase
+        .from('user_subtopic_progress')
+        .select('subtopic_id, difficulty_level')
+        .in('subtopic_id', subtopicIds)
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
-      if (questionsError) throw questionsError;
+      const subtopicDifficulties = new Map(
+        progressData?.map(p => [p.subtopic_id, p.difficulty_level]) || []
+      );
 
-      // Filter out answered questions in JavaScript
-      const unansweredQuestions = availableQuestions?.filter(
-        q => !answeredIds.includes(q.id)
-      ) || [];
-
-      if (unansweredQuestions.length === 0) {
-        // Try fallback difficulty if no questions found
-        const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
+      // Fetch questions for each subtopic at their current difficulty level
+      let availableQuestions: PracticeQuestion[] = [];
+      
+      for (const subtopicId of subtopicIds) {
+        const difficulty = subtopicDifficulties.get(subtopicId) || 'Easy';
         
-        const { data: fallbackQuestions, error: fallbackError } = await supabase
+        const { data: questions } = await supabase
           .from('questions')
-          .select('*, subtopics (id)')
-          .eq('difficulty', fallbackDifficulty)
-          .in('topic_id', topicIds);
+          .select('*')
+          .eq('subtopic_id', subtopicId)
+          .eq('difficulty', difficulty)
+          .not('id', 'in', `(${answeredIds.length > 0 ? answeredIds.join(',') : '0'})`);
 
-        if (fallbackError) throw fallbackError;
+        if (questions) {
+          availableQuestions.push(...questions as PracticeQuestion[]);
+        }
+      }
 
-        const unansweredFallbackQuestions = fallbackQuestions?.filter(
-          q => !answeredIds.includes(q.id)
-        ) || [];
+      if (availableQuestions.length === 0) {
+        // Fallback to questions of any difficulty if no questions at current difficulty
+        const { data: fallbackQuestions } = await supabase
+          .from('questions')
+          .select('*')
+          .in('subtopic_id', subtopicIds)
+          .not('id', 'in', `(${answeredIds.length > 0 ? answeredIds.join(',') : '0'})`)
+          .limit(10);
 
-        if (unansweredFallbackQuestions.length === 0) {
+        if (!fallbackQuestions || fallbackQuestions.length === 0) {
           toast({
             title: "No more questions available",
-            description: "You've completed all available questions at this difficulty level.",
+            description: "You've completed all available questions.",
             variant: "destructive",
           });
           return;
         }
-
-        // Select a random question from the fallback questions
-        const randomIndex = Math.floor(Math.random() * unansweredFallbackQuestions.length);
-        const selectedQuestion = unansweredFallbackQuestions[randomIndex];
-        setCurrentQuestion({
-          ...selectedQuestion,
-          subtopic_id: selectedQuestion.subtopics?.id
-        } as PracticeQuestion);
-        setCurrentDifficulty(fallbackDifficulty);
-      } else {
-        // Select a random question from the available questions
-        const randomIndex = Math.floor(Math.random() * unansweredQuestions.length);
-        const selectedQuestion = unansweredQuestions[randomIndex];
-        setCurrentQuestion({
-          ...selectedQuestion,
-          subtopic_id: selectedQuestion.subtopics?.id
-        } as PracticeQuestion);
+        
+        availableQuestions = fallbackQuestions as PracticeQuestion[];
       }
+
+      // Select a random question from available questions
+      const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+      setCurrentQuestion(availableQuestions[randomIndex]);
+
     } catch (error: any) {
       console.error("Error fetching next question:", error);
       toast({
