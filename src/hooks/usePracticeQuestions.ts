@@ -97,45 +97,33 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       const topicIds = topicsData.map(t => t.id);
 
-      // Build the base query
-      let query = supabase
-        .from('questions')
-        .select('*')
-        .eq('difficulty', currentDifficulty)
-        .in('topic_id', topicIds)
-        .order('random()')
-        .limit(1);
+      // Get random question using RPC function
+      const { data: question, error: questionError } = await supabase.rpc(
+        'get_random_unanswered_question',
+        { 
+          p_difficulty: currentDifficulty,
+          p_topic_ids: topicIds,
+          p_answered_ids: answeredIds.length > 0 ? answeredIds : null
+        }
+      );
 
-      // Only add the not.in filter if there are answered questions
-      if (answeredIds.length > 0) {
-        query = query.not('id', 'in', `(${answeredIds.join(',')})`);
-      }
+      if (questionError) throw questionError;
 
-      // Execute the query
-      const { data: questions, error: questionsError } = await query;
-
-      if (questionsError) throw questionsError;
-
-      if (!questions || questions.length === 0) {
+      if (!question || question.length === 0) {
         // Try fallback difficulty if no questions found
         const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
         
-        let fallbackQuery = supabase
-          .from('questions')
-          .select('*')
-          .eq('difficulty', fallbackDifficulty)
-          .in('topic_id', topicIds)
-          .order('random()')
-          .limit(1);
-
-        if (answeredIds.length > 0) {
-          fallbackQuery = fallbackQuery.not('id', 'in', `(${answeredIds.join(',')})`);
-        }
-
-        const { data: fallbackQuestions, error: fallbackError } = await fallbackQuery;
+        const { data: fallbackQuestion, error: fallbackError } = await supabase.rpc(
+          'get_random_unanswered_question',
+          { 
+            p_difficulty: fallbackDifficulty,
+            p_topic_ids: topicIds,
+            p_answered_ids: answeredIds.length > 0 ? answeredIds : null
+          }
+        );
 
         if (fallbackError) throw fallbackError;
-        if (!fallbackQuestions || fallbackQuestions.length === 0) {
+        if (!fallbackQuestion || fallbackQuestion.length === 0) {
           toast({
             title: "No more questions available",
             description: "You've completed all available questions at this difficulty level.",
@@ -143,10 +131,10 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           });
           return;
         }
-        setCurrentQuestion(fallbackQuestions[0] as PracticeQuestion);
+        setCurrentQuestion(fallbackQuestion[0] as PracticeQuestion);
         setCurrentDifficulty(fallbackDifficulty);
       } else {
-        setCurrentQuestion(questions[0] as PracticeQuestion);
+        setCurrentQuestion(question[0] as PracticeQuestion);
       }
     } catch (error: any) {
       console.error("Error fetching next question:", error);
