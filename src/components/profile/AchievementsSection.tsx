@@ -2,9 +2,8 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Trophy, Award, Star, Check, CircleCheck, Ribbon, BadgeCheck, Flame, Zap } from "lucide-react";
+import { Trophy, Award, Star, Check, CircleCheck, Ribbon, BadgeCheck, Flame, Zap, Lock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 type Achievement = {
@@ -21,6 +20,14 @@ type Achievement = {
 
 type AchievementsSectionProps = {
   achievements: Achievement[];
+  allAchievements: {
+    id: string;
+    title: string;
+    description: string;
+    points_required: number;
+    achievement_type: string;
+    icon_name: string;
+  }[] | null;
 };
 
 const achievementIcons: Record<string, React.ElementType> = {
@@ -47,18 +54,25 @@ const achievementTypeColors: Record<string, { bg: string; text: string; icon: st
   general: { bg: "bg-gray-100", text: "text-gray-600", icon: "text-gray-500" },
 };
 
-export function AchievementsSection({ achievements }: AchievementsSectionProps) {
+export function AchievementsSection({ achievements, allAchievements }: AchievementsSectionProps) {
   const [selectedType, setSelectedType] = useState<string>("all");
   
-  const filteredAchievements = achievements?.filter(achievement => 
-    selectedType === "all" || achievement.achievement.achievement_type === selectedType
+  const earnedAchievementIds = new Set(achievements?.map(a => a.achievement.id));
+  
+  const filteredAllAchievements = allAchievements?.filter(achievement => 
+    selectedType === "all" || achievement.achievement_type === selectedType
   );
 
-  const achievementTypes = ["all", ...new Set(achievements?.map(a => a.achievement.achievement_type) || [])];
+  const achievementTypes = ["all", ...new Set(allAchievements?.map(a => a.achievement_type) || [])];
 
   const getAchievementIcon = (iconName: string) => {
     const IconComponent = achievementIcons[iconName] || Trophy;
     return IconComponent;
+  };
+
+  // Function to find earned achievement data
+  const getEarnedAchievement = (achievementId: string) => {
+    return achievements?.find(a => a.achievement.id === achievementId);
   };
 
   return (
@@ -71,7 +85,7 @@ export function AchievementsSection({ achievements }: AchievementsSectionProps) 
           </SheetTrigger>
           <SheetContent className="w-[400px] sm:w-[540px] sm:max-w-none">
             <SheetHeader>
-              <SheetTitle>Your Achievements</SheetTitle>
+              <SheetTitle>All Achievements</SheetTitle>
             </SheetHeader>
             <div className="py-6">
               <div className="flex gap-2 overflow-x-auto pb-4">
@@ -87,28 +101,41 @@ export function AchievementsSection({ achievements }: AchievementsSectionProps) 
                 ))}
               </div>
               <div className="space-y-4 mt-4">
-                {filteredAchievements?.map((achievement) => {
-                  const colors = achievementTypeColors[achievement.achievement.achievement_type];
-                  const IconComponent = getAchievementIcon(achievement.achievement.icon_name);
+                {filteredAllAchievements?.map((achievement) => {
+                  const colors = achievementTypeColors[achievement.achievement_type];
+                  const IconComponent = getAchievementIcon(achievement.icon_name);
+                  const isEarned = earnedAchievementIds.has(achievement.id);
+                  const earnedData = getEarnedAchievement(achievement.id);
                   
                   return (
                     <div
                       key={achievement.id}
-                      className={`p-4 rounded-lg ${colors.bg} flex items-start gap-4`}
+                      className={`p-4 rounded-lg ${isEarned ? colors.bg : 'bg-gray-100'} flex items-start gap-4`}
                     >
-                      <div className={`p-2 rounded-full ${colors.bg}`}>
-                        <IconComponent className={`h-6 w-6 ${colors.icon}`} />
+                      <div className={`p-2 rounded-full ${isEarned ? colors.bg : 'bg-gray-200'}`}>
+                        {isEarned ? (
+                          <IconComponent className={`h-6 w-6 ${colors.icon}`} />
+                        ) : (
+                          <Lock className="h-6 w-6 text-gray-400" />
+                        )}
                       </div>
                       <div className="flex-1">
-                        <h3 className={`font-semibold ${colors.text}`}>
-                          {achievement.achievement.title}
+                        <h3 className={`font-semibold ${isEarned ? colors.text : 'text-gray-500'}`}>
+                          {achievement.title}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {achievement.achievement.description}
+                          {achievement.description}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Earned {formatDistanceToNow(new Date(achievement.earned_at))} ago
-                        </p>
+                        {isEarned && earnedData && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Earned {formatDistanceToNow(new Date(earnedData.earned_at))} ago
+                          </p>
+                        )}
+                        {!isEarned && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Points required: {achievement.points_required}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );

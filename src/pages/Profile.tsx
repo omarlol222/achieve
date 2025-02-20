@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileOverview } from "@/components/profile/ProfileOverview";
@@ -133,17 +132,35 @@ export default function Profile() {
     enabled: !!session?.user.id,
   });
 
-  // Show loading state
+  const { data: allAchievements } = useQuery({
+    queryKey: ["all-achievements"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("achievements")
+        .select("*")
+        .order('points_required', { ascending: true });
+
+      if (error) {
+        toast({
+          title: "Error fetching achievements",
+          description: error.message,
+          variant: "destructive",
+        });
+        return null;
+      }
+      return data;
+    },
+    enabled: !!session?.user.id,
+  });
+
   if (isLoading) {
     return <div className="container py-8">Loading...</div>;
   }
 
-  // Handle any errors
   if (isSessionError || isProfileError || isStatsError || isAchievementsError) {
     return <div className="container py-8">Error loading profile data</div>;
   }
 
-  // If there's no session, return null (the useEffect will handle redirect)
   if (!session) {
     return null;
   }
@@ -152,7 +169,10 @@ export default function Profile() {
     <div className="container py-8 space-y-8">
       <ProfileOverview profile={profileData} statistics={statistics} />
       <StatsSection statistics={statistics} />
-      <AchievementsSection achievements={achievements} />
+      <AchievementsSection 
+        achievements={achievements} 
+        allAchievements={allAchievements}
+      />
     </div>
   );
 }
