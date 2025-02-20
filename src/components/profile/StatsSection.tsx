@@ -23,6 +23,8 @@ export function StatsSection({ statistics }: StatsSectionProps) {
                stat?.subtopic?.topic?.subject?.name;
       });
 
+    console.log("Filtered statistics:", filteredStats); // Debug log
+
     return {
       mathData: filteredStats
         .filter(stat => stat.subtopic.topic.subject.name === 'Math')
@@ -39,11 +41,14 @@ export function StatsSection({ statistics }: StatsSectionProps) {
     };
   }, [statistics]);
 
+  console.log("Math data:", mathData); // Debug log
+  console.log("English data:", englishData); // Debug log
+
   const renderRadarChart = (data: any[], title: string) => {
-    if (data.length === 0) {
+    if (!data || data.length === 0) {
       return (
         <div className="h-full flex items-center justify-center text-muted-foreground">
-          No performance data available for {title} in the last 10 days
+          No performance data available for {title} in the last 10 days. Try practicing some questions!
         </div>
       );
     }

@@ -1146,8 +1146,10 @@ export type Database = {
           accuracy: number | null
           correct_answers: number | null
           created_at: string | null
+          difficulty_level: string | null
           id: string
           last_practiced: string | null
+          points_earned: number | null
           questions_answered: number | null
           subtopic_id: string | null
           updated_at: string | null
@@ -1157,8 +1159,10 @@ export type Database = {
           accuracy?: number | null
           correct_answers?: number | null
           created_at?: string | null
+          difficulty_level?: string | null
           id?: string
           last_practiced?: string | null
+          points_earned?: number | null
           questions_answered?: number | null
           subtopic_id?: string | null
           updated_at?: string | null
@@ -1168,8 +1172,10 @@ export type Database = {
           accuracy?: number | null
           correct_answers?: number | null
           created_at?: string | null
+          difficulty_level?: string | null
           id?: string
           last_practiced?: string | null
+          points_earned?: number | null
           questions_answered?: number | null
           subtopic_id?: string | null
           updated_at?: string | null

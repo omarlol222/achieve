@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileOverview } from "@/components/profile/ProfileOverview";
@@ -116,17 +115,23 @@ export default function Profile() {
     queryFn: async () => {
       if (!session?.user.id) return null;
       const { data, error } = await supabase
-        .from("user_subtopic_progress")
+        .from("user_subtopic_statistics")
         .select(`
           *,
-          subtopic: subtopics (
+          subtopic:subtopics (
             name,
-            topic: topics (name)
+            topic:topics (
+              name,
+              subject:subjects (
+                name
+              )
+            )
           )
         `)
         .eq("user_id", session.user.id);
 
       if (error) {
+        console.error("Error fetching statistics:", error);
         toast({
           title: "Error fetching statistics",
           description: error.message,
@@ -134,9 +139,12 @@ export default function Profile() {
         });
         return null;
       }
+
+      console.log("Fetched statistics:", data); // Debug log
       return data;
     },
     enabled: !!session?.user.id,
+    refetchInterval: 5000 // Refresh every 5 seconds to catch new statistics
   });
 
   const { data: achievements, isError: isAchievementsError } = useQuery({
@@ -147,7 +155,7 @@ export default function Profile() {
         .from("user_achievements")
         .select(`
           *,
-          achievement: achievements (
+          achievement:achievements (
             id,
             title,
             description,
