@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,32 +57,28 @@ export function PracticeSession() {
     if (!sessionId) return;
 
     try {
-      // Update questions_answered first
-      const { error: updateError } = await supabase
-        .from("practice_sessions")
-        .update({ questions_answered: totalQuestions })
-        .eq("id", sessionId);
-
-      if (updateError) throw updateError;
-
-      // Wait a moment before completing the session to ensure the previous update is processed
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Then complete the session
+      console.log("Starting session completion...");
+      
+      // Complete the session in a single update
       const { error: completeError } = await supabase
         .from("practice_sessions")
         .update({ 
           status: 'completed',
-          completed_at: new Date().toISOString()
+          completed_at: new Date().toISOString(),
+          questions_answered: totalQuestions
         })
-        .eq("id", sessionId);
+        .eq("id", sessionId)
+        .select();
 
-      if (completeError) throw completeError;
+      if (completeError) {
+        console.error("Complete session error:", completeError);
+        throw completeError;
+      }
 
-      // Navigate to results
+      console.log("Session completed successfully, navigating to results...");
       navigate(`/gat/practice/results/${sessionId}`);
     } catch (error: any) {
-      console.error("Error completing session:", error);
+      console.error("Error in completeSession:", error);
       throw error;
     }
   };
@@ -102,7 +97,6 @@ export function PracticeSession() {
       setIsSubmitting(true);
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
       
-      // Update streak and consecutive mistakes
       let newStreak = isCorrect ? currentStreak + 1 : 0;
       let newConsecutiveMistakes = isCorrect ? 0 : consecutiveMistakes + 1;
       
@@ -136,15 +130,16 @@ export function PracticeSession() {
 
       setShowFeedback(true);
 
-      // Handle session completion after feedback
       setTimeout(async () => {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
         if (questionsAnswered >= totalQuestions - 1) {
           try {
+            console.log("Attempting to complete session...");
             await completeSession();
           } catch (error: any) {
+            console.error("Failed to complete session:", error);
             toast({
               title: "Error completing session",
               description: "Failed to complete the practice session. Please try again.",
