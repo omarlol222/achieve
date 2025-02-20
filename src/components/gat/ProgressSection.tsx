@@ -23,7 +23,7 @@ export function ProgressSection() {
               id,
               name,
               user_subtopic_progress (
-                current_score
+                points
               )
             )
           )
@@ -38,12 +38,12 @@ export function ProgressSection() {
         topics: subject.topics.map(topic => ({
           id: topic.id,
           name: topic.name,
-          progress: { percentage: 0 }, // Changed from points to percentage
+          progress: { percentage: 0 },
           subtopics: topic.subtopics?.map(st => ({
             id: st.id,
             name: st.name,
             progress: {
-              points: st.user_subtopic_progress?.[0]?.current_score || 0
+              points: st.user_subtopic_progress?.[0]?.points || 0
             }
           }))
         }))
@@ -58,17 +58,22 @@ export function ProgressSection() {
     const validSubtopics = topic.subtopics.filter(st => st && st.progress && typeof st.progress.points === 'number');
     if (validSubtopics.length === 0) return { percentage: 0 };
 
-    // Calculate completion percentage for each subtopic (out of 500 points max)
-    const subtopicPercentages = validSubtopics.map(st => 
-      Math.min((st.progress.points / 500) * 100, 100)
-    );
+    // Calculate total points and max possible points
+    let totalPoints = 0;
+    const maxPointsPerSubtopic = 500; // Maximum points possible per subtopic
+    const maxTotalPoints = validSubtopics.length * maxPointsPerSubtopic;
 
-    // Calculate the average completion percentage
-    const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
-    const averagePercentage = totalPercentage / validSubtopics.length;
+    // Sum up all points
+    totalPoints = validSubtopics.reduce((sum, st) => {
+      const points = st.progress.points || 0;
+      return sum + points;
+    }, 0);
+
+    // Calculate percentage based on total points achieved vs maximum possible points
+    const percentage = (totalPoints / maxTotalPoints) * 100;
     
     return {
-      percentage: averagePercentage
+      percentage: Math.min(percentage, 100) // Ensure we don't exceed 100%
     };
   };
 
