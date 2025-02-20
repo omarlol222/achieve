@@ -82,12 +82,21 @@ const MathComponent = () => {
     const validSubtopics = topic.subtopics.filter(st => st && st.progress && typeof st.progress.points === 'number');
     if (validSubtopics.length === 0) return { points: 0, percentage: 0 };
 
-    const total = validSubtopics.reduce((sum, st) => sum + st.progress.points, 0);
-    const averagePoints = globalThis.Math.round(total / validSubtopics.length);
+    // Calculate completion percentage for each subtopic (out of 1000 points max)
+    const subtopicPercentages = validSubtopics.map(st => 
+      Math.min((st.progress.points / 1000) * 100, 100)
+    );
+
+    // Calculate the average completion percentage
+    const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
+    const averagePercentage = totalPercentage / validSubtopics.length;
+    
+    // Convert percentage back to points (out of 1000)
+    const points = Math.round((averagePercentage / 100) * 1000);
     
     return {
-      points: averagePoints,
-      percentage: (averagePoints / 1000) * 100
+      points,
+      percentage: averagePercentage
     };
   };
 
