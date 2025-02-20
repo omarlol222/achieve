@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,22 @@ export type PracticeQuestion = {
   subtopic_id?: string;
 };
 
+// Define the type for the subtopic_attempts JSON field
+type SubtopicAttempts = {
+  subtopics: string[];
+};
+
+// Define the type for the session with the correct JSON field type
+type PracticeSession = {
+  id: string;
+  user_id: string;
+  subject: string;
+  total_questions: number;
+  status: 'in_progress' | 'completed' | 'abandoned';
+  subtopic_attempts: SubtopicAttempts;
+  questions_answered?: number;
+};
+
 export function usePracticeQuestions(sessionId: string | undefined) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -49,7 +66,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   } = usePracticeStore();
 
   const { data: session } = useSession(sessionId);
-  const subtopicIds = session?.subtopic_attempts?.subtopics || [];
+  // Use type assertion to ensure correct typing
+  const subtopicIds = (session?.subtopic_attempts as SubtopicAttempts)?.subtopics || [];
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
   const userId = session?.user_id;
 

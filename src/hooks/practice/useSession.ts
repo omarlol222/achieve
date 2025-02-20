@@ -2,6 +2,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+type SubtopicAttempts = {
+  subtopics: string[];
+};
+
+type PracticeSession = {
+  id: string;
+  user_id: string;
+  subject: string;
+  total_questions: number;
+  status: 'in_progress' | 'completed' | 'abandoned';
+  subtopic_attempts: SubtopicAttempts;
+  questions_answered?: number;
+  practice_answers?: Array<{ points_earned: number }>;
+};
+
 export function useSession(sessionId: string | undefined) {
   return useQuery({
     queryKey: ["practice-session", sessionId],
@@ -24,7 +39,7 @@ export function useSession(sessionId: string | undefined) {
         throw error;
       }
       console.log("Session data:", data);
-      return data;
+      return data as PracticeSession;
     },
     enabled: !!sessionId
   });
