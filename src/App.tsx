@@ -49,10 +49,10 @@ export default function App() {
         <Route path="english/practice" element={<EnglishPracticeSetup />} />
         <Route path="english/practice/:sessionId" element={<EnglishPractice />} />
         <Route path="practice/results/:sessionId" element={<PracticeResults />} />
+        <Route path="leaderboard" element={<Leaderboard />} />
       </Route>
 
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/leaderboard" element={<Leaderboard />} />
 
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />

@@ -76,7 +76,7 @@ const Dashboard = () => {
 
       <div className="grid gap-8 mb-8">
         <Card className="group relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-          <Link to="/leaderboard">
+          <Link to="/gat/leaderboard">
             <CardHeader className="flex flex-row items-center gap-4">
               <div className="p-3 rounded-full bg-primary/10 text-primary">
                 <Trophy className="h-8 w-8" />
