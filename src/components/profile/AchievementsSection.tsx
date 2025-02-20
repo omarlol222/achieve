@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 type Achievement = {
   id: string;
   achievement: {
+    id: string;
     title: string;
     description: string;
     points_required: number;
