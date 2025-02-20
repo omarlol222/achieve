@@ -11,7 +11,7 @@ export const ProgressStats = memo(({ points, percentage }: ProgressStatsProps) =
     return <div className="text-sm text-gray-500">{Math.round(percentage)}%</div>;
   }
   
-  return <div className="text-sm text-gray-500">{points || 0} pts</div>;
+  return <div className="text-sm text-gray-500">{points || 0} / 1000 pts</div>;
 });
 
 ProgressStats.displayName = "ProgressStats";
