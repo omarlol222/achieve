@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +17,6 @@ const MathComponent = () => {
   const navigate = useNavigate();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
-  // First, fetch the Math subject
   const { data: subject } = useQuery<SubjectType>({
     queryKey: ["math-subject"],
     queryFn: async () => {
@@ -33,13 +31,11 @@ const MathComponent = () => {
     },
   });
 
-  // Then fetch topics and their progress
   const { data: topics } = useQuery({
     queryKey: ["math-topics", subject?.id],
     queryFn: async () => {
       if (!subject?.id) return [];
 
-      // Get topics and their subtopics
       const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
         .select(`
@@ -58,11 +54,10 @@ const MathComponent = () => {
       if (topicsError) throw topicsError;
       if (!topicsData) return [];
 
-      // Transform the data to match the expected format
       return topicsData.map(topic => ({
         id: topic.id,
         name: topic.name,
-        progress: { percentage: 0 }, // Changed from points to percentage
+        progress: { percentage: 0 },
         subtopics: (topic.subtopics || []).map(st => ({
           id: st.id,
           name: st.name,
@@ -82,12 +77,10 @@ const MathComponent = () => {
     const validSubtopics = topic.subtopics.filter(st => st && st.progress && typeof st.progress.points === 'number');
     if (validSubtopics.length === 0) return { percentage: 0 };
 
-    // Calculate completion percentage for each subtopic (out of 1000 points max)
     const subtopicPercentages = validSubtopics.map(st => 
       Math.min((st.progress.points / 1000) * 100, 100)
     );
 
-    // Calculate the average completion percentage
     const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
     const averagePercentage = totalPercentage / validSubtopics.length;
     

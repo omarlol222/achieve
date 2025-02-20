@@ -11,7 +11,7 @@ type SubjectProgressProps = {
       id: string;
       name: string;
       progress: {
-        points: number;
+        percentage: number;
       };
       subtopics?: {
         id: string;
@@ -24,7 +24,6 @@ type SubjectProgressProps = {
   };
   calculateTopicProgress: (topicId: string) => {
     percentage: number;
-    points: number;
   };
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -33,16 +32,14 @@ type SubjectProgressProps = {
 export const SubjectProgress = memo(({ subject, calculateTopicProgress, isExpanded, onToggleExpand }: SubjectProgressProps) => {
   const topicsList = useMemo(() => 
     subject.topics.map((topic) => {
-      const subtopicsProgress = topic.subtopics?.map(st => st.progress.points) || [];
-      const averagePoints = subtopicsProgress.length > 0
-        ? Math.round(subtopicsProgress.reduce((sum, points) => sum + points, 0) / subtopicsProgress.length)
-        : 0;
-
+      const progress = calculateTopicProgress(topic.id);
+      
       return (
         <div key={topic.id} className="space-y-4">
           <TopicProgress
             name={topic.name}
-            value={averagePoints}
+            value={progress.percentage}
+            isPercentage={true}
           />
           {isExpanded && topic.subtopics && topic.subtopics.length > 0 && (
             <div className="ml-4 space-y-3">
@@ -52,6 +49,7 @@ export const SubjectProgress = memo(({ subject, calculateTopicProgress, isExpand
                   name={subtopic.name}
                   value={subtopic.progress.points}
                   variant="subtle"
+                  isPercentage={false}
                 />
               ))}
             </div>
@@ -59,7 +57,7 @@ export const SubjectProgress = memo(({ subject, calculateTopicProgress, isExpand
         </div>
       );
     }),
-    [subject.topics, isExpanded]
+    [subject.topics, isExpanded, calculateTopicProgress]
   );
 
   return (

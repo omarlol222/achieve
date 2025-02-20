@@ -1,14 +1,17 @@
 
-import { Progress } from "@/components/ui/progress";
+import { memo } from "react";
 
 type ProgressStatsProps = {
-  points: number;
+  points: number | null;
+  percentage: number | null;
 };
 
-export const ProgressStats = ({ points }: ProgressStatsProps) => {
-  return (
-    <span className="text-sm text-gray-500">
-      {points} points
-    </span>
-  );
-};
+export const ProgressStats = memo(({ points, percentage }: ProgressStatsProps) => {
+  if (percentage !== null) {
+    return <div className="text-sm text-gray-500">{Math.round(percentage)}%</div>;
+  }
+  
+  return <div className="text-sm text-gray-500">{points || 0} pts</div>;
+});
+
+ProgressStats.displayName = "ProgressStats";

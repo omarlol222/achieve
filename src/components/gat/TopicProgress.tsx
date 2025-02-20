@@ -8,11 +8,15 @@ type TopicProgressProps = {
   name: string;
   value: number;
   variant?: "default" | "subtle";
+  isPercentage?: boolean;
 };
 
-export const TopicProgress = memo(({ name, value, variant = "default" }: TopicProgressProps) => {
-  // Calculate percentage based on fixed 1000 points maximum
-  const progressPercentage = useMemo(() => Math.min((value / 1000) * 100, 100), [value]);
+export const TopicProgress = memo(({ name, value, variant = "default", isPercentage = false }: TopicProgressProps) => {
+  // If value is points, convert to percentage, otherwise use directly
+  const progressPercentage = useMemo(() => 
+    isPercentage ? value : Math.min((value / 1000) * 100, 100), 
+    [value, isPercentage]
+  );
 
   return (
     <div className={cn("space-y-2", variant === "subtle" && "opacity-80")}>
@@ -23,7 +27,7 @@ export const TopicProgress = memo(({ name, value, variant = "default" }: TopicPr
         )}>
           {name}
         </div>
-        <ProgressStats points={value} />
+        <ProgressStats points={isPercentage ? null : value} percentage={isPercentage ? value : null} />
       </div>
       <Progress 
         value={progressPercentage} 
@@ -37,7 +41,8 @@ export const TopicProgress = memo(({ name, value, variant = "default" }: TopicPr
 }, (prevProps, nextProps) => {
   return prevProps.name === nextProps.name && 
          prevProps.value === nextProps.value && 
-         prevProps.variant === nextProps.variant;
+         prevProps.variant === nextProps.variant &&
+         prevProps.isPercentage === nextProps.isPercentage;
 });
 
 TopicProgress.displayName = "TopicProgress";
