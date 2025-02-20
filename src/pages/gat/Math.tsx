@@ -14,23 +14,6 @@ type SubjectType = {
   name: string;
 }
 
-type UserProgressType = {
-  points: number;
-}
-
-type SubtopicType = {
-  id: string;
-  name: string;
-  user_progress: UserProgressType[];
-}
-
-type TopicType = {
-  id: string;
-  name: string;
-  user_progress: UserProgressType[];
-  subtopics: SubtopicType[];
-}
-
 export default function Math() {
   const navigate = useNavigate();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
@@ -50,81 +33,58 @@ export default function Math() {
     },
   });
 
-  // Then fetch progress for all math topics
-  const { data: topics } = useQuery<TopicType[]>({
+  // Then fetch topics and their progress
+  const { data: topics } = useQuery({
     queryKey: ["math-topics", subject?.id],
     queryFn: async () => {
       if (!subject?.id) return [];
 
-      // First get topics with their progress
+      // Get topics and their subtopics
       const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
         .select(`
           id,
           name,
-          user_progress (points)
+          subtopics (
+            id,
+            name,
+            user_subtopic_progress (
+              current_score
+            )
+          )
         `)
         .eq("subject_id", subject.id);
 
       if (topicsError) throw topicsError;
       if (!topicsData) return [];
 
-      // Then for each topic, get its subtopics
-      const topicsWithSubtopics = await Promise.all(
-        topicsData.map(async (topic) => {
-          // Get subtopics for this topic
-          const { data: subtopicsData, error: subtopicsError } = await supabase
-            .from("subtopics")
-            .select(`
-              id,
-              name
-            `)
-            .eq("topic_id", topic.id);
-
-          if (subtopicsError) throw subtopicsError;
-          if (!subtopicsData) return { ...topic, subtopics: [] };
-
-          // For each subtopic, get its progress
-          const subtopicsWithProgress = await Promise.all(
-            subtopicsData.map(async (subtopic) => {
-              const { data: progressData, error: progressError } = await supabase
-                .from("user_progress")
-                .select("points")
-                .eq("topic_id", subtopic.id);
-
-              if (progressError) {
-                console.error('Error fetching progress:', progressError);
-                return {
-                  ...subtopic,
-                  user_progress: [{ points: 0 }]
-                };
-              }
-
-              return {
-                ...subtopic,
-                user_progress: progressData?.length ? progressData.map(p => ({ points: p.points })) : [{ points: 0 }]
-              };
-            })
-          );
-
-          return {
-            ...topic,
-            subtopics: subtopicsWithProgress
-          };
-        })
-      );
-
-      return topicsWithSubtopics;
+      // Transform the data to match the expected format
+      return topicsData.map(topic => ({
+        id: topic.id,
+        name: topic.name,
+        progress: { points: 0 }, // This is not used anymore since we calculate from subtopics
+        subtopics: topic.subtopics?.map(st => ({
+          id: st.id,
+          name: st.name,
+          progress: {
+            points: st.user_subtopic_progress?.[0]?.current_score || 0
+          }
+        }))
+      }));
     },
     enabled: !!subject?.id,
   });
 
   const calculateTopicProgress = (topicId: string) => {
     const topic = topics?.find(t => t.id === topicId);
-    const points = topic?.user_progress?.[0]?.points || 0;
+    const subtopicsPoints = topic?.subtopics?.map(st => st.progress.points) || [];
+    const averagePoints = subtopicsPoints.length > 0
+      ? Math.round(subtopicsPoints.reduce((sum, points) => sum + points, 0) / subtopicsPoints.length)
+      : 0;
+    
     return {
-      points,
-      percentage: (points / 1000) * 100
+      points: averagePoints,
+      percentage: (averagePoints / 1000) * 100
     };
   };
 
@@ -161,12 +121,8 @@ export default function Math() {
                     topics: [{
                       id: topic.id,
                       name: topic.name,
-                      progress: { points: topic.user_progress?.[0]?.points || 0 },
-                      subtopics: topic.subtopics?.map(st => ({
-                        id: st.id,
-                        name: st.name,
-                        progress: { points: st.user_progress?.[0]?.points || 0 }
-                      }))
+                      progress: { points: calculateTopicProgress(topic.id).points },
+                      subtopics: topic.subtopics
                     }]
                   }}
                   calculateTopicProgress={calculateTopicProgress}
