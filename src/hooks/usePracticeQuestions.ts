@@ -49,8 +49,21 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const getNextQuestion = async () => {
     if (!sessionId || !session?.subject) return;
 
+    // Get the current count of answered questions for this session
+    const { count } = await supabase
+      .from("practice_answers")
+      .select("*", { count: 'exact', head: true })
+      .eq("session_id", sessionId);
+
+    const currentAnsweredCount = count || 0;
+
     // Check if we've reached the total questions limit
-    if (session.total_questions && questionsAnswered >= session.total_questions) {
+    if (session.total_questions && currentAnsweredCount >= session.total_questions) {
+      // Update session status to completed
+      await supabase
+        .from("practice_sessions")
+        .update({ status: 'completed' })
+        .eq("id", sessionId);
       setCurrentQuestion(null);
       return;
     }
@@ -153,11 +166,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           return;
         }
         setCurrentQuestion(fallbackQuestion as PracticeQuestion);
-        setQuestionsAnswered(prev => prev + 1);
       } else {
         setCurrentQuestion(question as PracticeQuestion);
-        setQuestionsAnswered(prev => prev + 1);
       }
+      
+      // Update the questions answered count based on actual answers in the database
+      setQuestionsAnswered(currentAnsweredCount);
     } catch (error: any) {
       console.error("Error fetching next question:", error);
       toast({
