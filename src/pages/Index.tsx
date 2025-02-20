@@ -2,10 +2,8 @@ import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { SignUpForm } from "@/components/auth/SignUpForm";
-
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-white">
+  return <div className="min-h-screen bg-white">
       <Navigation />
       
       <div className="container mx-auto px-4 py-16">
@@ -19,9 +17,7 @@ const Index = () => {
           </p>
           <div className="flex gap-4 justify-center">
             <Link to="/signin">
-              <Button variant="outline" size="lg">
-                Sign In
-              </Button>
+              
             </Link>
             <Link to="/signup">
               <Button size="lg">
@@ -55,14 +51,10 @@ const Index = () => {
 
         {/* CTA Section */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold mb-6 text-[#1B2E35]">Ready to Start?</h2>
-          <div className="max-w-md mx-auto bg-white p-8 rounded-lg shadow-lg">
-            <SignUpForm />
-          </div>
+          
+          
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
