@@ -57,7 +57,9 @@ export function PracticeSession() {
           .single();
 
         if (session?.subtopic_attempts) {
-          setSubtopicAttempts(session.subtopic_attempts);
+          // Ensure we convert the JSONB data to our expected Record<string, number> type
+          const attempts = session.subtopic_attempts as Record<string, number>;
+          setSubtopicAttempts(attempts);
         }
       };
       loadSessionData();
