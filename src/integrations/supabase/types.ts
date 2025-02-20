@@ -281,7 +281,10 @@ export type Database = {
       }
       practice_answers: {
         Row: {
+          attempt_number: number | null
+          consecutive_mistakes: number | null
           created_at: string | null
+          difficulty_used: string | null
           hint_used: boolean | null
           id: string
           is_correct: boolean | null
@@ -294,7 +297,10 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          attempt_number?: number | null
+          consecutive_mistakes?: number | null
           created_at?: string | null
+          difficulty_used?: string | null
           hint_used?: boolean | null
           id?: string
           is_correct?: boolean | null
@@ -307,7 +313,10 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          attempt_number?: number | null
+          consecutive_mistakes?: number | null
           created_at?: string | null
+          difficulty_used?: string | null
           hint_used?: boolean | null
           id?: string
           is_correct?: boolean | null
@@ -350,8 +359,10 @@ export type Database = {
           current_streak: number | null
           id: string
           questions_answered: number | null
+          session_points: Json | null
           status: Database["public"]["Enums"]["practice_status"] | null
           subject: string | null
+          subtopic_attempts: Json | null
           total_points: number | null
           total_questions: number
           updated_at: string | null
@@ -363,8 +374,10 @@ export type Database = {
           current_streak?: number | null
           id?: string
           questions_answered?: number | null
+          session_points?: Json | null
           status?: Database["public"]["Enums"]["practice_status"] | null
           subject?: string | null
+          subtopic_attempts?: Json | null
           total_points?: number | null
           total_questions: number
           updated_at?: string | null
@@ -376,8 +389,10 @@ export type Database = {
           current_streak?: number | null
           id?: string
           questions_answered?: number | null
+          session_points?: Json | null
           status?: Database["public"]["Enums"]["practice_status"] | null
           subject?: string | null
+          subtopic_attempts?: Json | null
           total_points?: number | null
           total_questions?: number
           updated_at?: string | null
@@ -1126,6 +1141,50 @@ export type Database = {
           },
         ]
       }
+      user_subtopic_statistics: {
+        Row: {
+          accuracy: number | null
+          correct_answers: number | null
+          created_at: string | null
+          id: string
+          last_practiced: string | null
+          questions_answered: number | null
+          subtopic_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          correct_answers?: number | null
+          created_at?: string | null
+          id?: string
+          last_practiced?: string | null
+          questions_answered?: number | null
+          subtopic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          correct_answers?: number | null
+          created_at?: string | null
+          id?: string
+          last_practiced?: string | null
+          questions_answered?: number | null
+          subtopic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subtopic_statistics_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "subtopics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_points: {
         Row: {
           date_recorded: string | null
@@ -1189,6 +1248,12 @@ export type Database = {
       apply_progress_decay: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      calculate_session_points: {
+        Args: {
+          session_id: string
+        }
+        Returns: number
       }
       check_feature_access: {
         Args: {
@@ -1269,6 +1334,12 @@ export type Database = {
           user_id_input: string
         }
         Returns: number
+      }
+      get_week_start: {
+        Args: {
+          ts: string
+        }
+        Returns: string
       }
       grant_platform_access: {
         Args: {
