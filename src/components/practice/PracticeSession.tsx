@@ -92,21 +92,46 @@ export function PracticeSession() {
       }
       setConsecutiveMistakes(newMistakes);
 
-      const { error: answerError } = await supabase
+      // First check if an answer exists
+      const { data: existingAnswer } = await supabase
         .from("practice_answers")
-        .upsert({
-          session_id: sessionId,
-          question_id: currentQuestion.id,
-          selected_answer: selectedAnswer,
-          is_correct: isCorrect,
-          user_id: userId,
-          subtopic_id: currentQuestion.subtopic_id,
-          difficulty_used: currentQuestion.difficulty || 'Easy',
-          attempt_number: currentAttempts + 1,
-          consecutive_mistakes: newMistakes[subtopicId]
-        }, {
-          onConflict: 'session_id,question_id'
-        });
+        .select()
+        .eq('session_id', sessionId)
+        .eq('question_id', currentQuestion.id)
+        .single();
+
+      let answerError;
+      if (existingAnswer) {
+        // Update existing answer
+        const { error } = await supabase
+          .from("practice_answers")
+          .update({
+            selected_answer: selectedAnswer,
+            is_correct: isCorrect,
+            difficulty_used: currentQuestion.difficulty || 'Easy',
+            attempt_number: currentAttempts + 1,
+            consecutive_mistakes: newMistakes[subtopicId]
+          })
+          .eq('session_id', sessionId)
+          .eq('question_id', currentQuestion.id);
+        answerError = error;
+      } else {
+        // Insert new answer
+        const { error } = await supabase
+          .from("practice_answers")
+          .insert({
+            session_id: sessionId,
+            question_id: currentQuestion.id,
+            selected_answer: selectedAnswer,
+            is_correct: isCorrect,
+            user_id: userId,
+            subtopic_id: currentQuestion.subtopic_id,
+            difficulty_used: currentQuestion.difficulty || 'Easy',
+            attempt_number: currentAttempts + 1,
+            consecutive_mistakes: newMistakes[subtopicId]
+          });
+        answerError = error;
+      }
 
       if (answerError) throw answerError;
 
