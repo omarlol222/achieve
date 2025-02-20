@@ -86,7 +86,7 @@ export function PracticeSession() {
         throw streakError;
       }
 
-      // Record the answer with new point system data
+      // Record the answer
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -108,35 +108,39 @@ export function PracticeSession() {
 
       setShowFeedback(true);
 
-      // Only complete the session after showing feedback for the last question
+      // Handle session completion after feedback
       setTimeout(async () => {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
         if (questionsAnswered >= totalQuestions - 1) {
           try {
-            // Complete the session to trigger point calculation
-            const { error: sessionError } = await supabase
+            // First update questions_answered
+            const { error: updateError } = await supabase
+              .from("practice_sessions")
+              .update({ questions_answered: totalQuestions })
+              .eq("id", sessionId);
+
+            if (updateError) throw updateError;
+
+            // Then complete the session in a separate update
+            const { error: completeError } = await supabase
               .from("practice_sessions")
               .update({ 
                 status: 'completed',
-                completed_at: new Date().toISOString(),
-                questions_answered: totalQuestions
+                completed_at: new Date().toISOString()
               })
               .eq("id", sessionId);
 
-            if (sessionError) {
-              console.error("Error completing session:", sessionError);
-              throw sessionError;
-            }
+            if (completeError) throw completeError;
 
-            // Navigate to results after ensuring session is completed
+            // Navigate to results
             navigate(`/gat/practice/results/${sessionId}`);
           } catch (error: any) {
             console.error("Error completing session:", error);
             toast({
               title: "Error completing session",
-              description: error.message,
+              description: "Failed to complete the practice session. Please try again.",
               variant: "destructive",
             });
           }
@@ -151,7 +155,7 @@ export function PracticeSession() {
       console.error("Error submitting answer:", error);
       toast({
         title: "Error submitting answer",
-        description: error.message,
+        description: "Failed to submit your answer. Please try again.",
         variant: "destructive",
       });
     }
