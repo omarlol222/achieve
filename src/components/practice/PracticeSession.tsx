@@ -16,6 +16,8 @@ export function PracticeSession() {
   const [userId, setUserId] = useState<string | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [subtopicAttempts, setSubtopicAttempts] = useState<Record<string, number>>({});
+  const [consecutiveMistakes, setConsecutiveMistakes] = useState<Record<string, number>>({});
 
   const {
     currentQuestion,
@@ -44,6 +46,24 @@ export function PracticeSession() {
     checkAuth();
   }, [navigate, toast]);
 
+  // Load existing session data
+  useEffect(() => {
+    if (sessionId) {
+      const loadSessionData = async () => {
+        const { data: session } = await supabase
+          .from("practice_sessions")
+          .select("subtopic_attempts")
+          .eq("id", sessionId)
+          .single();
+
+        if (session?.subtopic_attempts) {
+          setSubtopicAttempts(session.subtopic_attempts);
+        }
+      };
+      loadSessionData();
+    }
+  }, [sessionId]);
+
   const handleAnswerSubmit = useCallback(async () => {
     if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
       toast({
@@ -57,13 +77,24 @@ export function PracticeSession() {
     try {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
       const newQuestionsAnswered = questionsAnswered + 1;
+      const subtopicId = currentQuestion.subtopic_id;
 
-      // Calculate points based on correct answer
-      const basePoints = 10; // Base points for a correct answer
-      const streakBonus = Math.floor(questionsAnswered / 5) * 2; // Bonus points for every 5 questions
-      const points = isCorrect ? basePoints + streakBonus : 0;
+      // Update attempts tracking
+      const currentAttempts = subtopicAttempts[subtopicId] || 0;
+      const newAttempts = { ...subtopicAttempts, [subtopicId]: currentAttempts + 1 };
+      setSubtopicAttempts(newAttempts);
 
-      // Record the answer
+      // Track consecutive mistakes
+      const currentMistakes = consecutiveMistakes[subtopicId] || 0;
+      const newMistakes = { ...consecutiveMistakes };
+      if (!isCorrect) {
+        newMistakes[subtopicId] = currentMistakes + 1;
+      } else {
+        newMistakes[subtopicId] = 0;
+      }
+      setConsecutiveMistakes(newMistakes);
+
+      // Record the answer with the new fields
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -73,17 +104,21 @@ export function PracticeSession() {
           is_correct: isCorrect,
           user_id: userId,
           subtopic_id: currentQuestion.subtopic_id,
-          points_earned: points
+          difficulty_used: currentQuestion.difficulty || 'Easy',
+          attempt_number: currentAttempts + 1,
+          consecutive_mistakes: newMistakes[subtopicId]
         });
 
       if (answerError) throw answerError;
 
-      // Update the session status
+      // Update session data
       const { error: sessionError } = await supabase
         .from("practice_sessions")
         .update({
           questions_answered: newQuestionsAnswered,
-          status: newQuestionsAnswered >= totalQuestions ? 'completed' : 'in_progress'
+          status: newQuestionsAnswered >= totalQuestions ? 'completed' : 'in_progress',
+          subtopic_attempts: newAttempts,
+          current_streak: isCorrect ? (questionsAnswered + 1) : 0
         })
         .eq("id", sessionId);
 
@@ -111,7 +146,7 @@ export function PracticeSession() {
         variant: "destructive",
       });
     }
-  }, [selectedAnswer, currentQuestion, sessionId, userId, questionsAnswered, totalQuestions, navigate, getNextQuestion, toast, setQuestionsAnswered]);
+  }, [selectedAnswer, currentQuestion, sessionId, userId, questionsAnswered, totalQuestions, navigate, getNextQuestion, toast, setQuestionsAnswered, subtopicAttempts, consecutiveMistakes]);
 
   if (!currentQuestion) {
     return <div>Loading...</div>;
