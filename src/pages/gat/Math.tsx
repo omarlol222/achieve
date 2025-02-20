@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { SubjectProgress } from "@/components/gat/progress/SubjectProgress";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 type SubjectType = {
   id: string;
@@ -16,11 +17,13 @@ type SubjectType = {
 
 const MathComponent = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
-  const { data: subject } = useQuery<SubjectType>({
+  const { data: subject, isError: isSubjectError } = useQuery<SubjectType>({
     queryKey: ["math-subject"],
     queryFn: async () => {
+      console.log("Fetching math subject");
       const { data, error } = await supabase
         .from("subjects")
         .select("id, name")
@@ -32,11 +35,16 @@ const MathComponent = () => {
     },
   });
 
-  const { data: topics } = useQuery({
+  const { 
+    data: topics, 
+    isError: isTopicsError,
+    refetch: refetchTopics 
+  } = useQuery({
     queryKey: ["math-topics", subject?.id],
     queryFn: async () => {
       if (!subject?.id) return [];
-
+      
+      console.log("Fetching topics and progress data");
       const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
         .select(`
@@ -69,9 +77,33 @@ const MathComponent = () => {
       }));
     },
     enabled: !!subject?.id,
-    refetchInterval: 3000, // Refetch every 3 seconds to see progress updates
-    staleTime: 0, // Consider data stale immediately so it always refetches
+    staleTime: 0
   });
+
+  useEffect(() => {
+    if (!subject?.id) return;
+
+    // Subscribe to changes in user_subtopic_progress
+    const channel = supabase
+      .channel('progress_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_subtopic_progress'
+        },
+        async (payload) => {
+          console.log("Progress update received:", payload);
+          await refetchTopics();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [subject?.id, refetchTopics]);
 
   const calculateTopicProgress = (topicId: string) => {
     const topic = topics?.find(t => t.id === topicId);
@@ -80,17 +112,27 @@ const MathComponent = () => {
     const validSubtopics = topic.subtopics.filter(st => st && st.progress && typeof st.progress.points === 'number');
     if (validSubtopics.length === 0) return { percentage: 0 };
 
-    const subtopicPercentages = validSubtopics.map(st => 
-      Math.min((st.progress.points / 500) * 100, 100)
-    );
+    const subtopicPercentages = validSubtopics.map(st => {
+      console.log(`Subtopic ${st.name} points:`, st.progress.points);
+      return Math.min((st.progress.points / 500) * 100, 100);
+    });
 
     const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
     const averagePercentage = totalPercentage / validSubtopics.length;
     
+    console.log(`Topic ${topic.name} average percentage:`, averagePercentage);
     return {
       percentage: averagePercentage
     };
   };
+
+  if (isSubjectError || isTopicsError) {
+    toast({
+      title: "Error loading progress",
+      description: "There was an error loading your progress. Please try refreshing the page.",
+      variant: "destructive"
+    });
+  }
 
   if (!subject || !topics) {
     return null;
