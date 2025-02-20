@@ -8,16 +8,19 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const { toast } = useToast();
-  const userId = supabase.auth.getUser()?.data?.user?.id;
+  const userId = supabase.auth.getSession().then(response => response.data.session?.user.id);
 
   const { data: profileData } = useQuery({
     queryKey: ["profile", userId],
     queryFn: async () => {
-      if (!userId) return null;
+      const session = await supabase.auth.getSession();
+      const currentUserId = session.data.session?.user.id;
+      
+      if (!currentUserId) return null;
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", userId)
+        .eq("id", currentUserId)
         .maybeSingle();
 
       if (error) {
@@ -30,13 +33,15 @@ export default function Profile() {
       }
       return data;
     },
-    enabled: !!userId,
   });
 
   const { data: statistics } = useQuery({
     queryKey: ["statistics", userId],
     queryFn: async () => {
-      if (!userId) return null;
+      const session = await supabase.auth.getSession();
+      const currentUserId = session.data.session?.user.id;
+      
+      if (!currentUserId) return null;
       const { data, error } = await supabase
         .from("user_subtopic_progress")
         .select(`
@@ -46,7 +51,7 @@ export default function Profile() {
             topic: topics (name)
           )
         `)
-        .eq("user_id", userId);
+        .eq("user_id", currentUserId);
 
       if (error) {
         toast({
@@ -58,13 +63,15 @@ export default function Profile() {
       }
       return data;
     },
-    enabled: !!userId,
   });
 
   const { data: achievements } = useQuery({
     queryKey: ["achievements", userId],
     queryFn: async () => {
-      if (!userId) return null;
+      const session = await supabase.auth.getSession();
+      const currentUserId = session.data.session?.user.id;
+      
+      if (!currentUserId) return null;
       const { data, error } = await supabase
         .from("user_achievements")
         .select(`
@@ -75,7 +82,7 @@ export default function Profile() {
             points_required
           )
         `)
-        .eq("user_id", userId);
+        .eq("user_id", currentUserId);
 
       if (error) {
         toast({
@@ -87,10 +94,17 @@ export default function Profile() {
       }
       return data;
     },
-    enabled: !!userId,
   });
 
-  if (!userId) {
+  const { data: session } = useQuery({
+    queryKey: ["auth-session"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
+
+  if (!session) {
     return <div>Please sign in to view your profile.</div>;
   }
 
