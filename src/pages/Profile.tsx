@@ -110,6 +110,7 @@ export default function Profile() {
         .select(`
           *,
           achievement: achievements (
+            id,
             title,
             description,
             points_required,
