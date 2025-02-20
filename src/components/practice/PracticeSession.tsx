@@ -92,7 +92,7 @@ export function PracticeSession() {
       }
       setConsecutiveMistakes(newMistakes);
 
-      // Basic insert without any special options
+      // Insert with all necessary fields for the trigger function
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -101,7 +101,10 @@ export function PracticeSession() {
           selected_answer: selectedAnswer,
           is_correct: isCorrect,
           user_id: userId,
-          subtopic_id: subtopicId
+          subtopic_id: subtopicId,
+          difficulty_used: currentQuestion.difficulty || 'Easy',
+          attempt_number: currentAttempts + 1,
+          consecutive_mistakes: newMistakes[subtopicId]
         });
 
       if (answerError) throw answerError;
