@@ -98,7 +98,9 @@ export default function Profile() {
           achievement: achievements (
             title,
             description,
-            points_required
+            points_required,
+            achievement_type,
+            icon_name
           )
         `)
         .eq("user_id", session.user.id);
