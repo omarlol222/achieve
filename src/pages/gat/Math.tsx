@@ -14,7 +14,7 @@ type SubjectType = {
   name: string;
 }
 
-export default function Math() {
+const MathComponent = () => {
   const navigate = useNavigate();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
@@ -62,8 +62,8 @@ export default function Math() {
       return topicsData.map(topic => ({
         id: topic.id,
         name: topic.name,
-        progress: { points: 0 }, // This is not used anymore since we calculate from subtopics
-        subtopics: topic.subtopics?.map(st => ({
+        progress: { points: 0 },
+        subtopics: (topic.subtopics || []).map(st => ({
           id: st.id,
           name: st.name,
           progress: {
@@ -77,11 +77,13 @@ export default function Math() {
 
   const calculateTopicProgress = (topicId: string) => {
     const topic = topics?.find(t => t.id === topicId);
-    const subtopicsPoints = topic?.subtopics?.map(st => st.progress.points) || [];
-    const total = subtopicsPoints.reduce((sum, points) => sum + points, 0);
-    const averagePoints = subtopicsPoints.length > 0
-      ? Math.round(total / subtopicsPoints.length)
-      : 0;
+    if (!topic || !topic.subtopics) return { points: 0, percentage: 0 };
+
+    const validSubtopics = topic.subtopics.filter(st => st && st.progress && typeof st.progress.points === 'number');
+    if (validSubtopics.length === 0) return { points: 0, percentage: 0 };
+
+    const total = validSubtopics.reduce((sum, st) => sum + st.progress.points, 0);
+    const averagePoints = globalThis.Math.round(total / validSubtopics.length);
     
     return {
       points: averagePoints,
@@ -90,7 +92,7 @@ export default function Math() {
   };
 
   if (!subject || !topics) {
-    return null; // or loading state
+    return null;
   }
 
   return (
@@ -148,3 +150,5 @@ export default function Math() {
     </div>
   );
 }
+
+export default MathComponent;
