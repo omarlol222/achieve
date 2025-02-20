@@ -25,6 +25,7 @@ import MathPractice from "@/pages/gat/math/MathPractice";
 import EnglishPracticeSetup from "@/pages/gat/english/EnglishPracticeSetup";
 import EnglishPractice from "@/pages/gat/english/EnglishPractice";
 import Profile from "@/pages/Profile";
+import PracticeResults from "@/pages/gat/practice/PracticeResults";
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="math/practice/:sessionId" element={<MathPractice />} />
         <Route path="english/practice" element={<EnglishPracticeSetup />} />
         <Route path="english/practice/:sessionId" element={<EnglishPractice />} />
+        <Route path="practice/results/:sessionId" element={<PracticeResults />} />
       </Route>
 
       <Route path="/dashboard" element={<Dashboard />} />
