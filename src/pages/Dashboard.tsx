@@ -76,7 +76,7 @@ const Dashboard = () => {
 
       <div className="grid gap-8 mb-8">
         <Card className="group relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-          <Link to="/gat/leaderboard">
+          <Link to="/gat/leaderboard" className="block">
             <CardHeader className="flex flex-row items-center gap-4">
               <div className="p-3 rounded-full bg-primary/10 text-primary">
                 <Trophy className="h-8 w-8" />
@@ -96,7 +96,7 @@ const Dashboard = () => {
             key={testType.id} 
             className="group relative flex flex-col justify-between min-h-[300px] transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             
             <CardHeader className="flex-1 text-center">
               <div className="mb-6 flex justify-center">
@@ -113,14 +113,16 @@ const Dashboard = () => {
             </CardHeader>
 
             <CardContent className="pt-4">
-              <Button 
-                asChild 
-                className="w-full py-6 text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+              <Link 
+                to={`/gat/${testType.name.toLowerCase()}`}
+                className="block w-full"
               >
-                <Link to={`/gat/${testType.name.toLowerCase()}`}>
+                <Button 
+                  className="w-full py-6 text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
+                >
                   Access {testType.name} Platform
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         ))}
