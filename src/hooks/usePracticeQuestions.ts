@@ -109,7 +109,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
     try {
       const currentAnsweredCount = answeredIds.length;
-      incrementQuestionsAnswered();
 
       if (session.total_questions && currentAnsweredCount >= session.total_questions) {
         await completeSession(currentAnsweredCount);
@@ -167,7 +166,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         variant: "destructive",
       });
     }
-  }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, completeSession, toast]);
+  }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, completeSession, toast]);
 
   useEffect(() => {
     if (session && !currentQuestion && subtopicIds.length > 0) {
