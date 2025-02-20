@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +69,7 @@ const EnglishComponent = () => {
       }));
     },
     enabled: !!subject?.id,
+    refetchInterval: 5000, // Refetch every 5 seconds to see progress updates
   });
 
   const calculateTopicProgress = (topicId: string) => {
@@ -77,12 +79,10 @@ const EnglishComponent = () => {
     const validSubtopics = topic.subtopics.filter(st => st && st.progress && typeof st.progress.points === 'number');
     if (validSubtopics.length === 0) return { percentage: 0 };
 
-    // Calculate completion percentage for each subtopic (out of 500 points max)
     const subtopicPercentages = validSubtopics.map(st => 
       Math.min((st.progress.points / 500) * 100, 100)
     );
 
-    // Calculate the average completion percentage
     const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
     const averagePercentage = totalPercentage / validSubtopics.length;
     
