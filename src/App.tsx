@@ -23,6 +23,7 @@ import MathPracticeSetup from "@/pages/gat/math/MathPracticeSetup";
 import MathPractice from "@/pages/gat/math/MathPractice";
 import EnglishPracticeSetup from "@/pages/gat/english/EnglishPracticeSetup";
 import EnglishPractice from "@/pages/gat/english/EnglishPractice";
+import Profile from "@/pages/Profile";
 
 export default function App() {
   return (
@@ -56,6 +57,8 @@ export default function App() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="payments" element={<AdminPayments />} />
       </Route>
+
+      <Route path="/profile" element={<Profile />} />
     </Routes>
   );
 }

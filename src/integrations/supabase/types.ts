@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          points_required: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          points_required?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          points_required?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       daily_attempts: {
         Row: {
           created_at: string | null
@@ -904,6 +931,48 @@ export type Database = {
           },
         ]
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string | null
+          created_at: string | null
+          earned_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          achievement_id?: string | null
+          created_at?: string | null
+          earned_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          achievement_id?: string | null
+          created_at?: string | null
+          earned_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_product_access: {
         Row: {
           created_at: string | null
@@ -988,28 +1057,43 @@ export type Database = {
       }
       user_subtopic_progress: {
         Row: {
+          accuracy: number | null
+          correct_answers: number | null
           created_at: string | null
           current_score: number | null
+          decay_factor: number | null
+          difficulty_level: string | null
           id: string
           last_practiced: string | null
+          questions_answered: number | null
           subtopic_id: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          accuracy?: number | null
+          correct_answers?: number | null
           created_at?: string | null
           current_score?: number | null
+          decay_factor?: number | null
+          difficulty_level?: string | null
           id?: string
           last_practiced?: string | null
+          questions_answered?: number | null
           subtopic_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          accuracy?: number | null
+          correct_answers?: number | null
           created_at?: string | null
           current_score?: number | null
+          decay_factor?: number | null
+          difficulty_level?: string | null
           id?: string
           last_practiced?: string | null
+          questions_answered?: number | null
           subtopic_id?: string | null
           updated_at?: string | null
           user_id?: string | null
