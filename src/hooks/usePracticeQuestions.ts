@@ -37,7 +37,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         .from("practice_sessions")
         .select("*")
         .eq("id", sessionId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -48,6 +48,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   // Get next question based on current performance
   const getNextQuestion = async () => {
     if (!sessionId || !session?.subject) return;
+
+    // Check if we've reached the total questions limit
+    if (session.total_questions && questionsAnswered >= session.total_questions) {
+      setCurrentQuestion(null);
+      return;
+    }
 
     try {
       // Get answers for this session to calculate performance
@@ -147,11 +153,11 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           return;
         }
         setCurrentQuestion(fallbackQuestion as PracticeQuestion);
+        setQuestionsAnswered(prev => prev + 1);
       } else {
         setCurrentQuestion(question as PracticeQuestion);
+        setQuestionsAnswered(prev => prev + 1);
       }
-      
-      setQuestionsAnswered(prev => prev + 1);
     } catch (error: any) {
       console.error("Error fetching next question:", error);
       toast({
@@ -169,12 +175,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
   }, [session]);
 
+  const isComplete = session?.status === 'completed' || 
+                    (session?.total_questions && questionsAnswered >= session.total_questions);
+
   return {
     currentQuestion,
     questionsAnswered,
     totalQuestions: session?.total_questions || 0,
     getNextQuestion,
-    isComplete: session?.status === 'completed' || 
-                (session?.total_questions && questionsAnswered >= session.total_questions)
+    isComplete
   };
 }
