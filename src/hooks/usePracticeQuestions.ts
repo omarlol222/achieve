@@ -97,14 +97,22 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       const topicIds = topicsData.map(t => t.id);
 
-      // Get a random question
-      const { data: questions, error: questionsError } = await supabase
+      // Build the base query
+      let query = supabase
         .from('questions')
         .select('*')
         .eq('difficulty', currentDifficulty)
         .in('topic_id', topicIds)
-        .not('id', 'in', answeredIds.length > 0 ? answeredIds : [''])
+        .order('random()')
         .limit(1);
+
+      // Only add the not.in filter if there are answered questions
+      if (answeredIds.length > 0) {
+        query = query.not('id', 'in', `(${answeredIds.join(',')})`);
+      }
+
+      // Execute the query
+      const { data: questions, error: questionsError } = await query;
 
       if (questionsError) throw questionsError;
 
@@ -112,13 +120,19 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         // Try fallback difficulty if no questions found
         const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
         
-        const { data: fallbackQuestions, error: fallbackError } = await supabase
+        let fallbackQuery = supabase
           .from('questions')
           .select('*')
           .eq('difficulty', fallbackDifficulty)
           .in('topic_id', topicIds)
-          .not('id', 'in', answeredIds.length > 0 ? answeredIds : [''])
+          .order('random()')
           .limit(1);
+
+        if (answeredIds.length > 0) {
+          fallbackQuery = fallbackQuery.not('id', 'in', `(${answeredIds.join(',')})`);
+        }
+
+        const { data: fallbackQuestions, error: fallbackError } = await fallbackQuery;
 
         if (fallbackError) throw fallbackError;
         if (!fallbackQuestions || fallbackQuestions.length === 0) {
