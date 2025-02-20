@@ -23,6 +23,12 @@ export type PracticeQuestion = {
   subtopic_id?: string;
 };
 
+type DifficultyLevel = 'Easy' | 'Moderate' | 'Hard';
+
+const isValidDifficulty = (difficulty: string | null | undefined): difficulty is DifficultyLevel => {
+  return difficulty === 'Easy' || difficulty === 'Moderate' || difficulty === 'Hard';
+};
+
 export function usePracticeQuestions(sessionId: string | undefined) {
   const [currentQuestion, setCurrentQuestion] = useState<PracticeQuestion | null>(null);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
@@ -119,7 +125,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
       const subtopicDifficulties = new Map(
-        progressData?.map(p => [p.subtopic_id, p.difficulty_level]) || []
+        progressData?.map(p => [p.subtopic_id, isValidDifficulty(p.difficulty_level) ? p.difficulty_level : 'Easy']) || []
       );
 
       // Fetch questions for each subtopic at their current difficulty level
