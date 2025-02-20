@@ -58,6 +58,11 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       return;
     }
 
+    if (subtopicIds.length === 0) {
+      console.log("No subtopics available yet");
+      return;
+    }
+
     try {
       const currentAnsweredCount = answeredIds.length;
       setQuestionsAnswered(currentAnsweredCount + 1);
@@ -144,11 +149,11 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   };
 
   useEffect(() => {
-    if (session && !currentQuestion) {
-      console.log("Initializing questions");
+    if (session && !currentQuestion && subtopicIds.length > 0) {
+      console.log("Initializing questions with subtopics:", subtopicIds.length);
       getNextQuestion();
     }
-  }, [session]);
+  }, [session, subtopicIds]);
 
   const isComplete = session?.status === 'completed' || 
                     (session?.total_questions && questionsAnswered >= session.total_questions);
