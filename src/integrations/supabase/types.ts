@@ -11,24 +11,30 @@ export type Database = {
     Tables: {
       achievements: {
         Row: {
+          achievement_type: string
           created_at: string | null
           description: string | null
+          icon_name: string
           id: string
           points_required: number | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          achievement_type?: string
           created_at?: string | null
           description?: string | null
+          icon_name?: string
           id?: string
           points_required?: number | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          achievement_type?: string
           created_at?: string | null
           description?: string | null
+          icon_name?: string
           id?: string
           points_required?: number | null
           title?: string
