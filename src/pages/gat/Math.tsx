@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +20,10 @@ const MathComponent = () => {
   const { toast } = useToast();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
-  const { data: subject, isError: isSubjectError } = useQuery<SubjectType>({
+  const { 
+    data: subject, 
+    isError: isSubjectError 
+  } = useQuery<SubjectType>({
     queryKey: ["math-subject"],
     queryFn: async () => {
       console.log("Fetching math subject");
@@ -53,7 +57,9 @@ const MathComponent = () => {
             id,
             name,
             user_subtopic_progress (
-              current_score
+              current_score,
+              questions_answered,
+              correct_answers
             )
           )
         `)
@@ -76,7 +82,8 @@ const MathComponent = () => {
       }));
     },
     enabled: !!subject?.id,
-    staleTime: 0
+    staleTime: 0,
+    refetchInterval: 2000 // Refresh every 2 seconds
   });
 
   useEffect(() => {
