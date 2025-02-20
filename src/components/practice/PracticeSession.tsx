@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,6 +104,8 @@ export function PracticeSession() {
           difficulty_used: currentQuestion.difficulty || 'Easy',
           attempt_number: currentAttempts + 1,
           consecutive_mistakes: newMistakes[subtopicId]
+        }, {
+          onConflict: 'session_id,question_id'
         });
 
       if (answerError) throw answerError;
