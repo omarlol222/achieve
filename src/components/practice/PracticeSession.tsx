@@ -17,6 +17,7 @@ export function PracticeSession() {
   const [userId, setUserId] = useState<string | null>(null);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [consecutiveMistakes, setConsecutiveMistakes] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     selectedAnswer,
@@ -54,7 +55,7 @@ export function PracticeSession() {
   }, [navigate, toast]);
 
   const handleAnswerSubmit = async () => {
-    if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
+    if (!selectedAnswer || !currentQuestion || !sessionId || !userId || isSubmitting) {
       toast({
         title: "Error",
         description: "Please select an answer and ensure you're logged in.",
@@ -64,6 +65,7 @@ export function PracticeSession() {
     }
 
     try {
+      setIsSubmitting(true);
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
       
       // Update streak and consecutive mistakes
@@ -141,9 +143,11 @@ export function PracticeSession() {
         } else {
           getNextQuestion();
         }
+        setIsSubmitting(false);
       }, 2000);
 
     } catch (error: any) {
+      setIsSubmitting(false);
       console.error("Error submitting answer:", error);
       toast({
         title: "Error submitting answer",
@@ -183,9 +187,9 @@ export function PracticeSession() {
           <Button
             size="lg"
             onClick={handleAnswerSubmit}
-            disabled={selectedAnswer === null || showFeedback}
+            disabled={selectedAnswer === null || showFeedback || isSubmitting}
           >
-            Submit Answer
+            {isSubmitting ? "Submitting..." : "Submit Answer"}
           </Button>
         </div>
       </Card>
