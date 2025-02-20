@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +25,6 @@ export function PracticeSession() {
     isComplete
   } = usePracticeQuestions(sessionId);
 
-  // Get and set the user ID when component mounts
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -45,6 +43,29 @@ export function PracticeSession() {
     checkAuth();
   }, [navigate, toast]);
 
+  const calculatePoints = (isCorrect: boolean, difficulty: string, currentStreak: number) => {
+    if (!isCorrect) return 0;
+    
+    let basePoints = 0;
+    switch (difficulty) {
+      case 'Easy':
+        basePoints = 10;
+        break;
+      case 'Moderate':
+        basePoints = 20;
+        break;
+      case 'Hard':
+        basePoints = 30;
+        break;
+      default:
+        basePoints = 10;
+    }
+
+    const streakBonus = currentStreak >= 3 ? Math.min(currentStreak - 2, 5) : 0;
+    
+    return basePoints + streakBonus;
+  };
+
   const handleAnswerSubmit = async () => {
     if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
       toast({
@@ -58,18 +79,19 @@ export function PracticeSession() {
     try {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
       
-      // Update streak
       const newStreak = isCorrect ? streak + 1 : 0;
       setStreak(newStreak);
 
-      // Record answer with explicit user_id
+      const pointsEarned = calculatePoints(isCorrect, currentQuestion.difficulty, streak);
+
       const { error: answerError } = await supabase.from("practice_answers").insert({
         session_id: sessionId,
         question_id: currentQuestion.id,
         selected_answer: selectedAnswer,
         is_correct: isCorrect,
         streak_at_answer: streak,
-        user_id: userId
+        user_id: userId,
+        points_earned: pointsEarned
       });
 
       if (answerError) {
@@ -77,14 +99,14 @@ export function PracticeSession() {
         throw answerError;
       }
 
-      // Update session progress
       const { error: sessionError } = await supabase
         .from("practice_sessions")
         .update({
           questions_answered: questionsAnswered,
           current_streak: newStreak,
           status: isComplete ? 'completed' : 'in_progress',
-          completed_at: isComplete ? new Date().toISOString() : null
+          completed_at: isComplete ? new Date().toISOString() : null,
+          total_points: pointsEarned
         })
         .eq("id", sessionId);
 
@@ -95,7 +117,6 @@ export function PracticeSession() {
 
       setShowFeedback(true);
 
-      // Show feedback for 2 seconds before moving to next question
       setTimeout(() => {
         setShowFeedback(false);
         setSelectedAnswer(null);
