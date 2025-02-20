@@ -5,16 +5,22 @@ import { PracticeQuestion } from "../usePracticeQuestions";
 
 type DifficultyLevel = 'Easy' | 'Moderate' | 'Hard';
 
+const isValidDifficulty = (difficulty: string | null | undefined): difficulty is DifficultyLevel => {
+  return difficulty === 'Easy' || difficulty === 'Moderate' || difficulty === 'Hard';
+};
+
 export async function fetchQuestionsForSubtopic(
   subtopicId: string,
-  difficulty: DifficultyLevel,
+  difficulty: string,
   answeredIds: string[]
 ) {
+  const validDifficulty = isValidDifficulty(difficulty) ? difficulty : 'Easy';
+  
   const query = supabase
     .from('questions')
     .select('*')
     .eq('subtopic_id', subtopicId)
-    .eq('difficulty', difficulty);
+    .eq('difficulty', validDifficulty);
 
   if (answeredIds.length > 0) {
     query.not('id', 'in', answeredIds);
