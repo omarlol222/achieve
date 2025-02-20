@@ -68,14 +68,27 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         }
       }
 
+      // First get the subject ID
+      const { data: subjectData, error: subjectError } = await supabase
+        .from("subjects")
+        .select("id")
+        .eq("name", session.subject)
+        .maybeSingle();
+
+      if (subjectError) throw subjectError;
+      if (!subjectData) {
+        throw new Error(`Subject "${session.subject}" not found`);
+      }
+
       // Get all topics for the selected subject
-      const { data: topicsData } = await supabase
+      const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
         .select("id")
-        .eq("subject_id", session.subject);
+        .eq("subject_id", subjectData.id);
 
+      if (topicsError) throw topicsError;
       if (!topicsData || topicsData.length === 0) {
-        throw new Error("No topics found for this subject");
+        throw new Error(`No topics found for subject "${session.subject}"`);
       }
 
       const topicIds = topicsData.map(t => t.id);
