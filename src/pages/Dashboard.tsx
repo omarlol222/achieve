@@ -117,7 +117,7 @@ const Dashboard = () => {
                 asChild 
                 className="w-full py-6 text-lg bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity"
               >
-                <Link to={`/${testType.name.toLowerCase()}`}>
+                <Link to={`/gat/${testType.name.toLowerCase()}`}>
                   Access {testType.name} Platform
                 </Link>
               </Button>
