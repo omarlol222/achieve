@@ -237,15 +237,18 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       if (currentQuestion.subtopic_id) {
         const { data: existingProgress } = await supabase
           .from("user_subtopic_progress")
-          .select("current_score")
+          .select('current_score, questions_answered, correct_answers')
           .eq("user_id", userId)
           .eq("subtopic_id", currentQuestion.subtopic_id)
           .maybeSingle();
 
         const currentScore = existingProgress?.current_score || 0;
+        const questionsAnswered = existingProgress?.questions_answered || 0;
+        const correctAnswers = existingProgress?.correct_answers || 0;
         const newScore = Math.max(0, Math.min(500, currentScore + pointsEarned));
 
         console.log("Updating progress - Current score:", currentScore, "New score:", newScore);
+        console.log("Questions answered:", questionsAnswered, "Correct answers:", correctAnswers);
 
         const { error: progressError } = await supabase
           .from("user_subtopic_progress")
@@ -255,8 +258,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
             current_score: newScore,
             last_practiced: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            questions_answered: (existingProgress?.questions_answered || 0) + 1,
-            correct_answers: (existingProgress?.correct_answers || 0) + (isCorrect ? 1 : 0)
+            questions_answered: questionsAnswered + 1,
+            correct_answers: correctAnswers + (isCorrect ? 1 : 0)
           }, {
             onConflict: 'user_id,subtopic_id'
           });
