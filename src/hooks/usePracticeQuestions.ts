@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePracticeStore } from "@/store/usePracticeStore";
@@ -34,21 +35,51 @@ const isValidDifficulty = (difficulty: string | null | undefined): difficulty is
 };
 
 export function usePracticeQuestions(sessionId: string | undefined) {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { showAchievementNotification } = useAchievementNotification();
   const { 
     currentQuestion,
     questionsAnswered,
+    selectedAnswer,
+    streak,
+    showFeedback,
     actions: { 
       setCurrentQuestion,
       setQuestionsAnswered,
-      incrementQuestionsAnswered
+      incrementQuestionsAnswered,
+      setSelectedAnswer,
+      setStreak,
+      setShowFeedback
     }
   } = usePracticeStore();
 
   const { data: session } = useSession(sessionId);
   const { data: subtopicIds = [] } = useSubtopics(session?.subject);
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
+  const userId = session?.user_id;
+
+  const calculatePoints = (isCorrect: boolean, difficulty: string, currentStreak: number) => {
+    if (!isCorrect) return 0;
+    
+    let basePoints = 0;
+    switch (difficulty) {
+      case 'Easy':
+        basePoints = 5;
+        break;
+      case 'Moderate':
+        basePoints = 10;
+        break;
+      case 'Hard':
+        basePoints = 15;
+        break;
+      default:
+        basePoints = 5;
+    }
+
+    const streakBonus = currentStreak >= 3 ? Math.min(currentStreak - 2, 3) : 0;
+    return basePoints + streakBonus;
+  };
 
   useEffect(() => {
     if (!session?.user_id) return;
@@ -109,7 +140,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
 
     try {
-      // Increment the questions answered count here, before fetching the next question
       const currentAnsweredCount = answeredIds.length;
       incrementQuestionsAnswered();
 
@@ -185,7 +215,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       console.log("Submitting answer with points:", pointsEarned, "for subtopic:", currentQuestion.subtopic_id);
 
-      // Record the answer
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -201,7 +230,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       if (answerError) throw answerError;
 
-      // Update user_subtopic_progress
       if (currentQuestion.subtopic_id) {
         const { data: existingProgress } = await supabase
           .from("user_subtopic_progress")
@@ -236,7 +264,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
-        if (questionsAnswered >= totalQuestions) {
+        if (questionsAnswered >= session?.total_questions) {
           navigate(`/gat/practice/results/${sessionId}`);
         } else {
           getNextQuestion();
@@ -267,6 +295,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     questionsAnswered,
     totalQuestions: session?.total_questions || 0,
     getNextQuestion,
+    handleAnswerSubmit,
     isComplete
   };
 }
