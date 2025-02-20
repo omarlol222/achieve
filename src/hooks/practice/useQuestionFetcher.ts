@@ -1,5 +1,4 @@
 
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PracticeQuestion } from "../usePracticeQuestions";
 
@@ -18,24 +17,21 @@ export async function fetchQuestionsForSubtopic(
   
   const validDifficulty = isValidDifficulty(difficulty) ? difficulty : 'Easy';
   
-  let query = supabase
+  // Fetch a batch of questions in one query
+  const { data: questions, error } = await supabase
     .from('questions')
     .select('*')
     .eq('subtopic_id', subtopicId)
-    .order('created_at');
-
-  if (answeredIds.length > 0) {
-    query = query.not('id', 'in', answeredIds);
-  }
-
-  const { data: questions, error } = await query;
+    .eq('difficulty', validDifficulty)
+    .not('id', 'in', answeredIds)
+    .order('created_at')
+    .limit(5); // Limit to reduce data transfer
   
   if (error) {
     console.error("Error fetching questions for subtopic:", error);
     return [];
   }
 
-  console.log(`Found ${questions?.length || 0} questions for subtopic ${subtopicId}`);
   return questions as PracticeQuestion[] || [];
 }
 
@@ -43,31 +39,21 @@ export async function fetchFallbackQuestions(
   subtopicIds: string[],
   answeredIds: string[]
 ) {
-  console.log("Fetching fallback questions for subtopics:", subtopicIds);
-  
-  if (!subtopicIds.length) {
-    console.log("No subtopic IDs provided for fallback");
-    return [];
-  }
+  if (!subtopicIds.length) return [];
 
-  let query = supabase
+  // Fetch a diverse set of questions across different difficulties
+  const { data: questions, error } = await supabase
     .from('questions')
     .select('*')
     .in('subtopic_id', subtopicIds)
+    .not('id', 'in', answeredIds)
     .order('created_at')
     .limit(10);
-
-  if (answeredIds.length > 0) {
-    query = query.not('id', 'in', answeredIds);
-  }
-
-  const { data: questions, error } = await query;
   
   if (error) {
     console.error("Error fetching fallback questions:", error);
     return [];
   }
 
-  console.log(`Found ${questions?.length || 0} fallback questions`);
   return questions as PracticeQuestion[] || [];
 }
