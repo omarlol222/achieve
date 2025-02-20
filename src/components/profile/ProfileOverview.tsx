@@ -131,8 +131,7 @@ export function ProfileOverview({ profile, statistics }: ProfileOverviewProps) {
         </div>
         <Progress 
           value={masteryProgress} 
-          className="mt-2" 
-          indicatorClassName={masteryProgress === 100 ? "bg-green-500" : undefined}
+          className="mt-2"
         />
         {masteryProgress === 100 && (
           <p className="text-sm text-green-600 mt-1">Congratulations! You've mastered all topics!</p>
