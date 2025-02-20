@@ -215,9 +215,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
       const pointsEarned = calculatePoints(isCorrect, currentQuestion.difficulty, streak);
 
-      console.log("Submitting answer with points:", pointsEarned, "for subtopic:", currentQuestion.subtopic_id);
+      console.log(`Processing answer for question ${currentQuestion.id}:`, {
+        isCorrect,
+        difficulty: currentQuestion.difficulty,
+        streak,
+        pointsEarned
+      });
 
-      // First save the answer with points
+      // First save the answer and points in practice_answers
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -233,8 +238,9 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       if (answerError) throw answerError;
 
-      // Then update user progress after confirming answer was saved
+      // Then update user progress
       if (currentQuestion.subtopic_id) {
+        // Get current progress including all needed fields
         const { data: existingProgress } = await supabase
           .from("user_subtopic_progress")
           .select('current_score, questions_answered, correct_answers')
@@ -245,11 +251,20 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         const currentScore = existingProgress?.current_score || 0;
         const questionsAnswered = existingProgress?.questions_answered || 0;
         const correctAnswers = existingProgress?.correct_answers || 0;
+
+        // Calculate new score ensuring it doesn't exceed 500
         const newScore = Math.max(0, Math.min(500, currentScore + pointsEarned));
 
-        console.log("Updating progress - Current score:", currentScore, "New score:", newScore);
-        console.log("Questions answered:", questionsAnswered, "Correct answers:", correctAnswers);
+        console.log("Updating user progress:", {
+          subtopicId: currentQuestion.subtopic_id,
+          currentScore,
+          pointsEarned,
+          newScore,
+          questionsAnswered,
+          correctAnswers
+        });
 
+        // Update progress with accurate counting
         const { error: progressError } = await supabase
           .from("user_subtopic_progress")
           .upsert({
@@ -259,15 +274,33 @@ export function usePracticeQuestions(sessionId: string | undefined) {
             last_practiced: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             questions_answered: questionsAnswered + 1,
-            correct_answers: correctAnswers + (isCorrect ? 1 : 0)
+            correct_answers: correctAnswers + (isCorrect ? 1 : 0),
+            accuracy: ((correctAnswers + (isCorrect ? 1 : 0)) / (questionsAnswered + 1))
           }, {
             onConflict: 'user_id,subtopic_id'
           });
 
-        if (progressError) throw progressError;
+        if (progressError) {
+          console.error("Error updating progress:", progressError);
+          throw progressError;
+        }
+
+        // Update session total points
+        const { error: sessionError } = await supabase
+          .from("practice_sessions")
+          .update({ 
+            total_points: supabase.sql`total_points + ${pointsEarned}`,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", sessionId);
+
+        if (sessionError) {
+          console.error("Error updating session points:", sessionError);
+          throw sessionError;
+        }
       }
 
-      // Update local state after confirming both saves were successful
+      // Update local state after confirming all database updates
       const newStreak = isCorrect ? streak + 1 : 0;
       setStreak(newStreak);
       incrementQuestionsAnswered();
