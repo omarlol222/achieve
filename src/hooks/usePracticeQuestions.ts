@@ -48,14 +48,19 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     if (!sessionId || !session?.subject) return;
 
     try {
-      const { data: answersData, count } = await supabase
+      // Get answered questions for this session
+      const { data: answersData, error: answersError } = await supabase
         .from("practice_answers")
-        .select("*", { count: 'exact' })
+        .select("question_id")
         .eq("session_id", sessionId);
 
-      const currentAnsweredCount = count || 0;
+      if (answersError) throw answersError;
+
+      const answeredIds = (answersData || []).map(a => a.question_id);
+      const currentAnsweredCount = answeredIds.length;
       setQuestionsAnswered(currentAnsweredCount + 1);
 
+      // Check if we've completed all questions
       if (session.total_questions && currentAnsweredCount >= session.total_questions) {
         await supabase
           .from("practice_sessions")
@@ -69,39 +74,42 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         return;
       }
 
-      const { data: subjectData } = await supabase
+      // Get subject ID
+      const { data: subjectData, error: subjectError } = await supabase
         .from("subjects")
         .select("id")
         .eq("name", session.subject)
         .single();
 
+      if (subjectError) throw subjectError;
       if (!subjectData) throw new Error(`Subject "${session.subject}" not found`);
 
-      const { data: topicsData } = await supabase
+      // Get topic IDs for the subject
+      const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
         .select("id")
         .eq("subject_id", subjectData.id);
 
+      if (topicsError) throw topicsError;
       if (!topicsData || topicsData.length === 0) {
         throw new Error(`No topics found for subject "${session.subject}"`);
       }
 
       const topicIds = topicsData.map(t => t.id);
-      const answeredIds = (answersData || []).map(a => a.question_id);
 
-      // Fetch a random unanswered question using a direct query instead of RPC
+      // Get a random question
       const { data: questions, error: questionsError } = await supabase
         .from('questions')
         .select('*')
         .eq('difficulty', currentDifficulty)
         .in('topic_id', topicIds)
-        .not('id', 'in', answeredIds)
-        .order('random()')
+        .not('id', 'in', answeredIds.length > 0 ? answeredIds : [''])
         .limit(1);
 
       if (questionsError) throw questionsError;
 
       if (!questions || questions.length === 0) {
+        // Try fallback difficulty if no questions found
         const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
         
         const { data: fallbackQuestions, error: fallbackError } = await supabase
@@ -109,8 +117,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           .select('*')
           .eq('difficulty', fallbackDifficulty)
           .in('topic_id', topicIds)
-          .not('id', 'in', answeredIds)
-          .order('random()')
+          .not('id', 'in', answeredIds.length > 0 ? answeredIds : [''])
           .limit(1);
 
         if (fallbackError) throw fallbackError;
@@ -123,6 +130,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           return;
         }
         setCurrentQuestion(fallbackQuestions[0] as PracticeQuestion);
+        setCurrentDifficulty(fallbackDifficulty);
       } else {
         setCurrentQuestion(questions[0] as PracticeQuestion);
       }
