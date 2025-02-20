@@ -48,8 +48,15 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const { data: subtopicIds = [] } = useSubtopics(session?.subject);
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
 
+  console.log("Session data:", session);
+  console.log("Subtopic IDs:", subtopicIds);
+  console.log("Answered IDs:", answeredIds);
+
   const getNextQuestion = async () => {
-    if (!sessionId || !session?.subject) return;
+    if (!sessionId || !session?.subject) {
+      console.log("Missing sessionId or subject:", { sessionId, subject: session?.subject });
+      return;
+    }
 
     try {
       const currentAnsweredCount = answeredIds.length;
@@ -57,6 +64,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       // Check if we've completed all questions
       if (session.total_questions && currentAnsweredCount >= session.total_questions) {
+        console.log("Session completed", { currentAnsweredCount, totalQuestions: session.total_questions });
         const totalPoints = (session.practice_answers || []).reduce(
           (sum: number, answer: any) => sum + (answer.points_earned || 0), 
           0
@@ -82,6 +90,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         .in('subtopic_id', subtopicIds)
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
+      console.log("Progress data:", progressData);
+
       const subtopicDifficulties = new Map(
         progressData?.map(p => [p.subtopic_id, isValidDifficulty(p.difficulty_level) ? p.difficulty_level : 'Easy']) || []
       );
@@ -91,13 +101,19 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       
       for (const subtopicId of subtopicIds) {
         const difficulty = subtopicDifficulties.get(subtopicId) || 'Easy';
+        console.log("Fetching questions for subtopic:", { subtopicId, difficulty });
         const questions = await fetchQuestionsForSubtopic(subtopicId, difficulty, answeredIds);
+        console.log("Questions fetched:", questions.length);
         availableQuestions.push(...questions);
       }
 
+      console.log("Total available questions:", availableQuestions.length);
+
       if (availableQuestions.length === 0) {
         // Fallback to questions of any difficulty if no questions at current difficulty
+        console.log("No questions available, trying fallback");
         const fallbackQuestions = await fetchFallbackQuestions(subtopicIds, answeredIds);
+        console.log("Fallback questions:", fallbackQuestions.length);
 
         if (!fallbackQuestions || fallbackQuestions.length === 0) {
           toast({
@@ -113,7 +129,9 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       // Select a random question from available questions
       const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-      setCurrentQuestion(availableQuestions[randomIndex]);
+      const selectedQuestion = availableQuestions[randomIndex];
+      console.log("Selected question:", selectedQuestion?.id);
+      setCurrentQuestion(selectedQuestion);
 
     } catch (error: any) {
       console.error("Error fetching next question:", error);
@@ -127,6 +145,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
   useEffect(() => {
     if (session && !currentQuestion) {
+      console.log("Initializing questions");
       getNextQuestion();
     }
   }, [session]);
