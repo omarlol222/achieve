@@ -9,26 +9,38 @@ type TopicProgressProps = {
   value: number;
   variant?: "default" | "subtle";
   isPercentage?: boolean;
+  maxValue?: number;
 };
 
-export const TopicProgress = memo(({ name, value, variant = "default", isPercentage = false }: TopicProgressProps) => {
-  // If value is points, convert to percentage, otherwise use directly
+export const TopicProgress = memo(({ 
+  name, 
+  value, 
+  variant = "default", 
+  isPercentage = false,
+  maxValue = 100
+}: TopicProgressProps) => {
+  // If value is points, convert to percentage based on maxValue
   const progressPercentage = useMemo(() => 
-    isPercentage ? value : Math.min((value / 500) * 100, 100), 
-    [value, isPercentage]
+    isPercentage ? value : Math.min((value / maxValue) * 100, 100), 
+    [value, isPercentage, maxValue]
   );
 
   return (
     <div className={cn("space-y-2", variant === "subtle" && "opacity-80")}>
-      <div className="flex justify-between items-center">
+      {name && (
         <div className={cn(
-          "text-sm font-medium",
+          "flex justify-between items-center",
           variant === "subtle" && "text-sm font-normal"
         )}>
-          {name}
+          <div className={cn(
+            "text-sm font-medium",
+            variant === "subtle" && "text-sm font-normal"
+          )}>
+            {name}
+          </div>
+          <ProgressStats points={isPercentage ? null : value} percentage={isPercentage ? value : null} />
         </div>
-        <ProgressStats points={isPercentage ? null : value} percentage={isPercentage ? value : null} />
-      </div>
+      )}
       <Progress 
         value={progressPercentage} 
         className={cn(
@@ -42,7 +54,8 @@ export const TopicProgress = memo(({ name, value, variant = "default", isPercent
   return prevProps.name === nextProps.name && 
          prevProps.value === nextProps.value && 
          prevProps.variant === nextProps.variant &&
-         prevProps.isPercentage === nextProps.isPercentage;
+         prevProps.isPercentage === nextProps.isPercentage &&
+         prevProps.maxValue === nextProps.maxValue;
 });
 
 TopicProgress.displayName = "TopicProgress";

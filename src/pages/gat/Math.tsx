@@ -57,7 +57,10 @@ const MathComponent = () => {
             id,
             name,
             user_subtopic_progress (
-              current_score
+              current_score,
+              difficulty_level,
+              streak_count,
+              accuracy
             )
           )
         `)
@@ -74,7 +77,10 @@ const MathComponent = () => {
           id: st.id,
           name: st.name,
           progress: {
-            points: st.user_subtopic_progress?.[0]?.current_score || 0
+            points: st.user_subtopic_progress?.[0]?.current_score || 0,
+            difficulty: st.user_subtopic_progress?.[0]?.difficulty_level || 'Easy',
+            streak: st.user_subtopic_progress?.[0]?.streak_count || 0,
+            accuracy: Math.round((st.user_subtopic_progress?.[0]?.accuracy || 0) * 100)
           }
         }))
       }));
@@ -125,29 +131,24 @@ const MathComponent = () => {
 
     if (validSubtopics.length === 0) return { percentage: 0 };
 
-    // Calculate total points and max possible points
-    let totalPoints = 0;
-    const maxPointsPerSubtopic = 500; // Maximum points possible per subtopic
-    const maxTotalPoints = validSubtopics.length * maxPointsPerSubtopic;
-
-    // Sum up all points
-    totalPoints = validSubtopics.reduce((sum, st) => {
-      const points = st.progress.points || 0;
-      console.log(`Subtopic ${st.name} points:`, points);
-      return sum + points;
+    // Calculate total completion percentage
+    // A subtopic is considered complete when it reaches 500 points
+    const totalPercentage = validSubtopics.reduce((sum, st) => {
+      const percentage = Math.min((st.progress.points / 500) * 100, 100);
+      return sum + percentage;
     }, 0);
 
-    // Calculate percentage based on total points achieved vs maximum possible points
-    const percentage = (totalPoints / maxTotalPoints) * 100;
+    // Average the percentages
+    const averagePercentage = totalPercentage / validSubtopics.length;
     
-    console.log(`Topic ${topic.name}:`, {
-      totalPoints,
-      maxTotalPoints,
-      percentage
+    console.log(`Topic ${topic.name} progress:`, {
+      totalPercentage,
+      averagePercentage,
+      subtopicsCount: validSubtopics.length
     });
 
     return {
-      percentage: Math.min(percentage, 100) // Ensure we don't exceed 100%
+      percentage: Math.round(averagePercentage)
     };
   };
 
