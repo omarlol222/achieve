@@ -11,7 +11,8 @@ type TopicProgressProps = {
 };
 
 export const TopicProgress = memo(({ name, value, variant = "default" }: TopicProgressProps) => {
-  const progressPercentage = useMemo(() => (value / 1000) * 100, [value]);
+  // Calculate percentage based on fixed 1000 points maximum
+  const progressPercentage = useMemo(() => Math.min((value / 1000) * 100, 100), [value]);
 
   return (
     <div className={cn("space-y-2", variant === "subtle" && "opacity-80")}>
