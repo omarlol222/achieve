@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -165,6 +164,94 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       });
     }
   }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, completeSession, toast]);
+
+  const handleAnswerSubmit = async () => {
+    if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
+      toast({
+        title: "Error",
+        description: "Please select an answer and ensure you're logged in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+      
+      const newStreak = isCorrect ? streak + 1 : 0;
+      setStreak(newStreak);
+
+      const pointsEarned = calculatePoints(isCorrect, currentQuestion.difficulty, streak);
+
+      console.log("Submitting answer with points:", pointsEarned, "for subtopic:", currentQuestion.subtopic_id);
+
+      // Record the answer
+      const { error: answerError } = await supabase
+        .from("practice_answers")
+        .insert({
+          session_id: sessionId,
+          question_id: currentQuestion.id,
+          selected_answer: selectedAnswer,
+          is_correct: isCorrect,
+          streak_at_answer: streak,
+          user_id: userId,
+          points_earned: pointsEarned,
+          subtopic_id: currentQuestion.subtopic_id
+        });
+
+      if (answerError) throw answerError;
+
+      // Update user_subtopic_progress
+      if (currentQuestion.subtopic_id) {
+        const { data: existingProgress } = await supabase
+          .from("user_subtopic_progress")
+          .select("current_score")
+          .eq("user_id", userId)
+          .eq("subtopic_id", currentQuestion.subtopic_id)
+          .single();
+
+        const currentScore = existingProgress?.current_score || 0;
+        const newScore = Math.max(0, Math.min(500, currentScore + pointsEarned));
+
+        console.log("Updating progress - Current score:", currentScore, "New score:", newScore);
+
+        const { error: progressError } = await supabase
+          .from("user_subtopic_progress")
+          .upsert({
+            user_id: userId,
+            subtopic_id: currentQuestion.subtopic_id,
+            current_score: newScore,
+            last_practiced: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,subtopic_id'
+          });
+
+        if (progressError) throw progressError;
+      }
+
+      setShowFeedback(true);
+
+      setTimeout(() => {
+        setShowFeedback(false);
+        setSelectedAnswer(null);
+        
+        if (questionsAnswered >= totalQuestions) {
+          navigate(`/gat/practice/results/${sessionId}`);
+        } else {
+          getNextQuestion();
+        }
+      }, 2000);
+
+    } catch (error: any) {
+      console.error("Error submitting answer:", error);
+      toast({
+        title: "Error submitting answer",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     if (session && !currentQuestion && subtopicIds.length > 0) {

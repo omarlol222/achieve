@@ -83,7 +83,7 @@ const MathComponent = () => {
   useEffect(() => {
     if (!subject?.id) return;
 
-    // Subscribe to changes in user_subtopic_progress
+    // Enable real-time updates for user_subtopic_progress
     const channel = supabase
       .channel('progress_updates')
       .on(
@@ -95,12 +95,19 @@ const MathComponent = () => {
         },
         async (payload) => {
           console.log("Progress update received:", payload);
+          // Force a refetch of the topics data
           await refetchTopics();
         }
       )
       .subscribe();
 
+    // Log when subscription is active
+    channel.onSubscribe(() => {
+      console.log("Subscribed to progress updates");
+    });
+
     return () => {
+      console.log("Unsubscribing from progress updates");
       supabase.removeChannel(channel);
     };
   }, [subject?.id, refetchTopics]);
