@@ -2,6 +2,7 @@
 import { Award, Badge, Star, Trophy, Check, CircleCheck, Ribbon, BadgeCheck, Flame, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import { type ToastActionElement } from "@/components/ui/toast";
 
 const achievementIcons: Record<string, React.ElementType> = {
   trophy: Trophy,
@@ -41,24 +42,25 @@ export function useAchievementNotification() {
     const colors = achievementTypeColors[achievement.achievement_type] || achievementTypeColors.general;
 
     toast({
-      title: (
-        <div className="flex items-center gap-2">
-          <div className={`p-2 rounded-full ${colors.bg}`}>
-            <IconComponent className={`h-4 w-4 ${colors.icon}`} />
-          </div>
-          <span>Achievement Unlocked!</span>
-        </div>
-      ),
-      description: (
-        <div className="mt-1">
-          <p className="font-semibold">{achievement.title}</p>
-          <p className="text-sm text-muted-foreground">{achievement.description}</p>
-        </div>
-      ),
+      variant: "default",
       duration: 5000,
+      className: "achievement-toast",
+      description: (
+        <div>
+          <div className="flex items-center gap-2">
+            <div className={`p-2 rounded-full ${colors.bg}`}>
+              <IconComponent className={`h-4 w-4 ${colors.icon}`} />
+            </div>
+            <span className="font-semibold">Achievement Unlocked!</span>
+          </div>
+          <div className="mt-1">
+            <p className="font-semibold">{achievement.title}</p>
+            <p className="text-sm text-muted-foreground">{achievement.description}</p>
+          </div>
+        </div>
+      ),
     });
   };
 
   return { showAchievementNotification };
 }
-
