@@ -74,10 +74,15 @@ export function PracticeSession() {
       setConsecutiveMistakes(newConsecutiveMistakes);
 
       // Update session streak
-      await supabase
+      const { error: streakError } = await supabase
         .from("practice_sessions")
         .update({ current_streak: newStreak })
         .eq("id", sessionId);
+
+      if (streakError) {
+        console.error("Error updating streak:", streakError);
+        throw streakError;
+      }
 
       // Record the answer with new point system data
       const { error: answerError } = await supabase
@@ -101,30 +106,38 @@ export function PracticeSession() {
 
       setShowFeedback(true);
 
-      // Check if this was the last question
-      if (questionsAnswered >= totalQuestions - 1) {
-        // Complete the session to trigger point calculation
-        const { error: sessionError } = await supabase
-          .from("practice_sessions")
-          .update({ 
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            questions_answered: totalQuestions
-          })
-          .eq("id", sessionId);
-
-        if (sessionError) {
-          console.error("Error completing session:", sessionError);
-          throw sessionError;
-        }
-      }
-
-      setTimeout(() => {
+      // Only complete the session after showing feedback for the last question
+      setTimeout(async () => {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
         if (questionsAnswered >= totalQuestions - 1) {
-          navigate(`/gat/practice/results/${sessionId}`);
+          try {
+            // Complete the session to trigger point calculation
+            const { error: sessionError } = await supabase
+              .from("practice_sessions")
+              .update({ 
+                status: 'completed',
+                completed_at: new Date().toISOString(),
+                questions_answered: totalQuestions
+              })
+              .eq("id", sessionId);
+
+            if (sessionError) {
+              console.error("Error completing session:", sessionError);
+              throw sessionError;
+            }
+
+            // Navigate to results after ensuring session is completed
+            navigate(`/gat/practice/results/${sessionId}`);
+          } catch (error: any) {
+            console.error("Error completing session:", error);
+            toast({
+              title: "Error completing session",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
         } else {
           getNextQuestion();
         }
