@@ -22,7 +22,8 @@ export function PracticeSession() {
     questionsAnswered,
     totalQuestions,
     getNextQuestion,
-    isComplete
+    isComplete,
+    setQuestionsAnswered
   } = usePracticeQuestions(sessionId);
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export function PracticeSession() {
 
     try {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+      const newQuestionsAnswered = questionsAnswered + 1;
 
       // Record the answer
       const { error: answerError } = await supabase
@@ -70,24 +72,25 @@ export function PracticeSession() {
 
       if (answerError) throw answerError;
 
-      // Update the session's questions_answered count
+      // Update the session status
       const { error: sessionError } = await supabase
         .from("practice_sessions")
-        .update({ 
-          questions_answered: questionsAnswered + 1,
-          status: questionsAnswered + 1 >= totalQuestions ? 'completed' : 'in_progress'
+        .update({
+          questions_answered: newQuestionsAnswered,
+          status: newQuestionsAnswered >= totalQuestions ? 'completed' : 'in_progress'
         })
         .eq("id", sessionId);
 
       if (sessionError) throw sessionError;
 
+      setQuestionsAnswered(newQuestionsAnswered);
       setShowFeedback(true);
 
       setTimeout(() => {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
-        if (questionsAnswered + 1 >= totalQuestions) {
+        if (newQuestionsAnswered >= totalQuestions) {
           navigate(`/gat/practice/results/${sessionId}`);
         } else {
           getNextQuestion();
@@ -102,7 +105,7 @@ export function PracticeSession() {
         variant: "destructive",
       });
     }
-  }, [selectedAnswer, currentQuestion, sessionId, userId, questionsAnswered, totalQuestions, navigate, getNextQuestion, toast]);
+  }, [selectedAnswer, currentQuestion, sessionId, userId, questionsAnswered, totalQuestions, navigate, getNextQuestion, toast, setQuestionsAnswered]);
 
   if (!currentQuestion) {
     return <div>Loading...</div>;

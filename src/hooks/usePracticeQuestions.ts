@@ -38,7 +38,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       if (session) {
         setTotalQuestions(session.total_questions);
-        setQuestionsAnswered(session.questions_answered);
+        setQuestionsAnswered(session.questions_answered || 0);
         setIsComplete(session.status === 'completed');
       }
     };
@@ -62,7 +62,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       const { data: questions } = await supabase
         .from("questions")
         .select("*, subtopics!inner(*)")
-        .not("id", "in", `(${answeredIds.join(",")})`)
+        .not("id", "in", `(${answeredIds.length > 0 ? answeredIds.join(",") : '00000000-0000-0000-0000-000000000000'})`)
         .limit(1)
         .single();
 
@@ -98,6 +98,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     questionsAnswered,
     totalQuestions,
     getNextQuestion,
-    isComplete
+    isComplete,
+    setQuestionsAnswered
   };
 }
