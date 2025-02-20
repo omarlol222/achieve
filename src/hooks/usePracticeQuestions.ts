@@ -1,21 +1,38 @@
 
 import { useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePracticeStore } from "@/store/usePracticeStore";
 import { useSession } from "./practice/useSession";
 import { useSubtopics } from "./practice/useSubtopics";
 import { useAnsweredQuestions } from "./practice/useAnsweredQuestions";
 import { fetchQuestionsForSubtopic, fetchFallbackQuestions } from "./practice/useQuestionFetcher";
-import { useAchievementHandler } from "./practice/useAchievementHandler";
-import { useSessionCompletion } from "./practice/useSessionCompletion";
-import { useAnswerSubmission } from "./practice/useAnswerSubmission";
-import { supabase } from "@/integrations/supabase/client";
-import { PracticeQuestion } from "./practice/types";
+import { useAchievementNotification } from "@/components/achievements/AchievementNotification";
 
-export type { PracticeQuestion };
+export type PracticeQuestion = {
+  id: string;
+  question_text: string;
+  choice1: string;
+  choice2: string;
+  choice3: string;
+  choice4: string;
+  correct_answer: number;
+  difficulty: 'Easy' | 'Moderate' | 'Hard';
+  image_url?: string;
+  explanation?: string;
+  explanation_image_url?: string;
+  question_type: 'normal' | 'passage' | 'analogy' | 'comparison';
+  passage_text?: string;
+  comparison_value1?: string;
+  comparison_value2?: string;
+  subtopic_id?: string;
+};
 
 export function usePracticeQuestions(sessionId: string | undefined) {
+  const navigate = useNavigate();
   const { toast } = useToast();
+  const { showAchievementNotification } = useAchievementNotification();
   const { 
     currentQuestion,
     questionsAnswered,
@@ -37,8 +54,52 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
   const userId = session?.user_id;
 
-  useAchievementHandler(userId);
-  const completeSession = useSessionCompletion(sessionId, setCurrentQuestion);
+  useEffect(() => {
+    if (!session?.user_id) return;
+
+    const channel = supabase
+      .channel('achievements')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_achievements',
+          filter: `user_id=eq.${session.user_id}`
+        },
+        async (payload) => {
+          const { data: achievement } = await supabase
+            .from('achievements')
+            .select('*')
+            .eq('id', payload.new.achievement_id)
+            .single();
+
+          if (achievement) {
+            showAchievementNotification(achievement);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user_id, showAchievementNotification]);
+
+  const completeSession = useCallback(async (currentAnsweredCount: number) => {
+    if (!sessionId) return;
+    
+    await supabase
+      .from("practice_sessions")
+      .update({ 
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        questions_answered: currentAnsweredCount
+      })
+      .eq("id", sessionId);
+    
+    setCurrentQuestion(null);
+  }, [sessionId, setCurrentQuestion]);
 
   const getNextQuestion = useCallback(async () => {
     if (!sessionId || !session?.subject || subtopicIds.length === 0) {
@@ -101,17 +162,66 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
   }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, completeSession, toast]);
 
-  const handleAnswerSubmit = useAnswerSubmission(
-    sessionId,
-    userId,
-    setStreak,
-    incrementQuestionsAnswered,
-    setShowFeedback,
-    setSelectedAnswer,
-    getNextQuestion,
-    questionsAnswered,
-    session?.total_questions || 0
-  );
+  const handleAnswerSubmit = async () => {
+    if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
+      toast({
+        title: "Error",
+        description: "Please select an answer and ensure you're logged in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+
+      // Insert the answer - points calculation is now handled by database trigger
+      const { error: answerError } = await supabase
+        .from("practice_answers")
+        .insert({
+          session_id: sessionId,
+          question_id: currentQuestion.id,
+          selected_answer: selectedAnswer,
+          is_correct: isCorrect,
+          user_id: userId,
+          subtopic_id: currentQuestion.subtopic_id
+        });
+
+      if (answerError) throw answerError;
+
+      // Get updated progress for streak
+      const { data: progress } = await supabase
+        .from("user_subtopic_progress")
+        .select('streak_count')
+        .eq("user_id", userId)
+        .eq("subtopic_id", currentQuestion.subtopic_id)
+        .single();
+
+      // Update local state
+      setStreak(progress?.streak_count || 0);
+      incrementQuestionsAnswered();
+      setShowFeedback(true);
+
+      setTimeout(() => {
+        setShowFeedback(false);
+        setSelectedAnswer(null);
+        
+        if (questionsAnswered >= session?.total_questions) {
+          navigate(`/gat/practice/results/${sessionId}`);
+        } else {
+          getNextQuestion();
+        }
+      }, 2000);
+
+    } catch (error: any) {
+      console.error("Error submitting answer:", error);
+      toast({
+        title: "Error submitting answer",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   useEffect(() => {
     if (session && !currentQuestion && subtopicIds.length > 0) {
@@ -124,7 +234,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     questionsAnswered,
     totalQuestions: session?.total_questions || 0,
     getNextQuestion,
-    handleAnswerSubmit: () => handleAnswerSubmit(selectedAnswer, currentQuestion),
+    handleAnswerSubmit,
     isComplete: session?.status === 'completed' || 
                 (session?.total_questions && questionsAnswered >= session.total_questions)
   };

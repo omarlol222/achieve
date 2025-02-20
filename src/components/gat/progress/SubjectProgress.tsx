@@ -2,7 +2,6 @@
 import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { TopicProgress } from "../TopicProgress";
-import { Badge } from "@/components/ui/badge";
 
 type SubjectProgressProps = {
   subject: {
@@ -19,9 +18,6 @@ type SubjectProgressProps = {
         name: string;
         progress: {
           points: number;
-          difficulty: string;
-          streak: number;
-          accuracy: number;
         };
       }[];
     }[];
@@ -48,32 +44,13 @@ export const SubjectProgress = memo(({ subject, calculateTopicProgress, isExpand
           {isExpanded && topic.subtopics && topic.subtopics.length > 0 && (
             <div className="ml-4 space-y-3">
               {topic.subtopics.map((subtopic) => (
-                <div key={subtopic.id} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{subtopic.name}</span>
-                      <Badge variant={subtopic.progress.difficulty === 'Hard' ? 'destructive' : 
-                              subtopic.progress.difficulty === 'Moderate' ? 'default' : 'secondary'}>
-                        {subtopic.progress.difficulty}
-                      </Badge>
-                      {subtopic.progress.streak > 0 && (
-                        <Badge variant="outline" className="bg-yellow-50">
-                          {subtopic.progress.streak}🔥
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {subtopic.progress.accuracy}% accuracy
-                    </div>
-                  </div>
-                  <TopicProgress
-                    name=""
-                    value={subtopic.progress.points}
-                    variant="subtle"
-                    isPercentage={false}
-                    maxValue={500}
-                  />
-                </div>
+                <TopicProgress
+                  key={subtopic.id}
+                  name={subtopic.name}
+                  value={subtopic.progress.points}
+                  variant="subtle"
+                  isPercentage={false}
+                />
               ))}
             </div>
           )}

@@ -9,38 +9,26 @@ type TopicProgressProps = {
   value: number;
   variant?: "default" | "subtle";
   isPercentage?: boolean;
-  maxValue?: number;
 };
 
-export const TopicProgress = memo(({ 
-  name, 
-  value, 
-  variant = "default", 
-  isPercentage = false,
-  maxValue = 100
-}: TopicProgressProps) => {
-  // If value is points, convert to percentage based on maxValue
+export const TopicProgress = memo(({ name, value, variant = "default", isPercentage = false }: TopicProgressProps) => {
+  // If value is points, convert to percentage, otherwise use directly
   const progressPercentage = useMemo(() => 
-    isPercentage ? value : Math.min((value / maxValue) * 100, 100), 
-    [value, isPercentage, maxValue]
+    isPercentage ? value : Math.min((value / 500) * 100, 100), 
+    [value, isPercentage]
   );
 
   return (
     <div className={cn("space-y-2", variant === "subtle" && "opacity-80")}>
-      {name && (
+      <div className="flex justify-between items-center">
         <div className={cn(
-          "flex justify-between items-center",
+          "text-sm font-medium",
           variant === "subtle" && "text-sm font-normal"
         )}>
-          <div className={cn(
-            "text-sm font-medium",
-            variant === "subtle" && "text-sm font-normal"
-          )}>
-            {name}
-          </div>
-          <ProgressStats points={isPercentage ? null : value} percentage={isPercentage ? value : null} />
+          {name}
         </div>
-      )}
+        <ProgressStats points={isPercentage ? null : value} percentage={isPercentage ? value : null} />
+      </div>
       <Progress 
         value={progressPercentage} 
         className={cn(
@@ -54,8 +42,7 @@ export const TopicProgress = memo(({
   return prevProps.name === nextProps.name && 
          prevProps.value === nextProps.value && 
          prevProps.variant === nextProps.variant &&
-         prevProps.isPercentage === nextProps.isPercentage &&
-         prevProps.maxValue === nextProps.maxValue;
+         prevProps.isPercentage === nextProps.isPercentage;
 });
 
 TopicProgress.displayName = "TopicProgress";
