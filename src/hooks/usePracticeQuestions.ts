@@ -49,26 +49,27 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const getNextQuestion = async () => {
     if (!sessionId || !session?.subject) return;
 
-    // Get the current count of answered questions for this session
-    const { count } = await supabase
-      .from("practice_answers")
-      .select("*", { count: 'exact', head: true })
-      .eq("session_id", sessionId);
-
-    const currentAnsweredCount = count || 0;
-
-    // Check if we've reached the total questions limit
-    if (session.total_questions && currentAnsweredCount >= session.total_questions) {
-      // Update session status to completed
-      await supabase
-        .from("practice_sessions")
-        .update({ status: 'completed' })
-        .eq("id", sessionId);
-      setCurrentQuestion(null);
-      return;
-    }
-
     try {
+      // Get the current count of answered questions for this session
+      const { count } = await supabase
+        .from("practice_answers")
+        .select("*", { count: 'exact', head: true })
+        .eq("session_id", sessionId);
+
+      const currentAnsweredCount = count || 0;
+      setQuestionsAnswered(currentAnsweredCount + 1);
+
+      // Check if we've reached the total questions limit
+      if (session.total_questions && currentAnsweredCount >= session.total_questions) {
+        // Update session status to completed
+        await supabase
+          .from("practice_sessions")
+          .update({ status: 'completed' })
+          .eq("id", sessionId);
+        setCurrentQuestion(null);
+        return;
+      }
+
       // Get answers for this session to calculate performance
       const { data: answers } = await supabase
         .from("practice_answers")
@@ -87,25 +88,23 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         }
       }
 
-      // First get the subject ID
-      const { data: subjectData, error: subjectError } = await supabase
+      // Get the subject ID
+      const { data: subjectData } = await supabase
         .from("subjects")
         .select("id")
         .eq("name", session.subject)
-        .maybeSingle();
+        .single();
 
-      if (subjectError) throw subjectError;
       if (!subjectData) {
         throw new Error(`Subject "${session.subject}" not found`);
       }
 
       // Get all topics for the selected subject
-      const { data: topicsData, error: topicsError } = await supabase
+      const { data: topicsData } = await supabase
         .from("topics")
         .select("id")
         .eq("subject_id", subjectData.id);
 
-      if (topicsError) throw topicsError;
       if (!topicsData || topicsData.length === 0) {
         throw new Error(`No topics found for subject "${session.subject}"`);
       }
@@ -120,44 +119,30 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       const answeredIds = answeredQuestions?.map(a => a.question_id) || [];
 
-      // Get a random question of appropriate difficulty for any topic in the subject
-      let query = supabase
+      // Get a random question of appropriate difficulty
+      const { data: questions, error: questionsError } = await supabase
         .from("questions")
         .select("*")
         .eq("difficulty", currentDifficulty)
-        .in("topic_id", topicIds);
+        .in("topic_id", topicIds)
+        .not("id", "in", answeredIds.length > 0 ? `(${answeredIds.join(',')})` : "")
+        .limit(1);
 
-      // Only add the not-in filter if there are answered questions
-      if (answeredIds.length > 0) {
-        query = query.not('id', 'in', `(${answeredIds.join(',')})`);
-      }
+      if (questionsError) throw questionsError;
 
-      const { data: question, error } = await query
-        .limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      
-      if (!question) {
+      if (!questions || questions.length === 0) {
         // If no questions available at current difficulty, try easier ones
         const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
-        let fallbackQuery = supabase
+        const { data: fallbackQuestions, error: fallbackError } = await supabase
           .from("questions")
           .select("*")
           .eq("difficulty", fallbackDifficulty)
-          .in("topic_id", topicIds);
-
-        // Only add the not-in filter if there are answered questions
-        if (answeredIds.length > 0) {
-          fallbackQuery = fallbackQuery.not('id', 'in', `(${answeredIds.join(',')})`);
-        }
-
-        const { data: fallbackQuestion, error: fallbackError } = await fallbackQuery
-          .limit(1)
-          .maybeSingle();
+          .in("topic_id", topicIds)
+          .not("id", "in", answeredIds.length > 0 ? `(${answeredIds.join(',')})` : "")
+          .limit(1);
 
         if (fallbackError) throw fallbackError;
-        if (!fallbackQuestion) {
+        if (!fallbackQuestions || fallbackQuestions.length === 0) {
           toast({
             title: "No more questions available",
             description: "You've completed all available questions at this difficulty level.",
@@ -165,13 +150,10 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           });
           return;
         }
-        setCurrentQuestion(fallbackQuestion as PracticeQuestion);
+        setCurrentQuestion(fallbackQuestions[0] as PracticeQuestion);
       } else {
-        setCurrentQuestion(question as PracticeQuestion);
+        setCurrentQuestion(questions[0] as PracticeQuestion);
       }
-      
-      // Update the questions answered count based on actual answers in the database
-      setQuestionsAnswered(currentAnsweredCount);
     } catch (error: any) {
       console.error("Error fetching next question:", error);
       toast({
