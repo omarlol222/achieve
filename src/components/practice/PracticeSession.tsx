@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,22 +8,14 @@ import { QuestionContent } from "./QuestionContent";
 import { useToast } from "@/hooks/use-toast";
 import { usePracticeQuestions } from "@/hooks/usePracticeQuestions";
 import { Progress } from "@/components/ui/progress";
-import { usePracticeStore } from "@/store/usePracticeStore";
 
 export function PracticeSession() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
-
-  const {
-    selectedAnswer,
-    showFeedback,
-    actions: {
-      setSelectedAnswer,
-      setShowFeedback
-    }
-  } = usePracticeStore();
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   const {
     currentQuestion,
@@ -51,7 +43,7 @@ export function PracticeSession() {
     checkAuth();
   }, [navigate, toast]);
 
-  const handleAnswerSubmit = async () => {
+  const handleAnswerSubmit = useCallback(async () => {
     if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
       toast({
         title: "Error",
@@ -99,7 +91,7 @@ export function PracticeSession() {
         variant: "destructive",
       });
     }
-  };
+  }, [selectedAnswer, currentQuestion, sessionId, userId, questionsAnswered, totalQuestions, navigate, getNextQuestion, toast]);
 
   if (!currentQuestion) {
     return <div>Loading...</div>;
