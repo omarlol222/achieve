@@ -61,6 +61,10 @@ const Dashboard = () => {
     }
   };
 
+  const getTestTypeUrl = (name: string) => {
+    return name.toLowerCase() === 'gat' ? '/gat' : `/gat/${name.toLowerCase()}`;
+  };
+
   return (
     <div className="container py-8">
       <div className="mb-8 flex items-center gap-4">
@@ -114,7 +118,7 @@ const Dashboard = () => {
 
             <CardContent className="pt-4">
               <Link 
-                to={`/gat/${testType.name.toLowerCase()}`}
+                to={getTestTypeUrl(testType.name)}
                 className="block w-full"
               >
                 <Button 
