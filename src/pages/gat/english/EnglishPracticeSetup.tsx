@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -10,12 +9,15 @@ import { ArrowLeft } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+type QuestionCount = 10 | 20 | 30 | -1; // -1 represents infinite mode
 
 export default function EnglishPracticeSetup() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [questionsCount, setQuestionsCount] = useState(10);
+  const [questionsCount, setQuestionsCount] = useState<QuestionCount>(10);
 
   // Fetch English subject ID first
   const { data: englishSubject } = useQuery({
@@ -83,7 +85,7 @@ export default function EnglishPracticeSetup() {
         .from('practice_sessions')
         .insert({
           user_id: (await supabase.auth.getUser()).data.user?.id,
-          total_questions: questionsCount,
+          total_questions: questionsCount === -1 ? 999 : questionsCount,
           subject: 'English',
           status: 'in_progress'
         })
@@ -154,18 +156,45 @@ export default function EnglishPracticeSetup() {
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-xl font-semibold">Number of Questions</h2>
-              <div className="flex gap-4">
-                {[5, 10, 15, 20].map((count) => (
-                  <Button
-                    key={count}
-                    variant={questionsCount === count ? "default" : "outline"}
-                    onClick={() => setQuestionsCount(count)}
-                  >
-                    {count}
-                  </Button>
-                ))}
-              </div>
+              <Label className="text-lg font-medium">Number of Questions</Label>
+              <RadioGroup
+                defaultValue="10"
+                onValueChange={(value) => setQuestionsCount(parseInt(value) as QuestionCount)}
+                className="grid grid-cols-2 gap-4"
+              >
+                <Label
+                  htmlFor="q10"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary cursor-pointer"
+                >
+                  <RadioGroupItem value="10" id="q10" className="sr-only" />
+                  <span className="text-xl font-bold">10</span>
+                  <span className="text-sm text-gray-500">Questions</span>
+                </Label>
+                <Label
+                  htmlFor="q20"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary cursor-pointer"
+                >
+                  <RadioGroupItem value="20" id="q20" className="sr-only" />
+                  <span className="text-xl font-bold">20</span>
+                  <span className="text-sm text-gray-500">Questions</span>
+                </Label>
+                <Label
+                  htmlFor="q30"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary cursor-pointer"
+                >
+                  <RadioGroupItem value="30" id="q30" className="sr-only" />
+                  <span className="text-xl font-bold">30</span>
+                  <span className="text-sm text-gray-500">Questions</span>
+                </Label>
+                <Label
+                  htmlFor="infinite"
+                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary cursor-pointer"
+                >
+                  <RadioGroupItem value="-1" id="infinite" className="sr-only" />
+                  <span className="text-xl font-bold">∞</span>
+                  <span className="text-sm text-gray-500">Infinite Mode</span>
+                </Label>
+              </RadioGroup>
             </div>
 
             <Button 
