@@ -35,6 +35,8 @@ export async function fetchQuestionsForSubtopic(
     return [];
   }
 
+  console.log(`Found ${questions?.length || 0} questions for subtopic ${subtopicId}`);
+
   // Filter out any potential duplicates by ID
   const uniqueQuestions = questions?.filter((question, index, self) =>
     index === self.findIndex((q) => q.id === question.id)
@@ -48,6 +50,8 @@ export async function fetchFallbackQuestions(
   answeredIds: string[]
 ) {
   if (!subtopicIds.length) return [];
+
+  console.log("Fetching fallback questions for subtopics:", subtopicIds);
 
   let query = supabase
     .from('questions')
@@ -65,6 +69,8 @@ export async function fetchFallbackQuestions(
     console.error("Error fetching fallback questions:", error);
     return [];
   }
+
+  console.log(`Found ${questions?.length || 0} fallback questions`);
 
   // Filter out any potential duplicates by ID
   const uniqueQuestions = questions?.filter((question, index, self) =>

@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,12 +27,10 @@ export type PracticeQuestion = {
   subtopic_id?: string;
 };
 
-// Define the type for the subtopic_attempts JSON field
 type SubtopicAttempts = {
   subtopics: string[];
 };
 
-// Define the type for the session with the correct JSON field type
 type PracticeSession = {
   id: string;
   user_id: string;
@@ -66,10 +63,13 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   } = usePracticeStore();
 
   const { data: session } = useSession(sessionId);
-  // Use type assertion to ensure correct typing
+  console.log("Session data in usePracticeQuestions:", session);
+  
   const subtopicIds = (session?.subtopic_attempts as SubtopicAttempts)?.subtopics || [];
+  console.log("Subtopic IDs:", subtopicIds);
+  
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
-  const userId = session?.user_id;
+  console.log("Answered IDs:", answeredIds);
 
   useEffect(() => {
     if (!session?.user_id) return;
@@ -120,13 +120,20 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
   const getNextQuestion = useCallback(async () => {
     if (!sessionId || !session?.subject || subtopicIds.length === 0) {
+      console.log("Early return conditions:", {
+        sessionId,
+        subject: session?.subject,
+        subtopicIdsLength: subtopicIds.length
+      });
       return;
     }
 
     try {
       const currentAnsweredCount = answeredIds.length;
+      console.log("Current answered count:", currentAnsweredCount);
 
       if (session.total_questions && currentAnsweredCount >= session.total_questions) {
+        console.log("Session completed, all questions answered");
         await completeSession(currentAnsweredCount);
         return;
       }
@@ -137,6 +144,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         .in('subtopic_id', subtopicIds)
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
+      console.log("Statistics data:", statisticsData);
+
       const subtopicDifficulties = new Map(
         statisticsData?.map(stat => [
           stat.subtopic_id,
@@ -145,21 +154,31 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         ]) || []
       );
 
-      const questionPromises = subtopicIds.map(subtopicId => 
-        fetchQuestionsForSubtopic(
+      console.log("Subtopic difficulties:", Object.fromEntries(subtopicDifficulties));
+
+      const questionPromises = subtopicIds.map(subtopicId => {
+        const difficulty = subtopicDifficulties.get(subtopicId) || 'Easy';
+        console.log(`Fetching questions for subtopic ${subtopicId} with difficulty ${difficulty}`);
+        return fetchQuestionsForSubtopic(
           subtopicId,
-          subtopicDifficulties.get(subtopicId) || 'Easy',
+          difficulty,
           answeredIds
-        )
-      );
+        );
+      });
 
       const questionsArrays = await Promise.all(questionPromises);
+      console.log("Questions arrays:", questionsArrays);
+      
       let availableQuestions = questionsArrays.flat();
+      console.log("Available questions after flattening:", availableQuestions);
 
       if (availableQuestions.length === 0) {
+        console.log("No questions found, trying fallback");
         availableQuestions = await fetchFallbackQuestions(subtopicIds, answeredIds);
+        console.log("Fallback questions:", availableQuestions);
 
         if (availableQuestions.length === 0) {
+          console.log("No questions available even after fallback");
           toast({
             title: "No more questions available",
             description: "You've completed all available questions.",
@@ -170,7 +189,9 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       }
 
       const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-      setCurrentQuestion(availableQuestions[randomIndex]);
+      const selectedQuestion = availableQuestions[randomIndex];
+      console.log("Selected question:", selectedQuestion);
+      setCurrentQuestion(selectedQuestion);
 
     } catch (error: any) {
       console.error("Error fetching next question:", error);
@@ -183,7 +204,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, completeSession, toast]);
 
   useEffect(() => {
+    console.log("useEffect conditions:", {
+      session: !!session,
+      currentQuestion: !!currentQuestion,
+      subtopicIdsLength: subtopicIds.length
+    });
+    
     if (session && !currentQuestion && subtopicIds.length > 0) {
+      console.log("Calling getNextQuestion from useEffect");
       getNextQuestion();
     }
   }, [session, currentQuestion, subtopicIds, getNextQuestion]);
