@@ -68,31 +68,13 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         return;
       }
 
-      const { data: answers } = await supabase
-        .from("practice_answers")
-        .select("is_correct")
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: false })
-        .limit(3);
-
-      if (answers && answers.length >= 3) {
-        const recentCorrect = answers.filter(a => a.is_correct).length;
-        if (recentCorrect >= 2 && currentDifficulty !== 'Hard') {
-          setCurrentDifficulty(currentDifficulty === 'Easy' ? 'Moderate' : 'Hard');
-        } else if (recentCorrect <= 1 && currentDifficulty !== 'Easy') {
-          setCurrentDifficulty(currentDifficulty === 'Hard' ? 'Moderate' : 'Easy');
-        }
-      }
-
       const { data: subjectData } = await supabase
         .from("subjects")
         .select("id")
         .eq("name", session.subject)
         .single();
 
-      if (!subjectData) {
-        throw new Error(`Subject "${session.subject}" not found`);
-      }
+      if (!subjectData) throw new Error(`Subject "${session.subject}" not found`);
 
       const { data: topicsData } = await supabase
         .from("topics")
@@ -104,17 +86,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       }
 
       const topicIds = topicsData.map(t => t.id);
-
       const answeredIds = (answersData || []).map(a => a.question_id);
 
       const { data: questions, error: questionsError } = await supabase
-        .from("questions")
-        .select("*")
-        .eq("difficulty", currentDifficulty)
-        .in("topic_id", topicIds)
-        .not('id', 'in', answeredIds)
-        .limit(1)
-        .order('random()');
+        .rpc('get_random_unanswered_question', {
+          p_difficulty: currentDifficulty,
+          p_topic_ids: topicIds,
+          p_answered_ids: answeredIds
+        });
 
       if (questionsError) throw questionsError;
 
@@ -122,16 +101,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
         
         const { data: fallbackQuestions, error: fallbackError } = await supabase
-          .from("questions")
-          .select("*")
-          .eq("difficulty", fallbackDifficulty)
-          .in("topic_id", topicIds)
-          .not('id', 'in', answeredIds)
-          .limit(1)
-          .order('random()');
+          .rpc('get_random_unanswered_question', {
+            p_difficulty: fallbackDifficulty,
+            p_topic_ids: topicIds,
+            p_answered_ids: answeredIds
+          });
 
         if (fallbackError) throw fallbackError;
-        if (!fallbackQuestions || fallbackQuestions.length === 0) {
+        if (!fallbackQuestions || !fallbackQuestions[0]) {
           toast({
             title: "No more questions available",
             description: "You've completed all available questions at this difficulty level.",

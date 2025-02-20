@@ -100,7 +100,7 @@ export function PracticeSession() {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
-        if (isComplete) {
+        if (questionsAnswered >= totalQuestions) {
           navigate(`/gat/practice/results/${sessionId}`);
         } else {
           getNextQuestion();
