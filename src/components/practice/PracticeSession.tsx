@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ export function PracticeSession() {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [streak, setStreak] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const {
     currentQuestion,
@@ -25,8 +26,34 @@ export function PracticeSession() {
     isComplete
   } = usePracticeQuestions(sessionId);
 
+  // Get and set the user ID when component mounts
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to continue practice.",
+          variant: "destructive",
+        });
+        navigate("/signin");
+        return;
+      }
+      setUserId(session.user.id);
+    };
+
+    checkAuth();
+  }, [navigate, toast]);
+
   const handleAnswerSubmit = async () => {
-    if (!selectedAnswer || !currentQuestion || !sessionId) return;
+    if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
+      toast({
+        title: "Error",
+        description: "Please select an answer and ensure you're logged in.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
@@ -35,18 +62,20 @@ export function PracticeSession() {
       const newStreak = isCorrect ? streak + 1 : 0;
       setStreak(newStreak);
 
-      // Record answer
-      await supabase.from("practice_answers").insert({
+      // Record answer with explicit user_id
+      const { error: answerError } = await supabase.from("practice_answers").insert({
         session_id: sessionId,
         question_id: currentQuestion.id,
         selected_answer: selectedAnswer,
         is_correct: isCorrect,
         streak_at_answer: streak,
-        user_id: (await supabase.auth.getUser()).data.user?.id
+        user_id: userId
       });
 
+      if (answerError) throw answerError;
+
       // Update session progress
-      await supabase
+      const { error: sessionError } = await supabase
         .from("practice_sessions")
         .update({
           questions_answered: questionsAnswered,
@@ -55,6 +84,8 @@ export function PracticeSession() {
           completed_at: isComplete ? new Date().toISOString() : null
         })
         .eq("id", sessionId);
+
+      if (sessionError) throw sessionError;
 
       setShowFeedback(true);
 
@@ -71,6 +102,7 @@ export function PracticeSession() {
       }, 2000);
 
     } catch (error: any) {
+      console.error("Error submitting answer:", error);
       toast({
         title: "Error submitting answer",
         description: error.message,
