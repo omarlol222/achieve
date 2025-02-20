@@ -73,10 +73,14 @@ export function PracticeSession() {
           selected_answer: selectedAnswer,
           is_correct: isCorrect,
           user_id: userId,
-          subtopic_id: currentQuestion.subtopic_id
+          subtopic_id: currentQuestion.subtopic_id,
+          difficulty_used: currentQuestion.difficulty || 'Easy'
         });
 
-      if (answerError) throw answerError;
+      if (answerError) {
+        console.error("Error inserting answer:", answerError);
+        throw answerError;
+      }
 
       setShowFeedback(true);
 
