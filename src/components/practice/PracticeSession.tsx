@@ -58,6 +58,11 @@ export function PracticeSession() {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
       const newQuestionsAnswered = questionsAnswered + 1;
 
+      // Calculate points based on correct answer
+      const basePoints = 10; // Base points for a correct answer
+      const streakBonus = Math.floor(questionsAnswered / 5) * 2; // Bonus points for every 5 questions
+      const points = isCorrect ? basePoints + streakBonus : 0;
+
       // Record the answer
       const { error: answerError } = await supabase
         .from("practice_answers")
@@ -67,7 +72,8 @@ export function PracticeSession() {
           selected_answer: selectedAnswer,
           is_correct: isCorrect,
           user_id: userId,
-          subtopic_id: currentQuestion.subtopic_id
+          subtopic_id: currentQuestion.subtopic_id,
+          points_earned: points
         });
 
       if (answerError) throw answerError;
