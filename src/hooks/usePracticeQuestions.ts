@@ -97,33 +97,37 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       const topicIds = topicsData.map(t => t.id);
 
-      // Get random question using RPC function
-      const { data: question, error: questionError } = await supabase.rpc(
-        'get_random_unanswered_question',
-        { 
-          p_difficulty: currentDifficulty,
-          p_topic_ids: topicIds,
-          p_answered_ids: answeredIds.length > 0 ? answeredIds : null
-        }
-      );
+      // Fetch all available questions for the current difficulty and topics
+      const { data: availableQuestions, error: questionsError } = await supabase
+        .from('questions')
+        .select('*')
+        .eq('difficulty', currentDifficulty)
+        .in('topic_id', topicIds);
 
-      if (questionError) throw questionError;
+      if (questionsError) throw questionsError;
 
-      if (!question || question.length === 0) {
+      // Filter out answered questions in JavaScript
+      const unansweredQuestions = availableQuestions?.filter(
+        q => !answeredIds.includes(q.id)
+      ) || [];
+
+      if (unansweredQuestions.length === 0) {
         // Try fallback difficulty if no questions found
         const fallbackDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
         
-        const { data: fallbackQuestion, error: fallbackError } = await supabase.rpc(
-          'get_random_unanswered_question',
-          { 
-            p_difficulty: fallbackDifficulty,
-            p_topic_ids: topicIds,
-            p_answered_ids: answeredIds.length > 0 ? answeredIds : null
-          }
-        );
+        const { data: fallbackQuestions, error: fallbackError } = await supabase
+          .from('questions')
+          .select('*')
+          .eq('difficulty', fallbackDifficulty)
+          .in('topic_id', topicIds);
 
         if (fallbackError) throw fallbackError;
-        if (!fallbackQuestion || fallbackQuestion.length === 0) {
+
+        const unansweredFallbackQuestions = fallbackQuestions?.filter(
+          q => !answeredIds.includes(q.id)
+        ) || [];
+
+        if (unansweredFallbackQuestions.length === 0) {
           toast({
             title: "No more questions available",
             description: "You've completed all available questions at this difficulty level.",
@@ -131,10 +135,15 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           });
           return;
         }
-        setCurrentQuestion(fallbackQuestion[0] as PracticeQuestion);
+
+        // Select a random question from the fallback questions
+        const randomIndex = Math.floor(Math.random() * unansweredFallbackQuestions.length);
+        setCurrentQuestion(unansweredFallbackQuestions[randomIndex] as PracticeQuestion);
         setCurrentDifficulty(fallbackDifficulty);
       } else {
-        setCurrentQuestion(question[0] as PracticeQuestion);
+        // Select a random question from the available questions
+        const randomIndex = Math.floor(Math.random() * unansweredQuestions.length);
+        setCurrentQuestion(unansweredQuestions[randomIndex] as PracticeQuestion);
       }
     } catch (error: any) {
       console.error("Error fetching next question:", error);
