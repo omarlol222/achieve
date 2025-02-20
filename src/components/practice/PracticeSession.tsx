@@ -56,23 +56,6 @@ export function PracticeSession() {
     }
 
     try {
-      // Verify that the question has a valid subtopic
-      const { data: questionData, error: questionError } = await supabase
-        .from("questions")
-        .select("subtopic_id")
-        .eq("id", currentQuestion.id)
-        .single();
-
-      if (questionError || !questionData?.subtopic_id) {
-        console.error("Question subtopic error:", questionError || "No subtopic found");
-        toast({
-          title: "Error processing answer",
-          description: "Unable to process this answer. Please try another question.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
       
       // Update streak
@@ -89,7 +72,10 @@ export function PracticeSession() {
         user_id: userId
       });
 
-      if (answerError) throw answerError;
+      if (answerError) {
+        console.error("Error recording answer:", answerError);
+        throw answerError;
+      }
 
       // Update session progress
       const { error: sessionError } = await supabase
@@ -102,7 +88,10 @@ export function PracticeSession() {
         })
         .eq("id", sessionId);
 
-      if (sessionError) throw sessionError;
+      if (sessionError) {
+        console.error("Error updating session:", sessionError);
+        throw sessionError;
+      }
 
       setShowFeedback(true);
 
