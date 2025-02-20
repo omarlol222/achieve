@@ -103,8 +103,6 @@ export function PracticeSession() {
           difficulty_used: currentQuestion.difficulty || 'Easy',
           attempt_number: currentAttempts + 1,
           consecutive_mistakes: newMistakes[subtopicId]
-        }, {
-          onConflict: 'practice_answers_session_question_unique'
         });
 
       if (answerError) throw answerError;
