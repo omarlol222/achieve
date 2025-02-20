@@ -1,8 +1,8 @@
-
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePracticeStore } from "@/store/usePracticeStore";
 
 export type PracticeQuestion = {
   id: string;
@@ -30,9 +30,15 @@ const isValidDifficulty = (difficulty: string | null | undefined): difficulty is
 };
 
 export function usePracticeQuestions(sessionId: string | undefined) {
-  const [currentQuestion, setCurrentQuestion] = useState<PracticeQuestion | null>(null);
-  const [questionsAnswered, setQuestionsAnswered] = useState(0);
   const { toast } = useToast();
+  const { 
+    currentQuestion,
+    questionsAnswered,
+    actions: { 
+      setCurrentQuestion,
+      setQuestionsAnswered 
+    }
+  } = usePracticeStore();
 
   const { data: session } = useQuery({
     queryKey: ["practice-session", sessionId],

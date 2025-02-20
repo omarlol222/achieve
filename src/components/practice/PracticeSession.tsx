@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,15 +8,24 @@ import { QuestionContent } from "./QuestionContent";
 import { useToast } from "@/hooks/use-toast";
 import { usePracticeQuestions } from "@/hooks/usePracticeQuestions";
 import { Progress } from "@/components/ui/progress";
+import { usePracticeStore } from "@/store/usePracticeStore";
 
 export function PracticeSession() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [streak, setStreak] = useState(0);
-  const [showFeedback, setShowFeedback] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  const {
+    selectedAnswer,
+    streak,
+    showFeedback,
+    actions: {
+      setSelectedAnswer,
+      setStreak,
+      setShowFeedback
+    }
+  } = usePracticeStore();
 
   const {
     currentQuestion,
@@ -50,19 +59,19 @@ export function PracticeSession() {
     let basePoints = 0;
     switch (difficulty) {
       case 'Easy':
-        basePoints = 5; // Reduced from 10
+        basePoints = 5;
         break;
       case 'Moderate':
-        basePoints = 10; // Reduced from 20
+        basePoints = 10;
         break;
       case 'Hard':
-        basePoints = 15; // Reduced from 30
+        basePoints = 15;
         break;
       default:
         basePoints = 5;
     }
 
-    const streakBonus = currentStreak >= 3 ? Math.min(currentStreak - 2, 3) : 0; // Reduced max streak bonus
+    const streakBonus = currentStreak >= 3 ? Math.min(currentStreak - 2, 3) : 0;
     
     return basePoints + streakBonus;
   };
@@ -85,7 +94,7 @@ export function PracticeSession() {
 
       const pointsEarned = calculatePoints(isCorrect, currentQuestion.difficulty, streak);
 
-      // First record the answer
+      // Record the answer
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -96,13 +105,10 @@ export function PracticeSession() {
           streak_at_answer: streak,
           user_id: userId,
           points_earned: pointsEarned,
-          subtopic_id: currentQuestion.subtopic_id // Add this line to ensure subtopic is tracked
+          subtopic_id: currentQuestion.subtopic_id
         });
 
-      if (answerError) {
-        console.error("Error recording answer:", answerError);
-        throw answerError;
-      }
+      if (answerError) throw answerError;
 
       // Update user_subtopic_progress
       if (currentQuestion.subtopic_id) {
@@ -117,27 +123,7 @@ export function PracticeSession() {
             onConflict: 'user_id,subtopic_id'
           });
 
-        if (progressError) {
-          console.error("Error updating progress:", progressError);
-          throw progressError;
-        }
-      }
-
-      // Update session
-      const { error: sessionError } = await supabase
-        .from("practice_sessions")
-        .update({
-          questions_answered: questionsAnswered,
-          current_streak: newStreak,
-          status: isComplete ? 'completed' : 'in_progress',
-          completed_at: isComplete ? new Date().toISOString() : null,
-          total_points: pointsEarned
-        })
-        .eq("id", sessionId);
-
-      if (sessionError) {
-        console.error("Error updating session:", sessionError);
-        throw sessionError;
+        if (progressError) throw progressError;
       }
 
       setShowFeedback(true);
