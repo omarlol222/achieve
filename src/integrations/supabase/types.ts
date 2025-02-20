@@ -290,6 +290,7 @@ export type Database = {
           selected_answer: number | null
           session_id: string | null
           streak_at_answer: number | null
+          subtopic_id: string | null
           user_id: string | null
         }
         Insert: {
@@ -302,6 +303,7 @@ export type Database = {
           selected_answer?: number | null
           session_id?: string | null
           streak_at_answer?: number | null
+          subtopic_id?: string | null
           user_id?: string | null
         }
         Update: {
@@ -314,6 +316,7 @@ export type Database = {
           selected_answer?: number | null
           session_id?: string | null
           streak_at_answer?: number | null
+          subtopic_id?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -329,6 +332,13 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "practice_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_answers_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "subtopics"
             referencedColumns: ["id"]
           },
         ]
