@@ -67,8 +67,7 @@ export default function PracticeResults() {
       return {
         session: sessionData,
         subtopicScores: Object.values(subtopicScores),
-        totalPoints: sessionData.practice_answers.reduce((sum: number, answer: any) => 
-          sum + (answer.points_earned || 0), 0),
+        totalPoints: sessionData.total_points,
         correctAnswers: sessionData.practice_answers.filter((a: any) => a.is_correct).length,
         totalQuestions: sessionData.total_questions
       };
