@@ -1,3 +1,4 @@
+
 import { Auth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,8 +29,9 @@ export const SignInForm = ({ siteUrl }: SignInFormProps) => {
         }}
         theme="light"
         providers={[]}
-        redirectTo={siteUrl}
+        redirectTo={`${window.location.origin}/dashboard`}
         showLinks={false}
+        onlyThirdPartyProviders={false}
       />
 
       <div className="mt-4 text-center space-y-4">
