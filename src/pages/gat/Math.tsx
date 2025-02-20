@@ -69,7 +69,8 @@ const MathComponent = () => {
       }));
     },
     enabled: !!subject?.id,
-    refetchInterval: 5000, // Refetch every 5 seconds to see progress updates
+    refetchInterval: 3000, // Refetch every 3 seconds to see progress updates
+    staleTime: 0, // Consider data stale immediately so it always refetches
   });
 
   const calculateTopicProgress = (topicId: string) => {
