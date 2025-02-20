@@ -78,7 +78,18 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
 
     const streakBonus = currentStreak >= 3 ? Math.min(currentStreak - 2, 3) : 0;
-    return basePoints + streakBonus;
+    const totalPoints = basePoints + streakBonus;
+    
+    console.log('Points calculation details:', {
+      isCorrect,
+      difficulty,
+      currentStreak,
+      basePoints,
+      streakBonus,
+      totalPoints
+    });
+
+    return totalPoints;
   };
 
   useEffect(() => {
@@ -214,11 +225,13 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
       const pointsEarned = calculatePoints(isCorrect, currentQuestion.difficulty, streak);
 
-      console.log(`Processing answer for question ${currentQuestion.id}:`, {
+      console.log(`Answer submission details:`, {
+        questionId: currentQuestion.id,
         isCorrect,
         difficulty: currentQuestion.difficulty,
         streak,
-        pointsEarned
+        pointsEarned,
+        subtopicId: currentQuestion.subtopic_id
       });
 
       // First save the answer and points in practice_answers
@@ -239,27 +252,33 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       // Then update user progress
       if (currentQuestion.subtopic_id) {
-        // Get current progress
-        const { data: existingProgress } = await supabase
+        // Get current progress and log it
+        const { data: existingProgress, error: progressFetchError } = await supabase
           .from("user_subtopic_progress")
           .select('current_score')
           .eq("user_id", userId)
           .eq("subtopic_id", currentQuestion.subtopic_id)
           .maybeSingle();
 
-        // Simply add the new points to the current score
+        if (progressFetchError) {
+          console.error("Error fetching current progress:", progressFetchError);
+          throw progressFetchError;
+        }
+
+        console.log("Current progress data:", existingProgress);
+
         const currentScore = existingProgress?.current_score || 0;
         const newScore = currentScore + pointsEarned;
 
-        console.log("Points calculation:", {
+        console.log("Score update calculation:", {
           currentScore,
           pointsEarned,
           newScore,
           subtopicId: currentQuestion.subtopic_id
         });
 
-        // Update progress with just the new total score
-        const { error: progressError } = await supabase
+        // Update progress with the new score
+        const { data: updatedProgress, error: progressError } = await supabase
           .from("user_subtopic_progress")
           .upsert({
             user_id: userId,
@@ -269,12 +288,16 @@ export function usePracticeQuestions(sessionId: string | undefined) {
             updated_at: new Date().toISOString()
           }, {
             onConflict: 'user_id,subtopic_id'
-          });
+          })
+          .select()
+          .single();
 
         if (progressError) {
           console.error("Error updating progress:", progressError);
           throw progressError;
         }
+
+        console.log("Updated progress:", updatedProgress);
 
         // Update session total points
         const { data: currentSession } = await supabase
@@ -284,11 +307,18 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           .single();
 
         const currentTotalPoints = currentSession?.total_points || 0;
+        const newTotalPoints = currentTotalPoints + pointsEarned;
         
+        console.log("Session points update:", {
+          currentTotalPoints,
+          pointsEarned,
+          newTotalPoints
+        });
+
         const { error: sessionError } = await supabase
           .from("practice_sessions")
           .update({ 
-            total_points: currentTotalPoints + pointsEarned,
+            total_points: newTotalPoints,
             updated_at: new Date().toISOString()
           })
           .eq("id", sessionId);
