@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +45,6 @@ export function PracticeSession() {
     checkAuth();
   }, [navigate, toast]);
 
-  // Load existing session data
   useEffect(() => {
     if (sessionId) {
       const loadSessionData = async () => {
@@ -57,7 +55,6 @@ export function PracticeSession() {
           .single();
 
         if (session?.subtopic_attempts) {
-          // Ensure we convert the JSONB data to our expected Record<string, number> type
           const attempts = session.subtopic_attempts as Record<string, number>;
           setSubtopicAttempts(attempts);
         }
@@ -81,12 +78,10 @@ export function PracticeSession() {
       const newQuestionsAnswered = questionsAnswered + 1;
       const subtopicId = currentQuestion.subtopic_id;
 
-      // Update attempts tracking
       const currentAttempts = subtopicAttempts[subtopicId] || 0;
       const newAttempts = { ...subtopicAttempts, [subtopicId]: currentAttempts + 1 };
       setSubtopicAttempts(newAttempts);
 
-      // Track consecutive mistakes
       const currentMistakes = consecutiveMistakes[subtopicId] || 0;
       const newMistakes = { ...consecutiveMistakes };
       if (!isCorrect) {
@@ -96,10 +91,9 @@ export function PracticeSession() {
       }
       setConsecutiveMistakes(newMistakes);
 
-      // Record the answer
       const { error: answerError } = await supabase
         .from("practice_answers")
-        .insert({
+        .upsert({
           session_id: sessionId,
           question_id: currentQuestion.id,
           selected_answer: selectedAnswer,
@@ -109,11 +103,12 @@ export function PracticeSession() {
           difficulty_used: currentQuestion.difficulty || 'Easy',
           attempt_number: currentAttempts + 1,
           consecutive_mistakes: newMistakes[subtopicId]
+        }, {
+          onConflict: 'session_id,question_id'
         });
 
       if (answerError) throw answerError;
 
-      // Update session data
       const { error: sessionError } = await supabase
         .from("practice_sessions")
         .update({
