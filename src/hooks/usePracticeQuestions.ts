@@ -285,11 +285,20 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           throw progressError;
         }
 
+        // First get current session points
+        const { data: currentSession } = await supabase
+          .from("practice_sessions")
+          .select('total_points')
+          .eq('id', sessionId)
+          .single();
+
+        const currentTotalPoints = currentSession?.total_points || 0;
+        
         // Update session total points
         const { error: sessionError } = await supabase
           .from("practice_sessions")
           .update({ 
-            total_points: supabase.sql`total_points + ${pointsEarned}`,
+            total_points: currentTotalPoints + pointsEarned,
             updated_at: new Date().toISOString()
           })
           .eq("id", sessionId);
