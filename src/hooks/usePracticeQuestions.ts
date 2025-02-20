@@ -6,6 +6,7 @@ import { useSession } from "./practice/useSession";
 import { useSubtopics } from "./practice/useSubtopics";
 import { useAnsweredQuestions } from "./practice/useAnsweredQuestions";
 import { fetchQuestionsForSubtopic, fetchFallbackQuestions } from "./practice/useQuestionFetcher";
+import { useAchievementNotification } from "@/components/achievements/AchievementNotification";
 
 export type PracticeQuestion = {
   id: string;
@@ -34,6 +35,7 @@ const isValidDifficulty = (difficulty: string | null | undefined): difficulty is
 
 export function usePracticeQuestions(sessionId: string | undefined) {
   const { toast } = useToast();
+  const { showAchievementNotification } = useAchievementNotification();
   const { 
     currentQuestion,
     questionsAnswered,
@@ -46,6 +48,38 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const { data: session } = useSession(sessionId);
   const { data: subtopicIds = [] } = useSubtopics(session?.subject);
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
+
+  useEffect(() => {
+    if (!session?.user_id) return;
+
+    const channel = supabase
+      .channel('achievements')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_achievements',
+          filter: `user_id=eq.${session.user_id}`
+        },
+        async (payload) => {
+          const { data: achievement } = await supabase
+            .from('achievements')
+            .select('*')
+            .eq('id', payload.new.achievement_id)
+            .single();
+
+          if (achievement) {
+            showAchievementNotification(achievement);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user_id, showAchievementNotification]);
 
   const completeSession = useCallback(async (currentAnsweredCount: number) => {
     if (!sessionId) return;
@@ -82,7 +116,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         return;
       }
 
-      // Batch fetch user progress data
       const { data: progressData } = await supabase
         .from('user_subtopic_progress')
         .select('subtopic_id, difficulty_level')
@@ -93,7 +126,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         progressData?.map(p => [p.subtopic_id, isValidDifficulty(p.difficulty_level) ? p.difficulty_level : 'Easy']) || []
       );
 
-      // Fetch questions in parallel for better performance
       const questionPromises = subtopicIds.map(subtopicId => 
         fetchQuestionsForSubtopic(
           subtopicId,
