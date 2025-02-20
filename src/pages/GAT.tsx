@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,12 @@ export default function GAT() {
   return <div className="min-h-screen bg-white">
       <Navigation />
       <div className="container py-8 space-y-8">
+        <div className="flex justify-start mb-4">
+          <Button variant="outline" size="icon" onClick={() => navigate("/gat/leaderboard")} className="hover:bg-primary/10 my-0 mx-[2px] py-0 px-0 text-center">
+            <Trophy className="h-5 w-5" />
+          </Button>
+        </div>
+
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold text-[#1B2B2B]">
             Welcome to GAT Learning!
@@ -14,12 +21,6 @@ export default function GAT() {
           <p className="text-lg text-gray-600">
             Choose your learning path and start your journey
           </p>
-        </div>
-
-        <div className="flex justify-end mb-4">
-          <Button variant="outline" size="icon" onClick={() => navigate("/gat/leaderboard")} className="hover:bg-primary/10 my-0 mx-[2px] py-0 px-0 text-center">
-            <Trophy className="h-5 w-5" />
-          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
