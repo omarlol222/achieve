@@ -19,14 +19,19 @@ export async function fetchQuestionsForSubtopic(
   const query = supabase
     .from('questions')
     .select('*')
-    .eq('subtopic_id', subtopicId)
-    .eq('difficulty', validDifficulty);
+    .eq('subtopic_id', subtopicId);
 
   if (answeredIds.length > 0) {
     query.not('id', 'in', answeredIds);
   }
 
-  const { data: questions } = await query;
+  const { data: questions, error } = await query;
+  
+  if (error) {
+    console.error("Error fetching questions:", error);
+    return [];
+  }
+
   return questions as PracticeQuestion[] || [];
 }
 
@@ -44,6 +49,12 @@ export async function fetchFallbackQuestions(
     query.not('id', 'in', answeredIds);
   }
 
-  const { data: questions } = await query;
+  const { data: questions, error } = await query;
+  
+  if (error) {
+    console.error("Error fetching fallback questions:", error);
+    return [];
+  }
+
   return questions as PracticeQuestion[] || [];
 }
