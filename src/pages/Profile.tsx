@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileOverview } from "@/components/profile/ProfileOverview";
@@ -6,12 +7,14 @@ import { AchievementsSection } from "@/components/profile/AchievementsSection";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAchievementNotification } from "@/components/achievements/AchievementNotification";
 
 export default function Profile() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
+  const { showAchievementNotification } = useAchievementNotification();
 
   const { data: session, isError: isSessionError } = useQuery({
     queryKey: ["auth-session"],
@@ -47,8 +50,43 @@ export default function Profile() {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     });
 
+    // Subscribe to real-time achievement updates
+    if (session?.user.id) {
+      const channel = supabase
+        .channel('achievements')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'user_achievements',
+            filter: `user_id=eq.${session.user.id}`
+          },
+          async (payload) => {
+            // Fetch the achievement details
+            const { data: achievement } = await supabase
+              .from('achievements')
+              .select('*')
+              .eq('id', payload.new.achievement_id)
+              .single();
+
+            if (achievement) {
+              showAchievementNotification(achievement);
+              // Invalidate achievements query to refresh the list
+              queryClient.invalidateQueries({ queryKey: ["achievements"] });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+        subscription.unsubscribe();
+      };
+    }
+
     return () => subscription.unsubscribe();
-  }, [navigate, queryClient]);
+  }, [navigate, queryClient, session?.user.id, showAchievementNotification]);
 
   const { data: profileData, isError: isProfileError } = useQuery({
     queryKey: ["profile", session?.user.id],
