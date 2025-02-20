@@ -57,9 +57,7 @@ const MathComponent = () => {
             id,
             name,
             user_subtopic_progress (
-              current_score,
-              questions_answered,
-              correct_answers
+              current_score
             )
           )
         `)
@@ -83,7 +81,7 @@ const MathComponent = () => {
     },
     enabled: !!subject?.id,
     staleTime: 0,
-    refetchInterval: 2000 // Refresh every 2 seconds
+    refetchInterval: 1000 // Refresh every second
   });
 
   useEffect(() => {
@@ -101,7 +99,6 @@ const MathComponent = () => {
         },
         async (payload) => {
           console.log("Progress update received:", payload);
-          // Force a refetch of the topics data
           await refetchTopics();
         }
       )
@@ -119,20 +116,38 @@ const MathComponent = () => {
     const topic = topics?.find(t => t.id === topicId);
     if (!topic || !topic.subtopics) return { percentage: 0 };
 
-    const validSubtopics = topic.subtopics.filter(st => st && st.progress && typeof st.progress.points === 'number');
+    // Filter out any subtopics with invalid progress data
+    const validSubtopics = topic.subtopics.filter(st => 
+      st && 
+      st.progress && 
+      typeof st.progress.points === 'number'
+    );
+
     if (validSubtopics.length === 0) return { percentage: 0 };
 
-    const subtopicPercentages = validSubtopics.map(st => {
-      console.log(`Subtopic ${st.name} points:`, st.progress.points);
-      return Math.min((st.progress.points / 500) * 100, 100);
+    // Calculate total points and max possible points
+    let totalPoints = 0;
+    const maxPointsPerSubtopic = 500; // Maximum points possible per subtopic
+    const maxTotalPoints = validSubtopics.length * maxPointsPerSubtopic;
+
+    // Sum up all points
+    totalPoints = validSubtopics.reduce((sum, st) => {
+      const points = st.progress.points || 0;
+      console.log(`Subtopic ${st.name} points:`, points);
+      return sum + points;
+    }, 0);
+
+    // Calculate percentage based on total points achieved vs maximum possible points
+    const percentage = (totalPoints / maxTotalPoints) * 100;
+    
+    console.log(`Topic ${topic.name}:`, {
+      totalPoints,
+      maxTotalPoints,
+      percentage
     });
 
-    const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
-    const averagePercentage = totalPercentage / validSubtopics.length;
-    
-    console.log(`Topic ${topic.name} average percentage:`, averagePercentage);
     return {
-      percentage: averagePercentage
+      percentage: Math.min(percentage, 100) // Ensure we don't exceed 100%
     };
   };
 
