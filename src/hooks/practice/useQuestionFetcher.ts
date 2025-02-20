@@ -3,9 +3,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PracticeQuestion } from "../usePracticeQuestions";
 
+type DifficultyLevel = 'Easy' | 'Moderate' | 'Hard';
+
 export async function fetchQuestionsForSubtopic(
   subtopicId: string,
-  difficulty: string,
+  difficulty: DifficultyLevel,
   answeredIds: string[]
 ) {
   const query = supabase
