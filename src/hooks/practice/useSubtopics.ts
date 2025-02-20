@@ -32,7 +32,7 @@ export function useSubtopics(subject: string | undefined) {
 
       console.log("Found subject:", subjectData);
 
-      // First get topic IDs
+      // First get all topics for this subject
       const { data: topicsData, error: topicsError } = await supabase
         .from("topics")
         .select("id")

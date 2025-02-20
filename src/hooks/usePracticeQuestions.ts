@@ -1,11 +1,9 @@
-
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { usePracticeStore } from "@/store/usePracticeStore";
 import { useSession } from "./practice/useSession";
-import { useSubtopics } from "./practice/useSubtopics";
 import { useAnsweredQuestions } from "./practice/useAnsweredQuestions";
 import { fetchQuestionsForSubtopic, fetchFallbackQuestions } from "./practice/useQuestionFetcher";
 import { useAchievementNotification } from "@/components/achievements/AchievementNotification";
@@ -51,7 +49,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   } = usePracticeStore();
 
   const { data: session } = useSession(sessionId);
-  const { data: subtopicIds = [] } = useSubtopics(session?.subject);
+  const subtopicIds = session?.subtopic_attempts?.subtopics || [];
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
   const userId = session?.user_id;
 
@@ -115,14 +113,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         return;
       }
 
-      // Get subtopic statistics for difficulty selection
       const { data: statisticsData } = await supabase
         .from('user_subtopic_statistics')
         .select('subtopic_id, accuracy')
         .in('subtopic_id', subtopicIds)
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
-      // Map statistics to difficulties
       const subtopicDifficulties = new Map(
         statisticsData?.map(stat => [
           stat.subtopic_id,

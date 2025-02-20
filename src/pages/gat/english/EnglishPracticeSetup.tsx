@@ -80,6 +80,14 @@ export default function EnglishPracticeSetup() {
     }
 
     try {
+      // Get all subtopics for selected topics
+      const { data: subtopics, error: subtopicsError } = await supabase
+        .from('subtopics')
+        .select('id')
+        .in('topic_id', selectedTopics);
+
+      if (subtopicsError) throw subtopicsError;
+
       // Create a new practice session
       const { data: session, error } = await supabase
         .from('practice_sessions')
@@ -87,7 +95,8 @@ export default function EnglishPracticeSetup() {
           user_id: (await supabase.auth.getUser()).data.user?.id,
           total_questions: questionsCount === -1 ? 999 : questionsCount,
           subject: 'English',
-          status: 'in_progress'
+          status: 'in_progress',
+          subtopic_attempts: { subtopics: subtopics.map(st => st.id) }
         })
         .select()
         .single();
