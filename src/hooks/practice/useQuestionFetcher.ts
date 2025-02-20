@@ -17,27 +17,26 @@ export async function fetchQuestionsForSubtopic(
   
   const validDifficulty = isValidDifficulty(difficulty) ? difficulty : 'Easy';
   
-  let query = supabase
+  // Use a CTE (Common Table Expression) to select random questions
+  const { data: questions, error } = await supabase
     .from('questions')
     .select('*')
     .eq('subtopic_id', subtopicId)
     .eq('difficulty', validDifficulty)
-    .order('created_at')
+    .not('id', answeredIds.length > 0 ? 'in' : 'eq', answeredIds)
     .limit(5);
-
-  // Only add the not.in filter if there are answered questions
-  if (answeredIds.length > 0) {
-    query = query.not('id', 'in', answeredIds);
-  }
-  
-  const { data: questions, error } = await query;
   
   if (error) {
     console.error("Error fetching questions for subtopic:", error);
     return [];
   }
 
-  return questions as PracticeQuestion[] || [];
+  // Filter out any potential duplicates by ID
+  const uniqueQuestions = questions?.filter((question, index, self) =>
+    index === self.findIndex((q) => q.id === question.id)
+  );
+
+  return uniqueQuestions as PracticeQuestion[] || [];
 }
 
 export async function fetchFallbackQuestions(
@@ -46,24 +45,24 @@ export async function fetchFallbackQuestions(
 ) {
   if (!subtopicIds.length) return [];
 
-  let query = supabase
+  // Use a more specific query to avoid duplicates
+  const { data: questions, error } = await supabase
     .from('questions')
     .select('*')
     .in('subtopic_id', subtopicIds)
-    .order('created_at')
+    .not('id', answeredIds.length > 0 ? 'in' : 'eq', answeredIds)
     .limit(10);
-
-  // Only add the not.in filter if there are answered questions
-  if (answeredIds.length > 0) {
-    query = query.not('id', 'in', answeredIds);
-  }
-  
-  const { data: questions, error } = await query;
   
   if (error) {
     console.error("Error fetching fallback questions:", error);
     return [];
   }
 
-  return questions as PracticeQuestion[] || [];
+  // Filter out any potential duplicates by ID
+  const uniqueQuestions = questions?.filter((question, index, self) =>
+    index === self.findIndex((q) => q.id === question.id)
+  );
+
+  // Sort randomly to avoid getting the same sequence
+  return uniqueQuestions?.sort(() => Math.random() - 0.5) as PracticeQuestion[] || [];
 }
