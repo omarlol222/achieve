@@ -17,14 +17,18 @@ export async function fetchQuestionsForSubtopic(
   
   const validDifficulty = isValidDifficulty(difficulty) ? difficulty : 'Easy';
   
-  // Use a CTE (Common Table Expression) to select random questions
-  const { data: questions, error } = await supabase
+  let query = supabase
     .from('questions')
     .select('*')
     .eq('subtopic_id', subtopicId)
-    .eq('difficulty', validDifficulty)
-    .not('id', answeredIds.length > 0 ? 'in' : 'eq', answeredIds)
-    .limit(5);
+    .eq('difficulty', validDifficulty);
+
+  // Only apply the filter if there are answered questions
+  if (answeredIds.length > 0) {
+    query = query.not('id', 'in', answeredIds);
+  }
+
+  const { data: questions, error } = await query.limit(5);
   
   if (error) {
     console.error("Error fetching questions for subtopic:", error);
@@ -45,13 +49,17 @@ export async function fetchFallbackQuestions(
 ) {
   if (!subtopicIds.length) return [];
 
-  // Use a more specific query to avoid duplicates
-  const { data: questions, error } = await supabase
+  let query = supabase
     .from('questions')
     .select('*')
-    .in('subtopic_id', subtopicIds)
-    .not('id', answeredIds.length > 0 ? 'in' : 'eq', answeredIds)
-    .limit(10);
+    .in('subtopic_id', subtopicIds);
+
+  // Only apply the filter if there are answered questions
+  if (answeredIds.length > 0) {
+    query = query.not('id', 'in', answeredIds);
+  }
+
+  const { data: questions, error } = await query.limit(10);
   
   if (error) {
     console.error("Error fetching fallback questions:", error);
