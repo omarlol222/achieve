@@ -57,7 +57,7 @@ const MathComponent = () => {
             id,
             name,
             user_subtopic_progress (
-              current_score
+              points
             )
           )
         `)
@@ -74,7 +74,7 @@ const MathComponent = () => {
           id: st.id,
           name: st.name,
           progress: {
-            points: st.user_subtopic_progress?.[0]?.current_score || 0
+            points: st.user_subtopic_progress?.[0]?.points || 0
           }
         }))
       }));

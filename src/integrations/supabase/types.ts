@@ -1090,52 +1090,28 @@ export type Database = {
       }
       user_subtopic_progress: {
         Row: {
-          accuracy: number | null
-          correct_answers: number | null
           created_at: string | null
-          current_score: number
-          decay_factor: number | null
-          difficulty_level: string | null
-          diminishing_returns_factor: number | null
           id: string
           last_practiced: string | null
-          last_question_timestamp: string | null
-          questions_answered: number | null
-          streak_count: number | null
+          points: number
           subtopic_id: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
-          accuracy?: number | null
-          correct_answers?: number | null
           created_at?: string | null
-          current_score?: number
-          decay_factor?: number | null
-          difficulty_level?: string | null
-          diminishing_returns_factor?: number | null
           id?: string
           last_practiced?: string | null
-          last_question_timestamp?: string | null
-          questions_answered?: number | null
-          streak_count?: number | null
+          points?: number
           subtopic_id?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
-          accuracy?: number | null
-          correct_answers?: number | null
           created_at?: string | null
-          current_score?: number
-          decay_factor?: number | null
-          difficulty_level?: string | null
-          diminishing_returns_factor?: number | null
           id?: string
           last_practiced?: string | null
-          last_question_timestamp?: string | null
-          questions_answered?: number | null
-          streak_count?: number | null
+          points?: number
           subtopic_id?: string | null
           updated_at?: string | null
           user_id?: string | null

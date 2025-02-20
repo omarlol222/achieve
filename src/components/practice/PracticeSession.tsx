@@ -18,11 +18,9 @@ export function PracticeSession() {
 
   const {
     selectedAnswer,
-    streak,
     showFeedback,
     actions: {
       setSelectedAnswer,
-      setStreak,
       setShowFeedback
     }
   } = usePracticeStore();
@@ -53,29 +51,6 @@ export function PracticeSession() {
     checkAuth();
   }, [navigate, toast]);
 
-  const calculatePoints = (isCorrect: boolean, difficulty: string, currentStreak: number) => {
-    if (!isCorrect) return 0;
-    
-    let basePoints = 0;
-    switch (difficulty) {
-      case 'Easy':
-        basePoints = 5;
-        break;
-      case 'Moderate':
-        basePoints = 10;
-        break;
-      case 'Hard':
-        basePoints = 15;
-        break;
-      default:
-        basePoints = 5;
-    }
-
-    const streakBonus = currentStreak >= 3 ? Math.min(currentStreak - 2, 3) : 0;
-    
-    return basePoints + streakBonus;
-  };
-
   const handleAnswerSubmit = async () => {
     if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
       toast({
@@ -88,11 +63,6 @@ export function PracticeSession() {
 
     try {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
-      
-      const newStreak = isCorrect ? streak + 1 : 0;
-      setStreak(newStreak);
-
-      const pointsEarned = calculatePoints(isCorrect, currentQuestion.difficulty, streak);
 
       // Record the answer
       const { error: answerError } = await supabase
@@ -102,29 +72,11 @@ export function PracticeSession() {
           question_id: currentQuestion.id,
           selected_answer: selectedAnswer,
           is_correct: isCorrect,
-          streak_at_answer: streak,
           user_id: userId,
-          points_earned: pointsEarned,
           subtopic_id: currentQuestion.subtopic_id
         });
 
       if (answerError) throw answerError;
-
-      // Update user_subtopic_progress
-      if (currentQuestion.subtopic_id) {
-        const { error: progressError } = await supabase
-          .from("user_subtopic_progress")
-          .upsert({
-            user_id: userId,
-            subtopic_id: currentQuestion.subtopic_id,
-            current_score: pointsEarned,
-            last_practiced: new Date().toISOString()
-          }, {
-            onConflict: 'user_id,subtopic_id'
-          });
-
-        if (progressError) throw progressError;
-      }
 
       setShowFeedback(true);
 
@@ -160,12 +112,6 @@ export function PracticeSession() {
           <p className="text-sm text-gray-500">Question {questionsAnswered} of {totalQuestions}</p>
           <Progress value={(questionsAnswered / totalQuestions) * 100} className="w-[200px]" />
         </div>
-        
-        {streak >= 3 && (
-          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-            🔥 Streak: {streak}
-          </div>
-        )}
       </div>
 
       <Card className="p-6">
