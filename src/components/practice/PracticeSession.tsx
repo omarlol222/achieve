@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,21 +85,45 @@ export function PracticeSession() {
 
       const pointsEarned = calculatePoints(isCorrect, currentQuestion.difficulty, streak);
 
-      const { error: answerError } = await supabase.from("practice_answers").insert({
-        session_id: sessionId,
-        question_id: currentQuestion.id,
-        selected_answer: selectedAnswer,
-        is_correct: isCorrect,
-        streak_at_answer: streak,
-        user_id: userId,
-        points_earned: pointsEarned
-      });
+      // First record the answer
+      const { error: answerError } = await supabase
+        .from("practice_answers")
+        .insert({
+          session_id: sessionId,
+          question_id: currentQuestion.id,
+          selected_answer: selectedAnswer,
+          is_correct: isCorrect,
+          streak_at_answer: streak,
+          user_id: userId,
+          points_earned: pointsEarned,
+          subtopic_id: currentQuestion.subtopic_id // Add this line to ensure subtopic is tracked
+        });
 
       if (answerError) {
         console.error("Error recording answer:", answerError);
         throw answerError;
       }
 
+      // Update user_subtopic_progress
+      if (currentQuestion.subtopic_id) {
+        const { error: progressError } = await supabase
+          .from("user_subtopic_progress")
+          .upsert({
+            user_id: userId,
+            subtopic_id: currentQuestion.subtopic_id,
+            current_score: pointsEarned,
+            last_practiced: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,subtopic_id'
+          });
+
+        if (progressError) {
+          console.error("Error updating progress:", progressError);
+          throw progressError;
+        }
+      }
+
+      // Update session
       const { error: sessionError } = await supabase
         .from("practice_sessions")
         .update({
