@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +69,7 @@ const MathComponent = () => {
       }));
     },
     enabled: !!subject?.id,
+    refetchInterval: 5000, // Refetch every 5 seconds to see progress updates
   });
 
   const calculateTopicProgress = (topicId: string) => {
