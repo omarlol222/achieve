@@ -41,7 +41,17 @@ export default function EnglishPractice() {
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
-      <PracticeSession />
+      <div className="container py-8">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate("/gat/english")}
+          className="mb-8 flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to English
+        </Button>
+        <PracticeSession />
+      </div>
     </div>
   );
 }

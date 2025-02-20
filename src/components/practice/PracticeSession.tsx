@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +53,29 @@ export function PracticeSession() {
 
     checkAuth();
   }, [navigate, toast]);
+
+  if (!currentQuestion && !isComplete) {
+    return (
+      <div className="container py-8 text-center">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto"></div>
+          <div className="h-32 bg-gray-200 rounded max-w-2xl mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isComplete) {
+    return (
+      <div className="container py-8 text-center">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Practice Complete!</h2>
+        <p className="text-gray-600 mb-6">You've completed all questions in this session.</p>
+        <Button onClick={() => navigate("/gat/english")}>
+          Return to English Practice
+        </Button>
+      </div>
+    );
+  }
 
   const calculatePointsForAnswer = (isCorrect: boolean, difficulty: string, streak: number) => {
     if (!isCorrect) return 0;
