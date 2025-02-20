@@ -1,9 +1,11 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ArrowLeft, BookOpen, Calculator, BrainCircuit, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+
 const Dashboard = () => {
   const {
     data: testTypes,
@@ -42,11 +44,13 @@ const Dashboard = () => {
       return uniqueTestTypes;
     }
   });
+
   if (isLoading) {
     return <div className="flex h-[50vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>;
   }
+
   const getTestTypeIcon = (name: string) => {
     switch (name.toLowerCase()) {
       case 'gat':
@@ -57,13 +61,15 @@ const Dashboard = () => {
         return <BookOpen className="h-12 w-12" />;
     }
   };
+
   const getTestTypeUrl = (name: string) => {
     return name.toLowerCase() === 'gat' ? '/gat' : `/gat/${name.toLowerCase()}`;
   };
+
   return <div className="container py-8">
       <div className="mb-8 flex items-center gap-4">
         <Button variant="outline" size="icon" asChild>
-          <Link to="/gat">
+          <Link to="/">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
@@ -109,4 +115,5 @@ const Dashboard = () => {
       </div>
     </div>;
 };
+
 export default Dashboard;
