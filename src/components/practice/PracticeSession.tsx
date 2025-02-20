@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,24 +8,29 @@ import { QuestionContent } from "./QuestionContent";
 import { useToast } from "@/hooks/use-toast";
 import { usePracticeQuestions } from "@/hooks/usePracticeQuestions";
 import { Progress } from "@/components/ui/progress";
+import { usePracticeStore } from "@/store/usePracticeStore";
 
 export function PracticeSession() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [subtopicAttempts, setSubtopicAttempts] = useState<Record<string, number>>({});
-  const [consecutiveMistakes, setConsecutiveMistakes] = useState<Record<string, number>>({});
+
+  const {
+    selectedAnswer,
+    showFeedback,
+    actions: {
+      setSelectedAnswer,
+      setShowFeedback
+    }
+  } = usePracticeStore();
 
   const {
     currentQuestion,
     questionsAnswered,
     totalQuestions,
     getNextQuestion,
-    isComplete,
-    setQuestionsAnswered
+    isComplete
   } = usePracticeQuestions(sessionId);
 
   useEffect(() => {
@@ -46,25 +51,7 @@ export function PracticeSession() {
     checkAuth();
   }, [navigate, toast]);
 
-  useEffect(() => {
-    if (sessionId) {
-      const loadSessionData = async () => {
-        const { data: session } = await supabase
-          .from("practice_sessions")
-          .select("subtopic_attempts")
-          .eq("id", sessionId)
-          .single();
-
-        if (session?.subtopic_attempts) {
-          const attempts = session.subtopic_attempts as Record<string, number>;
-          setSubtopicAttempts(attempts);
-        }
-      };
-      loadSessionData();
-    }
-  }, [sessionId]);
-
-  const handleAnswerSubmit = useCallback(async () => {
+  const handleAnswerSubmit = async () => {
     if (!selectedAnswer || !currentQuestion || !sessionId || !userId) {
       toast({
         title: "Error",
@@ -76,23 +63,8 @@ export function PracticeSession() {
 
     try {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
-      const newQuestionsAnswered = questionsAnswered + 1;
-      const subtopicId = currentQuestion.subtopic_id;
 
-      const currentAttempts = subtopicAttempts[subtopicId] || 0;
-      const newAttempts = { ...subtopicAttempts, [subtopicId]: currentAttempts + 1 };
-      setSubtopicAttempts(newAttempts);
-
-      const currentMistakes = consecutiveMistakes[subtopicId] || 0;
-      const newMistakes = { ...consecutiveMistakes };
-      if (!isCorrect) {
-        newMistakes[subtopicId] = currentMistakes + 1;
-      } else {
-        newMistakes[subtopicId] = 0;
-      }
-      setConsecutiveMistakes(newMistakes);
-
-      // Insert with all necessary fields for the trigger function
+      // Record the answer
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -101,39 +73,18 @@ export function PracticeSession() {
           selected_answer: selectedAnswer,
           is_correct: isCorrect,
           user_id: userId,
-          subtopic_id: subtopicId,
-          difficulty_used: currentQuestion.difficulty || 'Easy',
-          attempt_number: currentAttempts + 1,
-          consecutive_mistakes: newMistakes[subtopicId],
-          points_earned: isCorrect ? (
-            currentQuestion.difficulty === 'Hard' ? 15 :
-            currentQuestion.difficulty === 'Moderate' ? 10 : 5
-          ) : 0
+          subtopic_id: currentQuestion.subtopic_id
         });
 
       if (answerError) throw answerError;
 
-      // Update session
-      const { error: sessionError } = await supabase
-        .from("practice_sessions")
-        .update({
-          questions_answered: newQuestionsAnswered,
-          status: newQuestionsAnswered >= totalQuestions ? 'completed' : 'in_progress',
-          subtopic_attempts: newAttempts,
-          current_streak: isCorrect ? (questionsAnswered + 1) : 0
-        })
-        .eq("id", sessionId);
-
-      if (sessionError) throw sessionError;
-
-      setQuestionsAnswered(newQuestionsAnswered);
       setShowFeedback(true);
 
       setTimeout(() => {
         setShowFeedback(false);
         setSelectedAnswer(null);
         
-        if (newQuestionsAnswered >= totalQuestions) {
+        if (questionsAnswered >= totalQuestions) {
           navigate(`/gat/practice/results/${sessionId}`);
         } else {
           getNextQuestion();
@@ -148,7 +99,7 @@ export function PracticeSession() {
         variant: "destructive",
       });
     }
-  }, [selectedAnswer, currentQuestion, sessionId, userId, questionsAnswered, totalQuestions, navigate, getNextQuestion, toast, setQuestionsAnswered, subtopicAttempts, consecutiveMistakes]);
+  };
 
   if (!currentQuestion) {
     return <div>Loading...</div>;
@@ -158,8 +109,8 @@ export function PracticeSession() {
     <div className="container py-8 space-y-8">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <p className="text-sm text-gray-500">Question {questionsAnswered + 1} of {totalQuestions}</p>
-          <Progress value={((questionsAnswered + 1) / totalQuestions) * 100} className="w-[200px]" />
+          <p className="text-sm text-gray-500">Question {questionsAnswered} of {totalQuestions}</p>
+          <Progress value={(questionsAnswered / totalQuestions) * 100} className="w-[200px]" />
         </div>
       </div>
 
@@ -169,7 +120,7 @@ export function PracticeSession() {
           selectedAnswer={selectedAnswer}
           showFeedback={showFeedback}
           onAnswerSelect={setSelectedAnswer}
-          questionNumber={questionsAnswered + 1}
+          questionNumber={questionsAnswered}
           totalQuestions={totalQuestions}
         />
         
@@ -186,4 +137,3 @@ export function PracticeSession() {
     </div>
   );
 }
-

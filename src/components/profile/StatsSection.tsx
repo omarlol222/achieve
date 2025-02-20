@@ -16,6 +16,7 @@ export function StatsSection({ statistics }: StatsSectionProps) {
     
     return statistics
       .filter(stat => {
+        // Filter for stats within last 10 days based on last_practiced
         const lastPracticed = new Date(stat.last_practiced);
         return stat?.subtopic?.name && lastPracticed >= tenDaysAgo;
       })

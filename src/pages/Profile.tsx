@@ -116,7 +116,7 @@ export default function Profile() {
     queryFn: async () => {
       if (!session?.user.id) return null;
       const { data, error } = await supabase
-        .from("user_subtopic_statistics")
+        .from("user_subtopic_progress")
         .select(`
           *,
           subtopic: subtopics (
