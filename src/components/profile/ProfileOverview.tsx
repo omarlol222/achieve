@@ -21,6 +21,12 @@ export function ProfileOverview({ profile, statistics }: ProfileOverviewProps) {
   const correctAnswers = statistics?.reduce((acc, stat) => acc + (stat.correct_answers || 0), 0) || 0;
   const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
+  // Calculate mastery progress
+  const masteryThreshold = 800; // Consider a topic mastered when score is above 800
+  const masteredTopics = statistics?.filter(stat => (stat.current_score || 0) >= masteryThreshold).length || 0;
+  const totalTopics = statistics?.length || 0;
+  const masteryProgress = totalTopics > 0 ? (masteredTopics / totalTopics) * 100 : 0;
+
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -120,10 +126,17 @@ export function ProfileOverview({ profile, statistics }: ProfileOverviewProps) {
       
       <div className="mt-6">
         <div className="flex justify-between text-sm">
-          <span>Total XP</span>
-          <span>{correctAnswers * 10} / 1000</span>
+          <span>Topic Mastery</span>
+          <span>{masteredTopics} / {totalTopics} topics mastered</span>
         </div>
-        <Progress value={(correctAnswers * 10 / 1000) * 100} className="mt-2" />
+        <Progress 
+          value={masteryProgress} 
+          className="mt-2" 
+          indicatorClassName={masteryProgress === 100 ? "bg-green-500" : undefined}
+        />
+        {masteryProgress === 100 && (
+          <p className="text-sm text-green-600 mt-1">Congratulations! You've mastered all topics!</p>
+        )}
       </div>
     </Card>
   );
