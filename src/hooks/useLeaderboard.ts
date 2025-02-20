@@ -79,11 +79,11 @@ export function useLeaderboard() {
       return {
         overall: overallRank.data ? {
           ...overallRank.data,
-          weekly_points: 0,
+          weekly_points: 0, // Add missing field for overall entries
         } : null,
         weekly: weeklyRank.data ? {
           ...weeklyRank.data,
-          total_points: 0,
+          total_points: 0, // Add missing field for weekly entries
         } : null,
       };
     },
