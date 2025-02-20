@@ -22,8 +22,8 @@ export function ProfileOverview({ profile, statistics }: ProfileOverviewProps) {
   const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
   // Calculate mastery progress
-  const masteryThreshold = 800; // Consider a topic mastered when score is above 800
-  const masteredTopics = statistics?.filter(stat => (stat.current_score || 0) >= masteryThreshold).length || 0;
+  const masteryThreshold = 0.8; // Consider a topic mastered when accuracy is above 80%
+  const masteredTopics = statistics?.filter(stat => (stat.accuracy || 0) >= masteryThreshold).length || 0;
   const totalTopics = statistics?.length || 0;
   const masteryProgress = totalTopics > 0 ? (masteredTopics / totalTopics) * 100 : 0;
 

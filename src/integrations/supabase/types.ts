@@ -1126,6 +1126,50 @@ export type Database = {
           },
         ]
       }
+      user_subtopic_statistics: {
+        Row: {
+          accuracy: number | null
+          correct_answers: number | null
+          created_at: string | null
+          id: string
+          last_practiced: string | null
+          questions_answered: number | null
+          subtopic_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accuracy?: number | null
+          correct_answers?: number | null
+          created_at?: string | null
+          id?: string
+          last_practiced?: string | null
+          questions_answered?: number | null
+          subtopic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accuracy?: number | null
+          correct_answers?: number | null
+          created_at?: string | null
+          id?: string
+          last_practiced?: string | null
+          questions_answered?: number | null
+          subtopic_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subtopic_statistics_subtopic_id_fkey"
+            columns: ["subtopic_id"]
+            isOneToOne: false
+            referencedRelation: "subtopics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_points: {
         Row: {
           date_recorded: string | null
