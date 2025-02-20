@@ -35,7 +35,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       if (!sessionId) return null;
       const { data, error } = await supabase
         .from("practice_sessions")
-        .select("*, subjects!inner(*)")
+        .select("*")
         .eq("id", sessionId)
         .single();
 
@@ -68,16 +68,17 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         }
       }
 
-      // First get the subject ID for Math
-      const { data: subjectData } = await supabase
-        .from("subjects")
+      // Get all topics for the selected subject
+      const { data: topicsData } = await supabase
+        .from("topics")
         .select("id")
-        .eq("name", session.subject)
-        .single();
+        .eq("subject_id", session.subject);
 
-      if (!subjectData?.id) {
-        throw new Error("Subject not found");
+      if (!topicsData || topicsData.length === 0) {
+        throw new Error("No topics found for this subject");
       }
+
+      const topicIds = topicsData.map(t => t.id);
 
       // Get already answered question IDs
       const { data: answeredQuestions } = await supabase
@@ -87,12 +88,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       const answeredIds = answeredQuestions?.map(a => a.question_id) || [];
 
-      // Get a random question of appropriate difficulty for the subject
+      // Get a random question of appropriate difficulty for any topic in the subject
       let query = supabase
         .from("questions")
         .select("*")
         .eq("difficulty", currentDifficulty)
-        .eq("topic_id", subjectData.id);
+        .in("topic_id", topicIds);
 
       // Only add the not-in filter if there are answered questions
       if (answeredIds.length > 0) {
@@ -112,7 +113,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           .from("questions")
           .select("*")
           .eq("difficulty", fallbackDifficulty)
-          .eq("topic_id", subjectData.id);
+          .in("topic_id", topicIds);
 
         // Only add the not-in filter if there are answered questions
         if (answeredIds.length > 0) {
