@@ -1,26 +1,49 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileOverview } from "@/components/profile/ProfileOverview";
 import { StatsSection } from "@/components/profile/StatsSection";
 import { AchievementsSection } from "@/components/profile/AchievementsSection";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const { toast } = useToast();
-  const userId = supabase.auth.getSession().then(response => response.data.session?.user.id);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const { data: session } = useQuery({
+    queryKey: ["auth-session"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session;
+    },
+  });
+
+  useEffect(() => {
+    if (!session) {
+      navigate("/signin");
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        navigate("/signin");
+      }
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    });
+
+    return () => subscription.unsubscribe();
+  }, [session, navigate, queryClient]);
 
   const { data: profileData } = useQuery({
-    queryKey: ["profile", userId],
+    queryKey: ["profile", session?.user.id],
     queryFn: async () => {
-      const session = await supabase.auth.getSession();
-      const currentUserId = session.data.session?.user.id;
-      
-      if (!currentUserId) return null;
+      if (!session?.user.id) return null;
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", currentUserId)
+        .eq("id", session.user.id)
         .maybeSingle();
 
       if (error) {
@@ -33,15 +56,13 @@ export default function Profile() {
       }
       return data;
     },
+    enabled: !!session?.user.id,
   });
 
   const { data: statistics } = useQuery({
-    queryKey: ["statistics", userId],
+    queryKey: ["statistics", session?.user.id],
     queryFn: async () => {
-      const session = await supabase.auth.getSession();
-      const currentUserId = session.data.session?.user.id;
-      
-      if (!currentUserId) return null;
+      if (!session?.user.id) return null;
       const { data, error } = await supabase
         .from("user_subtopic_progress")
         .select(`
@@ -51,7 +72,7 @@ export default function Profile() {
             topic: topics (name)
           )
         `)
-        .eq("user_id", currentUserId);
+        .eq("user_id", session.user.id);
 
       if (error) {
         toast({
@@ -63,15 +84,13 @@ export default function Profile() {
       }
       return data;
     },
+    enabled: !!session?.user.id,
   });
 
   const { data: achievements } = useQuery({
-    queryKey: ["achievements", userId],
+    queryKey: ["achievements", session?.user.id],
     queryFn: async () => {
-      const session = await supabase.auth.getSession();
-      const currentUserId = session.data.session?.user.id;
-      
-      if (!currentUserId) return null;
+      if (!session?.user.id) return null;
       const { data, error } = await supabase
         .from("user_achievements")
         .select(`
@@ -82,7 +101,7 @@ export default function Profile() {
             points_required
           )
         `)
-        .eq("user_id", currentUserId);
+        .eq("user_id", session.user.id);
 
       if (error) {
         toast({
@@ -94,18 +113,11 @@ export default function Profile() {
       }
       return data;
     },
-  });
-
-  const { data: session } = useQuery({
-    queryKey: ["auth-session"],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session;
-    },
+    enabled: !!session?.user.id,
   });
 
   if (!session) {
-    return <div>Please sign in to view your profile.</div>;
+    return null; // We'll redirect in the useEffect
   }
 
   return (
