@@ -18,6 +18,7 @@ export function PracticeSession() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [consecutiveMistakes, setConsecutiveMistakes] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pointsEarned, setPointsEarned] = useState(0);
 
   const {
     selectedAnswer,
@@ -54,19 +55,34 @@ export function PracticeSession() {
     checkAuth();
   }, [navigate, toast]);
 
+  const calculatePointsForAnswer = (isCorrect: boolean, difficulty: string, streak: number) => {
+    if (!isCorrect) return 0;
+    
+    let basePoints = 
+      difficulty === 'Hard' ? 30 :
+      difficulty === 'Moderate' ? 20 : 10;
+
+    let multiplier = 
+      streak >= 10 ? 2.0 :
+      streak >= 5 ? 1.5 :
+      streak >= 3 ? 1.2 : 1.0;
+
+    return Math.round(basePoints * multiplier);
+  };
+
   const completeSession = async () => {
     if (!sessionId) return;
 
     try {
       console.log("Starting session completion...");
       
-      // Complete the session in a single update
       const { error: completeError } = await supabase
         .from("practice_sessions")
         .update({ 
           status: 'completed',
           completed_at: new Date().toISOString(),
-          questions_answered: totalQuestions
+          questions_answered: totalQuestions,
+          total_points: pointsEarned
         })
         .eq("id", sessionId)
         .select();
@@ -101,13 +117,23 @@ export function PracticeSession() {
       let newStreak = isCorrect ? currentStreak + 1 : 0;
       let newConsecutiveMistakes = isCorrect ? 0 : consecutiveMistakes + 1;
       
+      const newPoints = calculatePointsForAnswer(
+        isCorrect, 
+        currentQuestion.difficulty || 'Easy',
+        newStreak
+      );
+      
       setCurrentStreak(newStreak);
       setConsecutiveMistakes(newConsecutiveMistakes);
+      setPointsEarned(prev => prev + newPoints);
 
-      // Update session streak
+      // Update session streak and points
       const { error: streakError } = await supabase
         .from("practice_sessions")
-        .update({ current_streak: newStreak })
+        .update({ 
+          current_streak: newStreak,
+          total_points: pointsEarned + newPoints
+        })
         .eq("id", sessionId);
 
       if (streakError) throw streakError;
@@ -124,7 +150,8 @@ export function PracticeSession() {
           subtopic_id: currentQuestion.subtopic_id,
           difficulty_used: currentQuestion.difficulty || 'Easy',
           streak_at_answer: newStreak,
-          consecutive_mistakes: newConsecutiveMistakes
+          consecutive_mistakes: newConsecutiveMistakes,
+          points_earned: newPoints
         });
 
       if (answerError) throw answerError;
@@ -175,8 +202,13 @@ export function PracticeSession() {
           <p className="text-sm text-gray-500">Question {questionsAnswered + 1} of {totalQuestions}</p>
           <Progress value={((questionsAnswered + 1) / totalQuestions) * 100} className="w-[200px]" />
         </div>
-        <div className="text-sm text-gray-500">
-          Current Streak: {currentStreak}
+        <div className="space-y-1 text-right">
+          <div className="text-sm text-gray-500">
+            Current Streak: {currentStreak}
+          </div>
+          <div className="text-sm text-gray-500">
+            Points: {pointsEarned}
+          </div>
         </div>
       </div>
 
