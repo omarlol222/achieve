@@ -1335,6 +1335,12 @@ export type Database = {
         }
         Returns: number
       }
+      get_week_start: {
+        Args: {
+          ts: string
+        }
+        Returns: string
+      }
       grant_platform_access: {
         Args: {
           user_id_input: string

@@ -104,7 +104,11 @@ export function PracticeSession() {
           subtopic_id: subtopicId,
           difficulty_used: currentQuestion.difficulty || 'Easy',
           attempt_number: currentAttempts + 1,
-          consecutive_mistakes: newMistakes[subtopicId]
+          consecutive_mistakes: newMistakes[subtopicId],
+          points_earned: isCorrect ? (
+            currentQuestion.difficulty === 'Hard' ? 15 :
+            currentQuestion.difficulty === 'Moderate' ? 10 : 5
+          ) : 0
         });
 
       if (answerError) throw answerError;
@@ -182,3 +186,4 @@ export function PracticeSession() {
     </div>
   );
 }
+
