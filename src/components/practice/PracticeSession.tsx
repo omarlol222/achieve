@@ -104,7 +104,7 @@ export function PracticeSession() {
           attempt_number: currentAttempts + 1,
           consecutive_mistakes: newMistakes[subtopicId]
         }, {
-          onConflict: 'session_id,question_id'
+          onConflict: 'practice_answers_session_question_unique'
         });
 
       if (answerError) throw answerError;
