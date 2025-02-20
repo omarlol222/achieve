@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,13 +10,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SignUpFormFields } from "./signup/SignUpFormFields";
 import { signUpSchema, type SignUpForm } from "./signup/types";
 import { useToast } from "@/hooks/use-toast";
+
 export function SignUpForm() {
   const [signUpError, setSignUpError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
+
   const form = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -26,16 +27,19 @@ export function SignUpForm() {
       phone: ""
     }
   });
+
   const onSubmit = async (data: SignUpForm) => {
     try {
       setIsSubmitting(true);
       setSignUpError(null);
 
       // First, check if the username is already taken
-      const {
-        data: existingUsers,
-        error: checkError
-      } = await supabase.from("profiles").select("username").eq("username", data.username).single();
+      const { data: existingUsers, error: checkError } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("username", data.username)
+        .single();
+
       if (checkError && checkError.code !== "PGRST116") {
         throw checkError;
       }
@@ -45,10 +49,7 @@ export function SignUpForm() {
       }
 
       // Proceed with signup
-      const {
-        error: signUpError,
-        data: signUpData
-      } = await supabase.auth.signUp({
+      const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
@@ -59,10 +60,10 @@ export function SignUpForm() {
           }
         }
       });
+
       if (signUpError) throw signUpError;
 
       // The profile will be created automatically via the handle_new_user database trigger
-
       toast({
         title: "Success",
         description: "Please check your email to verify your account."
@@ -77,9 +78,35 @@ export function SignUpForm() {
       setIsSubmitting(false);
     }
   };
-  return <div className="w-full max-w-md mx-auto">
+
+  return (
+    <div className="w-full max-w-md mx-auto">
       <Form {...form}>
-        
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <SignUpFormFields form={form} />
+          
+          {signUpError && (
+            <Alert variant="destructive">
+              <AlertDescription>{signUpError}</AlertDescription>
+            </Alert>
+          )}
+
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Signing up..." : "Sign Up"}
+          </Button>
+
+          <p className="text-center text-sm text-gray-600">
+            Already have an account?{" "}
+            <Link to="/signin" className="text-primary hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </form>
       </Form>
-    </div>;
+    </div>
+  );
 }
