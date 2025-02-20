@@ -62,7 +62,7 @@ const MathComponent = () => {
       return topicsData.map(topic => ({
         id: topic.id,
         name: topic.name,
-        progress: { points: 0 },
+        progress: { percentage: 0 }, // Changed from points to percentage
         subtopics: (topic.subtopics || []).map(st => ({
           id: st.id,
           name: st.name,
@@ -77,10 +77,10 @@ const MathComponent = () => {
 
   const calculateTopicProgress = (topicId: string) => {
     const topic = topics?.find(t => t.id === topicId);
-    if (!topic || !topic.subtopics) return { points: 0, percentage: 0 };
+    if (!topic || !topic.subtopics) return { percentage: 0 };
 
     const validSubtopics = topic.subtopics.filter(st => st && st.progress && typeof st.progress.points === 'number');
-    if (validSubtopics.length === 0) return { points: 0, percentage: 0 };
+    if (validSubtopics.length === 0) return { percentage: 0 };
 
     // Calculate completion percentage for each subtopic (out of 1000 points max)
     const subtopicPercentages = validSubtopics.map(st => 
@@ -91,11 +91,7 @@ const MathComponent = () => {
     const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
     const averagePercentage = totalPercentage / validSubtopics.length;
     
-    // Convert percentage back to points (out of 1000)
-    const points = Math.round((averagePercentage / 100) * 1000);
-    
     return {
-      points,
       percentage: averagePercentage
     };
   };
@@ -133,7 +129,7 @@ const MathComponent = () => {
                     topics: [{
                       id: topic.id,
                       name: topic.name,
-                      progress: { points: calculateTopicProgress(topic.id).points },
+                      progress: { percentage: calculateTopicProgress(topic.id).percentage },
                       subtopics: topic.subtopics
                     }]
                   }}
