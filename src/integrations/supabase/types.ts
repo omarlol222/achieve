@@ -987,8 +987,22 @@ export type Database = {
             foreignKeyName: "user_achievements_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "overall_leaderboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_leaderboard"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -1144,6 +1158,26 @@ export type Database = {
           },
         ]
       }
+      overall_leaderboard: {
+        Row: {
+          avatar_url: string | null
+          rank: number | null
+          total_points: number | null
+          user_id: string | null
+          username: string | null
+        }
+        Relationships: []
+      }
+      weekly_leaderboard: {
+        Row: {
+          avatar_url: string | null
+          rank: number | null
+          user_id: string | null
+          username: string | null
+          weekly_points: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       apply_progress_decay: {
@@ -1217,6 +1251,18 @@ export type Database = {
           topic_id: string | null
           updated_at: string
         }[]
+      }
+      get_user_total_points: {
+        Args: {
+          user_id_input: string
+        }
+        Returns: number
+      }
+      get_user_weekly_points: {
+        Args: {
+          user_id_input: string
+        }
+        Returns: number
       }
       grant_platform_access: {
         Args: {

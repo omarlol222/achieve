@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, ArrowLeft, BookOpen, Calculator, BrainCircuit } from "lucide-react";
+import { Loader2, ArrowLeft, BookOpen, Calculator, BrainCircuit, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
@@ -73,6 +73,22 @@ const Dashboard = () => {
           My Dashboard
         </h1>
       </div>
+
+      <div className="grid gap-8 mb-8">
+        <Card className="group relative transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <Link to="/leaderboard">
+            <CardHeader className="flex flex-row items-center gap-4">
+              <div className="p-3 rounded-full bg-primary/10 text-primary">
+                <Trophy className="h-8 w-8" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Leaderboard</CardTitle>
+                <CardDescription>See where you rank among other users</CardDescription>
+              </div>
+            </CardHeader>
+          </Link>
+        </Card>
+      </div>
       
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {testTypes?.map((testType) => (
@@ -111,6 +127,6 @@ const Dashboard = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Dashboard;

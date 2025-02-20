@@ -26,6 +26,7 @@ import EnglishPracticeSetup from "@/pages/gat/english/EnglishPracticeSetup";
 import EnglishPractice from "@/pages/gat/english/EnglishPractice";
 import Profile from "@/pages/Profile";
 import PracticeResults from "@/pages/gat/practice/PracticeResults";
+import Leaderboard from "@/pages/Leaderboard";
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
       </Route>
 
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/leaderboard" element={<Leaderboard />} />
 
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
