@@ -1093,12 +1093,15 @@ export type Database = {
           accuracy: number | null
           correct_answers: number | null
           created_at: string | null
-          current_score: number | null
+          current_score: number
           decay_factor: number | null
           difficulty_level: string | null
+          diminishing_returns_factor: number | null
           id: string
           last_practiced: string | null
+          last_question_timestamp: string | null
           questions_answered: number | null
+          streak_count: number | null
           subtopic_id: string | null
           updated_at: string | null
           user_id: string | null
@@ -1107,12 +1110,15 @@ export type Database = {
           accuracy?: number | null
           correct_answers?: number | null
           created_at?: string | null
-          current_score?: number | null
+          current_score?: number
           decay_factor?: number | null
           difficulty_level?: string | null
+          diminishing_returns_factor?: number | null
           id?: string
           last_practiced?: string | null
+          last_question_timestamp?: string | null
           questions_answered?: number | null
+          streak_count?: number | null
           subtopic_id?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -1121,12 +1127,15 @@ export type Database = {
           accuracy?: number | null
           correct_answers?: number | null
           created_at?: string | null
-          current_score?: number | null
+          current_score?: number
           decay_factor?: number | null
           difficulty_level?: string | null
+          diminishing_returns_factor?: number | null
           id?: string
           last_practiced?: string | null
+          last_question_timestamp?: string | null
           questions_answered?: number | null
+          streak_count?: number | null
           subtopic_id?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -1140,6 +1149,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      weekly_points: {
+        Row: {
+          date_recorded: string | null
+          id: string
+          points: number
+          user_id: string | null
+        }
+        Insert: {
+          date_recorded?: string | null
+          id?: string
+          points?: number
+          user_id?: string | null
+        }
+        Update: {
+          date_recorded?: string | null
+          id?: string
+          points?: number
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

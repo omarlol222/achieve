@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,12 +29,6 @@ export type PracticeQuestion = {
   subtopic_id?: string;
 };
 
-type DifficultyLevel = 'Easy' | 'Moderate' | 'Hard';
-
-const isValidDifficulty = (difficulty: string | null | undefined): difficulty is DifficultyLevel => {
-  return difficulty === 'Easy' || difficulty === 'Moderate' || difficulty === 'Hard';
-};
-
 export function usePracticeQuestions(sessionId: string | undefined) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -58,39 +53,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const { data: subtopicIds = [] } = useSubtopics(session?.subject);
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
   const userId = session?.user_id;
-
-  const calculatePoints = (isCorrect: boolean, difficulty: string, currentStreak: number) => {
-    if (!isCorrect) return 0;
-    
-    let basePoints = 0;
-    switch (difficulty) {
-      case 'Easy':
-        basePoints = 5;
-        break;
-      case 'Moderate':
-        basePoints = 10;
-        break;
-      case 'Hard':
-        basePoints = 15;
-        break;
-      default:
-        basePoints = 5;
-    }
-
-    const streakBonus = currentStreak >= 3 ? Math.min(currentStreak - 2, 3) : 0;
-    const totalPoints = basePoints + streakBonus;
-    
-    console.log('Points calculation details:', {
-      isCorrect,
-      difficulty,
-      currentStreak,
-      basePoints,
-      streakBonus,
-      totalPoints
-    });
-
-    return totalPoints;
-  };
 
   useEffect(() => {
     if (!session?.user_id) return;
@@ -127,23 +89,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const completeSession = useCallback(async (currentAnsweredCount: number) => {
     if (!sessionId) return;
     
-    const { data: answers } = await supabase
-      .from("practice_answers")
-      .select('points_earned')
-      .eq('session_id', sessionId);
-    
-    const totalPoints = (answers || []).reduce(
-      (sum: number, answer: any) => sum + (answer.points_earned || 0), 
-      0
-    );
-
     await supabase
       .from("practice_sessions")
       .update({ 
         status: 'completed',
         completed_at: new Date().toISOString(),
-        questions_answered: currentAnsweredCount,
-        total_points: totalPoints
+        questions_answered: currentAnsweredCount
       })
       .eq("id", sessionId);
     
@@ -171,7 +122,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
       const subtopicDifficulties = new Map(
-        progressData?.map(p => [p.subtopic_id, isValidDifficulty(p.difficulty_level) ? p.difficulty_level : 'Easy']) || []
+        progressData?.map(p => [p.subtopic_id, p.difficulty_level || 'Easy']) || []
       );
 
       const questionPromises = subtopicIds.map(subtopicId => 
@@ -223,18 +174,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
     try {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
-      const pointsEarned = calculatePoints(isCorrect, currentQuestion.difficulty, streak);
 
-      console.log(`Answer submission details:`, {
-        questionId: currentQuestion.id,
-        isCorrect,
-        difficulty: currentQuestion.difficulty,
-        streak,
-        pointsEarned,
-        subtopicId: currentQuestion.subtopic_id
-      });
-
-      // First save the answer and points in practice_answers
+      // Insert the answer - points calculation is now handled by database trigger
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -242,96 +183,22 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           question_id: currentQuestion.id,
           selected_answer: selectedAnswer,
           is_correct: isCorrect,
-          streak_at_answer: streak,
           user_id: userId,
-          points_earned: pointsEarned,
           subtopic_id: currentQuestion.subtopic_id
         });
 
       if (answerError) throw answerError;
 
-      // Then update user progress
-      if (currentQuestion.subtopic_id) {
-        // Get current progress and log it
-        const { data: existingProgress, error: progressFetchError } = await supabase
-          .from("user_subtopic_progress")
-          .select('current_score')
-          .eq("user_id", userId)
-          .eq("subtopic_id", currentQuestion.subtopic_id)
-          .maybeSingle();
-
-        if (progressFetchError) {
-          console.error("Error fetching current progress:", progressFetchError);
-          throw progressFetchError;
-        }
-
-        console.log("Current progress data:", existingProgress);
-
-        const currentScore = existingProgress?.current_score || 0;
-        const newScore = currentScore + pointsEarned;
-
-        console.log("Score update calculation:", {
-          currentScore,
-          pointsEarned,
-          newScore,
-          subtopicId: currentQuestion.subtopic_id
-        });
-
-        // Update progress with the new score
-        const { data: updatedProgress, error: progressError } = await supabase
-          .from("user_subtopic_progress")
-          .upsert({
-            user_id: userId,
-            subtopic_id: currentQuestion.subtopic_id,
-            current_score: newScore,
-            last_practiced: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id,subtopic_id'
-          })
-          .select()
-          .single();
-
-        if (progressError) {
-          console.error("Error updating progress:", progressError);
-          throw progressError;
-        }
-
-        console.log("Updated progress:", updatedProgress);
-
-        // Update session total points
-        const { data: currentSession } = await supabase
-          .from("practice_sessions")
-          .select('total_points')
-          .eq('id', sessionId)
-          .single();
-
-        const currentTotalPoints = currentSession?.total_points || 0;
-        const newTotalPoints = currentTotalPoints + pointsEarned;
-        
-        console.log("Session points update:", {
-          currentTotalPoints,
-          pointsEarned,
-          newTotalPoints
-        });
-
-        const { error: sessionError } = await supabase
-          .from("practice_sessions")
-          .update({ 
-            total_points: newTotalPoints,
-            updated_at: new Date().toISOString()
-          })
-          .eq("id", sessionId);
-
-        if (sessionError) {
-          console.error("Error updating session points:", sessionError);
-          throw sessionError;
-        }
-      }
+      // Get updated progress for streak
+      const { data: progress } = await supabase
+        .from("user_subtopic_progress")
+        .select('streak_count')
+        .eq("user_id", userId)
+        .eq("subtopic_id", currentQuestion.subtopic_id)
+        .single();
 
       // Update local state
-      const newStreak = isCorrect ? streak + 1 : 0;
-      setStreak(newStreak);
+      setStreak(progress?.streak_count || 0);
       incrementQuestionsAnswered();
       setShowFeedback(true);
 
@@ -362,15 +229,13 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
   }, [session, currentQuestion, subtopicIds, getNextQuestion]);
 
-  const isComplete = session?.status === 'completed' || 
-                    (session?.total_questions && questionsAnswered >= session.total_questions);
-
   return {
     currentQuestion,
     questionsAnswered,
     totalQuestions: session?.total_questions || 0,
     getNextQuestion,
     handleAnswerSubmit,
-    isComplete
+    isComplete: session?.status === 'completed' || 
+                (session?.total_questions && questionsAnswered >= session.total_questions)
   };
 }
