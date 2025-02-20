@@ -78,8 +78,9 @@ export default function Math() {
   const calculateTopicProgress = (topicId: string) => {
     const topic = topics?.find(t => t.id === topicId);
     const subtopicsPoints = topic?.subtopics?.map(st => st.progress.points) || [];
+    const total = subtopicsPoints.reduce((sum, points) => sum + points, 0);
     const averagePoints = subtopicsPoints.length > 0
-      ? Math.round(subtopicsPoints.reduce((sum, points) => sum + points, 0) / subtopicsPoints.length)
+      ? Math.round(total / subtopicsPoints.length)
       : 0;
     
     return {
