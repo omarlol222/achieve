@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -116,7 +117,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
   const completeSession = useCallback(async (currentAnsweredCount: number) => {
     if (!sessionId) return;
     
-    const totalPoints = (session?.practice_answers || []).reduce(
+    const { data: answers } = await supabase
+      .from("practice_answers")
+      .select('points_earned')
+      .eq('session_id', sessionId);
+    
+    const totalPoints = (answers || []).reduce(
       (sum: number, answer: any) => sum + (answer.points_earned || 0), 
       0
     );
@@ -132,7 +138,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       .eq("id", sessionId);
     
     setCurrentQuestion(null);
-  }, [sessionId, session?.practice_answers, setCurrentQuestion]);
+  }, [sessionId, setCurrentQuestion]);
 
   const getNextQuestion = useCallback(async () => {
     if (!sessionId || !session?.subject || subtopicIds.length === 0) {
@@ -207,14 +213,11 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
     try {
       const isCorrect = selectedAnswer === currentQuestion.correct_answer;
-      
-      const newStreak = isCorrect ? streak + 1 : 0;
-      setStreak(newStreak);
-
       const pointsEarned = calculatePoints(isCorrect, currentQuestion.difficulty, streak);
 
       console.log("Submitting answer with points:", pointsEarned, "for subtopic:", currentQuestion.subtopic_id);
 
+      // First save the answer with points
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -230,13 +233,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       if (answerError) throw answerError;
 
+      // Then update user progress after confirming answer was saved
       if (currentQuestion.subtopic_id) {
         const { data: existingProgress } = await supabase
           .from("user_subtopic_progress")
           .select("current_score")
           .eq("user_id", userId)
           .eq("subtopic_id", currentQuestion.subtopic_id)
-          .single();
+          .maybeSingle();
 
         const currentScore = existingProgress?.current_score || 0;
         const newScore = Math.max(0, Math.min(500, currentScore + pointsEarned));
@@ -250,7 +254,9 @@ export function usePracticeQuestions(sessionId: string | undefined) {
             subtopic_id: currentQuestion.subtopic_id,
             current_score: newScore,
             last_practiced: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            questions_answered: (existingProgress?.questions_answered || 0) + 1,
+            correct_answers: (existingProgress?.correct_answers || 0) + (isCorrect ? 1 : 0)
           }, {
             onConflict: 'user_id,subtopic_id'
           });
@@ -258,6 +264,10 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         if (progressError) throw progressError;
       }
 
+      // Update local state after confirming both saves were successful
+      const newStreak = isCorrect ? streak + 1 : 0;
+      setStreak(newStreak);
+      incrementQuestionsAnswered();
       setShowFeedback(true);
 
       setTimeout(() => {
