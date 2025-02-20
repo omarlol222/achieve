@@ -5,38 +5,53 @@ import { ProfileOverview } from "@/components/profile/ProfileOverview";
 import { StatsSection } from "@/components/profile/StatsSection";
 import { AchievementsSection } from "@/components/profile/AchievementsSection";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: session } = useQuery({
+  const { data: session, isError: isSessionError } = useQuery({
     queryKey: ["auth-session"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
       return session;
     },
   });
 
   useEffect(() => {
-    if (!session) {
-      navigate("/signin");
-    }
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate("/signin");
+          return;
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        navigate("/signin");
+      }
+    };
+
+    checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT") {
+      if (event === "SIGNED_OUT" || !session) {
         navigate("/signin");
+        return;
       }
       queryClient.invalidateQueries({ queryKey: ["profile"] });
     });
 
     return () => subscription.unsubscribe();
-  }, [session, navigate, queryClient]);
+  }, [navigate, queryClient]);
 
-  const { data: profileData } = useQuery({
+  const { data: profileData, isError: isProfileError } = useQuery({
     queryKey: ["profile", session?.user.id],
     queryFn: async () => {
       if (!session?.user.id) return null;
@@ -59,7 +74,7 @@ export default function Profile() {
     enabled: !!session?.user.id,
   });
 
-  const { data: statistics } = useQuery({
+  const { data: statistics, isError: isStatsError } = useQuery({
     queryKey: ["statistics", session?.user.id],
     queryFn: async () => {
       if (!session?.user.id) return null;
@@ -87,7 +102,7 @@ export default function Profile() {
     enabled: !!session?.user.id,
   });
 
-  const { data: achievements } = useQuery({
+  const { data: achievements, isError: isAchievementsError } = useQuery({
     queryKey: ["achievements", session?.user.id],
     queryFn: async () => {
       if (!session?.user.id) return null;
@@ -118,8 +133,19 @@ export default function Profile() {
     enabled: !!session?.user.id,
   });
 
+  // Show loading state
+  if (isLoading) {
+    return <div className="container py-8">Loading...</div>;
+  }
+
+  // Handle any errors
+  if (isSessionError || isProfileError || isStatsError || isAchievementsError) {
+    return <div className="container py-8">Error loading profile data</div>;
+  }
+
+  // If there's no session, return null (the useEffect will handle redirect)
   if (!session) {
-    return null; // We'll redirect in the useEffect
+    return null;
   }
 
   return (
