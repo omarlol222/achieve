@@ -51,32 +51,50 @@ serve(async (req) => {
 
     console.log('Sending request to Gemini with prompt:', prompt); // Debug log
 
+    // Ensure we have a valid API key
+    if (!geminiApiKey) {
+      throw new Error('Missing Gemini API key');
+    }
+
+    const requestBody = {
+      contents: [{
+        parts: [{
+          text: `${SYSTEM_PROMPT}\n\n${prompt}`
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.8,
+        maxOutputTokens: 1000,
+      },
+    };
+
+    console.log('Request body:', JSON.stringify(requestBody, null, 2)); // Debug log
+
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
+      'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent',
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${geminiApiKey}`,
         },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `${SYSTEM_PROMPT}\n\n${prompt}`
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.8,
-            maxOutputTokens: 1000,
-          },
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
-    if (!response.ok) {
+    // First check if we got a JSON response
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
       const errorText = await response.text();
-      console.error('Gemini API error response:', errorText);
+      console.error('Non-JSON response:', errorText);
+      throw new Error(`Unexpected response type: ${contentType}`);
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Gemini API error response:', errorData);
       throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
     }
 
@@ -84,6 +102,7 @@ serve(async (req) => {
     console.log('Gemini API response:', data); // Debug log
 
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      console.error('Invalid response structure:', data);
       throw new Error('Invalid response format from Gemini API');
     }
 
@@ -104,7 +123,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        details: error.toString()
+        details: error.toString(),
+        timestamp: new Date().toISOString()
       }),
       { 
         status: 500,
