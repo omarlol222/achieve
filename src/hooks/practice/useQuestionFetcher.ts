@@ -14,6 +14,7 @@ export async function fetchQuestionsForSubtopic(
   answeredIds: string[]
 ) {
   console.log(`Fetching questions for subtopic ${subtopicId} with difficulty ${difficulty}`);
+  console.log('Already answered questions:', answeredIds);
   
   const validDifficulty = isValidDifficulty(difficulty) ? difficulty : 'Easy';
   
@@ -52,6 +53,7 @@ export async function fetchFallbackQuestions(
   if (!subtopicIds.length) return [];
 
   console.log("Fetching fallback questions for subtopics:", subtopicIds);
+  console.log("Already answered questions:", answeredIds);
 
   let query = supabase
     .from('questions')
