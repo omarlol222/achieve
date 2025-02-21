@@ -209,7 +209,7 @@ const MathComponent = () => {
           <Button
             size="lg"
             className="w-full"
-            onClick={() => navigate("/gat/math/practice")}
+            onClick={() => navigate("/gat/math/practice/setup")}
           >
             Start Practice
           </Button>

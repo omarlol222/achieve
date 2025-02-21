@@ -14,6 +14,7 @@ import EnglishPractice from "@/pages/gat/english/EnglishPractice";
 import MathPractice from "@/pages/gat/math/MathPractice";
 import MathPracticeSetup from "@/pages/gat/math/MathPracticeSetup";
 import Dashboard from "@/pages/Dashboard";
+import Profile from "@/pages/Profile";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
       <Route path="/signin" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/profile" element={<Profile />} />
       
       {/* GAT Routes */}
       <Route path="/gat">
