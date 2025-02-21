@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY')!;
+const geminiApiKey = Deno.env.get('GEMINI_API_KEY')!;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -49,30 +49,30 @@ serve(async (req) => {
       (questionContext ? `\n\nContext: ${questionContext}` : '');
 
     const response = await fetch(
-      `https://api.openai.com/v1/chat/completions`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            ...messages.map((msg: any) => ({
-              role: msg.role,
-              content: msg.content
-            }))
-          ],
-          temperature: 0.7,
-          max_tokens: 1000,
+          contents: [{
+            parts: [{
+              text: `${SYSTEM_PROMPT}\n\n${prompt}`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.8,
+            maxOutputTokens: 1000,
+          },
         }),
       }
     );
 
     const data = await response.json();
-    console.log('OpenAI response:', data); // Debug log
+    console.log('Gemini response:', data); // Debug log
 
     if (!response.ok) {
       throw new Error(data.error?.message || 'Failed to get AI response');
@@ -82,7 +82,7 @@ serve(async (req) => {
     const aiResponse = {
       choices: [{
         message: {
-          content: data.choices[0].message.content
+          content: data.candidates[0].content.parts[0].text
         }
       }]
     };
