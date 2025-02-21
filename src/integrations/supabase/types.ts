@@ -610,6 +610,7 @@ export type Database = {
       }
       questions: {
         Row: {
+          category: Database["public"]["Enums"]["question_category"] | null
           choice1: string
           choice2: string
           choice3: string
@@ -632,6 +633,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: Database["public"]["Enums"]["question_category"] | null
           choice1: string
           choice2: string
           choice3: string
@@ -654,6 +656,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: Database["public"]["Enums"]["question_category"] | null
           choice1?: string
           choice2?: string
           choice3?: string
@@ -1307,6 +1310,7 @@ export type Database = {
           p_answered_ids: string[]
         }
         Returns: {
+          category: Database["public"]["Enums"]["question_category"] | null
           choice1: string
           choice2: string
           choice3: string
@@ -1361,6 +1365,12 @@ export type Database = {
       platform_type: "gat" | "sat" | "act"
       practice_status: "in_progress" | "completed" | "abandoned"
       product_status: "active" | "inactive"
+      question_category:
+        | "analogy"
+        | "vocabulary"
+        | "grammar"
+        | "reading"
+        | "writing"
       question_difficulty: "Easy" | "Moderate" | "Hard"
     }
     CompositeTypes: {

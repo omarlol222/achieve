@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { usePracticeQuestions } from "@/hooks/usePracticeQuestions";
 import { Progress } from "@/components/ui/progress";
 import { usePracticeStore } from "@/store/usePracticeStore";
+import { InfoCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function PracticeSession() {
   const { sessionId } = useParams();
@@ -191,6 +197,32 @@ export function PracticeSession() {
     }
   };
 
+  const getPointsInfo = () => {
+    if (!currentQuestion) return null;
+
+    const basePoints = (() => {
+      const difficulty = currentQuestion.difficulty || 'Easy';
+      if (currentQuestion.question_type === 'analogy') {
+        return difficulty === 'Hard' ? 9 : difficulty === 'Moderate' ? 6 : 3;
+      } else if (currentQuestion.category === 'vocabulary' || currentQuestion.category === 'grammar') {
+        return difficulty === 'Hard' ? 12 : difficulty === 'Moderate' ? 8 : 4;
+      } else {
+        return difficulty === 'Hard' ? 15 : difficulty === 'Moderate' ? 10 : 5;
+      }
+    })();
+
+    const categoryMultiplier = currentQuestion.question_type === 'analogy' ? 0.7 :
+      (currentQuestion.category === 'vocabulary' || currentQuestion.category === 'grammar') ? 0.9 : 1;
+
+    return {
+      basePoints,
+      categoryMultiplier,
+      potentialPoints: Math.floor(basePoints * categoryMultiplier)
+    };
+  };
+
+  const pointsInfo = getPointsInfo();
+
   if (!currentQuestion && !isComplete) {
     return (
       <div className="container py-8 text-center">
@@ -232,6 +264,32 @@ export function PracticeSession() {
           <div className="text-sm text-gray-500">
             Points: {pointsEarned}
           </div>
+          {pointsInfo && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1 text-sm text-gray-500 cursor-help">
+                    <InfoCircle className="h-4 w-4" />
+                    Potential Points: {pointsInfo.potentialPoints}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="w-64">
+                  <p>Base Points: {pointsInfo.basePoints}</p>
+                  <p>Question Type: {currentQuestion?.question_type}</p>
+                  {pointsInfo.categoryMultiplier !== 1 && (
+                    <p>Category Multiplier: {pointsInfo.categoryMultiplier}x</p>
+                  )}
+                  <p className="mt-2 text-xs text-gray-400">
+                    {currentQuestion?.question_type === 'analogy' 
+                      ? 'Analogy questions earn 30% fewer points'
+                      : currentQuestion?.category === 'vocabulary' || currentQuestion?.category === 'grammar'
+                      ? 'This question type earns 10% fewer points'
+                      : 'Full points awarded for this question type'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       </div>
 
