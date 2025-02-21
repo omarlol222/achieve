@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
 import { MonitorPlay, BookOpen, Calculator, HelpCircle, Trophy } from "lucide-react";
+
 export default function GAT() {
   const navigate = useNavigate();
   return <div className="min-h-screen bg-white">
@@ -39,7 +40,7 @@ export default function GAT() {
             Math
           </Button>
 
-          <Button variant="outline" size="lg" className="h-32 flex flex-col items-center justify-center gap-3 text-lg opacity-50 cursor-not-allowed" disabled>
+          <Button variant="outline" size="lg" className="h-32 flex flex-col items-center justify-center gap-3 text-lg hover:bg-[#1B2B2B] hover:text-white transition-all" onClick={() => navigate("/questionsupport")}>
             <HelpCircle className="h-8 w-8" />
             Question Support
           </Button>

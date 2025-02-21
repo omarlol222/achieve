@@ -16,6 +16,7 @@ import MathPracticeSetup from "@/pages/gat/math/MathPracticeSetup";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
 import GatLeaderboard from "@/pages/gat/leaderboard";
+import QuestionSupport from "@/pages/QuestionSupport";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/questionsupport" element={<QuestionSupport />} />
       
       {/* GAT Routes */}
       <Route path="/gat">
