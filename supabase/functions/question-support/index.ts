@@ -41,22 +41,6 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
       }]
     });
 
-    // Add image message if present
-    if (messageWithImage) {
-      contents.push({
-        role: "user",
-        parts: [
-          { text: messageWithImage.content || "Please analyze this image" },
-          {
-            inline_data: {
-              mime_type: "image/jpeg",
-              data: messageWithImage.imageBase64
-            }
-          }
-        ]
-      });
-    }
-
     // Add all text messages
     const textMessage = messages
       .filter(msg => !msg.imageBase64)
@@ -72,37 +56,65 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
       });
     }
 
-    console.log('Making request to Gemini API with contents:', 
-      JSON.stringify(contents.map(c => ({
-        ...c,
-        parts: c.parts.map(p => 'inline_data' in p ? { type: 'image' } : p)
-      })), null, 2)
-    );
+    // Choose the appropriate model and endpoint based on whether we have an image
+    let apiUrl;
+    let requestBody;
 
-    // Updated to use gemini-1.5-flash model
-    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
-    
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: contents,
+    if (messageWithImage) {
+      // Use gemini-1.5-flash for image analysis
+      apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+      requestBody = {
+        contents: [
+          ...contents,
+          {
+            role: "user",
+            parts: [
+              { text: messageWithImage.content || "Please analyze this image" },
+              {
+                inline_data: {
+                  mime_type: "image/jpeg",
+                  data: messageWithImage.imageBase64
+                }
+              }
+            ]
+          }
+        ],
         generationConfig: {
           temperature: 0.7,
           topK: 40,
           topP: 0.8,
           maxOutputTokens: 1000,
         },
-      }),
+      };
+    } else {
+      // Use gemini-pro for text-only conversations
+      apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${geminiApiKey}`;
+      requestBody = {
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.8,
+          maxOutputTokens: 1000,
+        },
+      };
+    }
+
+    console.log('Making request to Gemini API:', {
+      url: apiUrl,
+      contents: requestBody.contents.map(c => ({
+        ...c,
+        parts: c.parts.map(p => 'inline_data' in p ? { type: 'image' } : p)
+      }))
     });
 
-    const responseHeaders = {};
-    response.headers.forEach((value, key) => {
-      responseHeaders[key] = value;
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
     });
-    console.log('Gemini API response headers:', JSON.stringify(responseHeaders, null, 2));
 
     if (!response.ok) {
       const errorText = await response.text();
