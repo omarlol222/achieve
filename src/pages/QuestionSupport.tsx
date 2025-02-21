@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
@@ -32,7 +31,6 @@ export default function QuestionSupport() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -43,7 +41,6 @@ export default function QuestionSupport() {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // Add user message to chat
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -54,31 +51,24 @@ export default function QuestionSupport() {
     setIsLoading(true);
 
     try {
-      // Convert messages to the format expected by the API
       const messageHistory = messages.concat(userMessage).map(msg => ({
         role: msg.role,
         content: msg.content
       }));
 
-      const response = await fetch('/api/question-support', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('question-support', {
+        body: {
           messages: messageHistory,
           questionContext,
-        }),
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to get AI response');
+      if (error) {
+        throw error;
       }
 
-      const data = await response.json();
       console.log('AI Response:', data); // Debug log
 
-      // Properly handle Gemini API response format
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -87,7 +77,6 @@ export default function QuestionSupport() {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Store the chat in the database
       const { error: sessionError } = await supabase
         .from('ai_chat_sessions')
         .insert({
@@ -158,7 +147,6 @@ export default function QuestionSupport() {
     }));
 
     try {
-      // Store the rating in the database
       const { error } = await supabase
         .from('ai_chat_messages')
         .update({ rating: rating === 'up' ? 5 : 1 })
@@ -179,7 +167,6 @@ export default function QuestionSupport() {
     if (!file) return;
 
     try {
-      // Upload image to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const { data, error } = await supabase.storage
@@ -188,12 +175,10 @@ export default function QuestionSupport() {
 
       if (error) throw error;
 
-      // Get the public URL
       const { data: { publicUrl } } = supabase.storage
         .from('question-images')
         .getPublicUrl(fileName);
 
-      // Add image message to chat
       const imageMessage: Message = {
         id: crypto.randomUUID(),
         role: 'user',
