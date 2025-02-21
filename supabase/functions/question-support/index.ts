@@ -2,39 +2,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
-const geminiApiKey = Deno.env.get('GEMINI_API_KEY')!;
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const SYSTEM_PROMPT = `You are an AI tutor specialized in helping students understand GAT (General Aptitude Test) questions. Your job is to explain questions clearly and concisely, ensuring students fully grasp the concepts.
-
-✅ What You Should Do:
-- Answer only GAT-related questions.
-- Provide step-by-step explanations in a simple and structured way.
-- Use clear and easy-to-understand language—avoid overcomplicating things.
-- If a user asks for further clarification, break it down even more with examples.
-- Keep explanations relevant and concise, focusing only on what's necessary.
-- If a question involves math, guide the user through the correct approach rather than just giving the answer.
-- If the question is about verbal reasoning, explain the meaning of the words and why the correct answer is the best choice.
-- If a user uploads a question ID, prioritize fetching that specific question's explanation.
-
-❌ What You Should NOT Do:
-- Do not answer unrelated questions or engage in casual conversation.
-- Do not provide information outside the context of GAT preparation.
-- Do not generate excessive details that are not useful for solving the question.
-- Do not give direct answers without explanations—your role is to teach, not just provide answers.
-- Do not assume additional information if the question is incomplete—ask the user for clarification instead.
-
-Behavior Tuning:
-- Keep responses to the point but detailed enough to ensure understanding.
-- If a user repeatedly asks about the same question, try explaining it from a different angle.
-- If a user is confused, use simpler words and provide a real-life analogy if applicable.
-- If the user still doesn't understand, ask specific questions to identify what part they find confusing.
-- Avoid making assumptions—always rely on the exact wording of the question when explaining.
-- If a question has multiple steps, list them in order to guide the user logically.`;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -43,23 +14,39 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, questionContext } = await req.json();
+    // Get API key from environment and validate
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiApiKey) {
+      console.error('GEMINI_API_KEY not found in environment');
+      throw new Error('API key not configured');
+    }
 
-    // Create the prompt by combining context and messages
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error('Failed to parse request body:', e);
+      throw new Error('Invalid request body');
+    }
+
+    const { messages, questionContext } = body;
+
+    // Validate request data
+    if (!messages || !Array.isArray(messages)) {
+      throw new Error('Invalid messages format');
+    }
+
+    // Create the prompt
     const prompt = messages.map((msg: any) => msg.content).join('\n') + 
       (questionContext ? `\n\nContext: ${questionContext}` : '');
 
-    console.log('Sending request to Gemini with prompt:', prompt); // Debug log
-
-    // Ensure we have a valid API key
-    if (!geminiApiKey) {
-      throw new Error('Missing Gemini API key');
-    }
+    console.log('Creating Gemini request with prompt:', prompt);
 
     const requestBody = {
       contents: [{
         parts: [{
-          text: `${SYSTEM_PROMPT}\n\n${prompt}`
+          text: prompt
         }]
       }],
       generationConfig: {
@@ -70,11 +57,10 @@ serve(async (req) => {
       },
     };
 
-    console.log('Request body:', JSON.stringify(requestBody, null, 2)); // Debug log
-
+    // Make request to Gemini API
     const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${geminiApiKey}`;
-    console.log('API URL (without key):', apiUrl.split('?')[0]); // Log URL without exposing the key
-
+    
+    console.log('Making request to Gemini API...');
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -83,29 +69,35 @@ serve(async (req) => {
       body: JSON.stringify(requestBody),
     });
 
-    // First check if we got a JSON response
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const errorText = await response.text();
-      console.error('Non-JSON response:', errorText);
-      throw new Error(`Unexpected response type: ${contentType}`);
-    }
+    // Log response details for debugging
+    console.log('Gemini API response status:', response.status);
+    console.log('Gemini API response headers:', Object.fromEntries(response.headers.entries()));
 
+    // Handle non-200 responses
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Gemini API error response:', errorData);
+      const errorText = await response.text();
+      console.error('Gemini API error response:', errorText);
       throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
-    console.log('Gemini API response:', data); // Debug log
+    // Parse JSON response
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.error('Failed to parse Gemini API response:', e);
+      throw new Error('Invalid response from Gemini API');
+    }
 
+    console.log('Gemini API response data:', data);
+
+    // Validate response structure
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
       console.error('Invalid response structure:', data);
       throw new Error('Invalid response format from Gemini API');
     }
 
-    // Format response to match the expected structure
+    // Format response
     const aiResponse = {
       choices: [{
         message: {
@@ -117,15 +109,18 @@ serve(async (req) => {
     return new Response(JSON.stringify(aiResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
-    console.error('Error in edge function:', error);
+    console.error('Edge function error:', error);
+    
+    // Ensure we return a properly formatted error response
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message,
         details: error.toString(),
         timestamp: new Date().toISOString()
       }),
-      { 
+      {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
