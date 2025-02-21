@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Upload, Check } from "lucide-react";
 import { useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Message } from "@/components/question-support/types";
 
 interface ChatInputProps {
   input: string;

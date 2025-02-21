@@ -1,5 +1,5 @@
 
-import { Message } from "../types";
+import { Message } from "@/components/question-support/types";
 import { Button } from "@/components/ui/button";
 import { OptimizedImage } from "@/components/ui/optimized-image/OptimizedImage";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
