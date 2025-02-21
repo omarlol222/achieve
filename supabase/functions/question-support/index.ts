@@ -20,81 +20,88 @@ serve(async (req) => {
     }
 
     const { messages, questionContext } = await req.json();
+    console.log('Received request body:', { messages, questionContext });
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error('Invalid messages format');
     }
 
-    console.log('Received messages:', messages);
-
     // Find the latest message with an image
-    const messageWithImage = [...messages].reverse().find(msg => msg.image?.data);
+    const messageWithImage = [...messages].reverse().find(msg => msg.imageBase64);
     
-    const systemPrompt = `You are a helpful AI assistant that helps students understand questions and concepts. 
+    const contents = [];
+
+    // Add system prompt
+    contents.push({
+      role: "user",
+      parts: [{
+        text: `You are a helpful AI assistant that helps students understand questions and concepts. 
 When provided with an image of a question, analyze it carefully and provide a detailed explanation to help the student understand it.
-Break down complex concepts, provide examples, and offer step-by-step explanations when relevant.`;
+Break down complex concepts, provide examples, and offer step-by-step explanations when relevant.`
+      }]
+    });
 
-    const contents = [{
-      parts: [
-        { text: systemPrompt }
-      ]
-    }];
-
+    // Add image message if present
     if (messageWithImage) {
       contents.push({
+        role: "user",
         parts: [
-          { text: messageWithImage.content },
+          { text: messageWithImage.content || "Please analyze this image" },
           {
-            inlineData: {
-              mimeType: 'image/jpeg',
-              data: messageWithImage.image.data
+            inline_data: {
+              mime_type: "image/jpeg",
+              data: messageWithImage.imageBase64
             }
           }
         ]
       });
     }
 
-    // Add text messages and context as a separate content part
-    const textMessages = messages
-      .filter(msg => !msg.image)
+    // Add all text messages
+    const textMessage = messages
+      .filter(msg => !msg.imageBase64)
       .map(msg => msg.content)
       .join('\n');
 
-    if (textMessages || questionContext) {
+    if (textMessage || questionContext) {
       contents.push({
+        role: "user",
         parts: [{
-          text: `${textMessages}${questionContext ? `\n\nAdditional Context: ${questionContext}` : ''}`
+          text: `${textMessage}${questionContext ? `\n\nAdditional Context: ${questionContext}` : ''}`
         }]
       });
     }
 
-    console.log('Making request to Gemini API with contents structure:', 
-      contents.map(c => ({
+    console.log('Making request to Gemini API with contents:', 
+      JSON.stringify(contents.map(c => ({
         ...c,
-        parts: c.parts.map(p => 'inlineData' in p ? { type: 'image' } : p)
-      }))
+        parts: c.parts.map(p => 'inline_data' in p ? { type: 'image' } : p)
+      })), null, 2)
     );
-
-    const requestBody = {
-      contents,
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.8,
-        maxOutputTokens: 1000,
-      },
-    };
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${geminiApiKey}`;
     
-    console.log('Making request to Gemini API...');
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        contents: contents,
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.8,
+          maxOutputTokens: 1000,
+        },
+      }),
     });
+
+    const responseHeaders = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+    console.log('Gemini API response headers:', JSON.stringify(responseHeaders, null, 2));
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -103,9 +110,10 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
     }
 
     const data = await response.json();
-    console.log('Gemini API response data:', data);
+    console.log('Gemini API response:', JSON.stringify(data, null, 2));
 
-    const aiResponse = {
+    // Format response to match what frontend expects
+    const formattedResponse = {
       choices: [{
         message: {
           content: data.candidates[0].content.parts[0].text
@@ -113,7 +121,7 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
       }]
     };
 
-    return new Response(JSON.stringify(aiResponse), {
+    return new Response(JSON.stringify(formattedResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
