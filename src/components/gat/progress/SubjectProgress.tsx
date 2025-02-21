@@ -16,8 +16,8 @@ type SubjectProgressProps = {
       subtopics?: {
         id: string;
         name: string;
-        progress: {
-          points: number;
+        progress?: {
+          points?: number;
         };
       }[];
     }[];
@@ -47,7 +47,7 @@ export const SubjectProgress = memo(({ subject, calculateTopicProgress, isExpand
                 <TopicProgress
                   key={subtopic.id}
                   name={subtopic.name}
-                  value={subtopic.progress.points}
+                  value={subtopic.progress?.points ?? 0}
                   variant="subtle"
                   isPercentage={false}
                 />
