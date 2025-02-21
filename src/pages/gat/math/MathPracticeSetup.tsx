@@ -6,11 +6,16 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { usePracticeStore } from "@/store/usePracticeStore";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+
+type QuestionCount = 10 | 20 | 30 | -1; // -1 represents infinite mode
 
 const MathPracticeSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [questionsCount, setQuestionsCount] = useState<QuestionCount>(10);
   
   // Get reset action from store and reset immediately
   const resetSession = usePracticeStore(state => state.actions.resetSession);
@@ -30,7 +35,7 @@ const MathPracticeSetup = () => {
         .from("practice_sessions")
         .insert({
           user_id: (await supabase.auth.getUser()).data.user?.id,
-          total_questions: 10,
+          total_questions: questionsCount === -1 ? 999 : questionsCount,
           questions_answered: 0,
           status: 'in_progress',
           subject: 'Math'
@@ -75,6 +80,48 @@ const MathPracticeSetup = () => {
           <p className="text-lg text-gray-600">
             Start a practice session to improve your math skills
           </p>
+        </div>
+
+        <div className="space-y-4">
+          <Label className="text-lg font-medium">Number of Questions</Label>
+          <RadioGroup
+            defaultValue="10"
+            onValueChange={(value) => setQuestionsCount(parseInt(value) as QuestionCount)}
+            className="grid grid-cols-2 gap-4"
+          >
+            <Label
+              htmlFor="q10"
+              className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary cursor-pointer"
+            >
+              <RadioGroupItem value="10" id="q10" className="sr-only" />
+              <span className="text-xl font-bold">10</span>
+              <span className="text-sm text-gray-500">Questions</span>
+            </Label>
+            <Label
+              htmlFor="q20"
+              className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary cursor-pointer"
+            >
+              <RadioGroupItem value="20" id="q20" className="sr-only" />
+              <span className="text-xl font-bold">20</span>
+              <span className="text-sm text-gray-500">Questions</span>
+            </Label>
+            <Label
+              htmlFor="q30"
+              className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary cursor-pointer"
+            >
+              <RadioGroupItem value="30" id="q30" className="sr-only" />
+              <span className="text-xl font-bold">30</span>
+              <span className="text-sm text-gray-500">Questions</span>
+            </Label>
+            <Label
+              htmlFor="infinite"
+              className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-white p-4 hover:bg-gray-50 [&:has([data-state=checked])]:border-primary cursor-pointer"
+            >
+              <RadioGroupItem value="-1" id="infinite" className="sr-only" />
+              <span className="text-xl font-bold">∞</span>
+              <span className="text-sm text-gray-500">Infinite Mode</span>
+            </Label>
+          </RadioGroup>
         </div>
 
         <Button
