@@ -15,6 +15,7 @@ import MathPractice from "@/pages/gat/math/MathPractice";
 import MathPracticeSetup from "@/pages/gat/math/MathPracticeSetup";
 import Dashboard from "@/pages/Dashboard";
 import Profile from "@/pages/Profile";
+import GatLeaderboard from "@/pages/gat/leaderboard";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
         <Route path="practice/results/:sessionId" element={<PracticeResults />} />
         <Route path="simulator" element={<Simulator />} />
         <Route path="simulator/results/:sessionId" element={<SimulatorResults />} />
+        <Route path="leaderboard" element={<GatLeaderboard />} />
       </Route>
     </Routes>
   );
