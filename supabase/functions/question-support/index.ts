@@ -29,80 +29,85 @@ serve(async (req) => {
     // Find the latest message with an image
     const messageWithImage = [...messages].reverse().find(msg => msg.imageBase64);
     
-    const contents = [];
+    if (!messageWithImage) {
+      return new Response(JSON.stringify({
+        choices: [{
+          message: {
+            content: "Please upload an image of your GAT question. I'll analyze it and provide a detailed explanation to help you understand it better."
+          }
+        }]
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
-    // Add system prompt
-    contents.push({
-      role: "user",
-      parts: [{
-        text: `You are a helpful AI assistant that helps students understand questions and concepts. 
-When provided with an image of a question, analyze it carefully and provide a detailed explanation to help the student understand it.
-Break down complex concepts, provide examples, and offer step-by-step explanations when relevant.`
-      }]
-    });
+    // Use gemini-1.5-flash for image analysis
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+    
+    const systemPrompt = `You are an AI tutor specializing in GAT (General Aptitude Test) preparation. Your role is to help users understand and solve problems by providing clear, structured explanations.
 
-    // Add all text messages
-    const textMessage = messages
-      .filter(msg => !msg.imageBase64)
+✅ What You Should Do:
+- Analyze the text and figures in the uploaded image to extract the question details
+- Provide step-by-step explanations in a clear and simple manner
+- For math questions, explain the approach and show calculations
+- For verbal reasoning, identify key relationships and logic
+- For geometric diagrams:
+  * Identify shapes, angles, intersections, or given values
+  * Apply appropriate formulas or theorems
+  * Clearly state reasoning behind each step
+
+❌ What You Should NOT Do:
+- Do not provide direct answers without explanations
+- Do not assume details not visible in the image
+- Do not generate unnecessary information
+- Do not engage in casual conversation
+
+Format your response in this structure:
+1. Question Analysis: Brief overview of what the question is asking
+2. Key Concepts: List the main concepts or formulas needed
+3. Step-by-Step Solution: Numbered steps explaining the approach
+4. Final Answer: Clear statement of the solution
+5. Additional Notes: Any important tips or related concepts (if relevant)
+
+Use clear language and avoid unnecessary complexity.`;
+
+    const contents = [
+      {
+        role: "user",
+        parts: [{ text: systemPrompt }]
+      },
+      {
+        role: "user",
+        parts: [
+          { text: "Please analyze this GAT question and provide a detailed explanation:" },
+          {
+            inline_data: {
+              mime_type: "image/jpeg",
+              data: messageWithImage.imageBase64
+            }
+          }
+        ]
+      }
+    ];
+
+    // Add any additional context from the chat
+    const textMessages = messages
+      .filter(msg => !msg.imageBase64 && msg.content.trim())
       .map(msg => msg.content)
       .join('\n');
 
-    if (textMessage || questionContext) {
+    if (textMessages || questionContext) {
       contents.push({
         role: "user",
         parts: [{
-          text: `${textMessage}${questionContext ? `\n\nAdditional Context: ${questionContext}` : ''}`
+          text: `Additional context:\n${textMessages}${questionContext ? `\n${questionContext}` : ''}`
         }]
       });
     }
 
-    // Choose the appropriate model and endpoint based on whether we have an image
-    let apiUrl;
-    let requestBody;
-
-    if (messageWithImage) {
-      // Use gemini-1.5-flash for image analysis
-      apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
-      requestBody = {
-        contents: [
-          ...contents,
-          {
-            role: "user",
-            parts: [
-              { text: messageWithImage.content || "Please analyze this image" },
-              {
-                inline_data: {
-                  mime_type: "image/jpeg",
-                  data: messageWithImage.imageBase64
-                }
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.8,
-          maxOutputTokens: 1000,
-        },
-      };
-    } else {
-      // Use gemini-pro for text-only conversations
-      apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${geminiApiKey}`;
-      requestBody = {
-        contents,
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.8,
-          maxOutputTokens: 1000,
-        },
-      };
-    }
-
     console.log('Making request to Gemini API:', {
       url: apiUrl,
-      contents: requestBody.contents.map(c => ({
+      contents: contents.map(c => ({
         ...c,
         parts: c.parts.map(p => 'inline_data' in p ? { type: 'image' } : p)
       }))
@@ -113,7 +118,15 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        contents,
+        generationConfig: {
+          temperature: 0.2, // Lower temperature for more focused responses
+          topK: 40,
+          topP: 0.8,
+          maxOutputTokens: 1000,
+        },
+      }),
     });
 
     if (!response.ok) {
