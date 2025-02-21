@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { usePracticeStore } from "@/store/practice";
 
 type QuestionCount = 10 | 20 | 30 | -1; // -1 represents infinite mode
 
@@ -19,6 +19,7 @@ export default function EnglishPracticeSetup() {
   const { toast } = useToast();
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [questionsCount, setQuestionsCount] = useState<QuestionCount>(10);
+  const { actions: { resetSession } } = usePracticeStore();
 
   // Fetch English subject ID first
   const { data: englishSubject } = useQuery({
@@ -81,6 +82,9 @@ export default function EnglishPracticeSetup() {
     }
 
     try {
+      // Reset the practice session state
+      resetSession();
+
       // Get all subtopics for selected topics
       const { data: subtopics, error: subtopicsError } = await supabase
         .from('subtopics')
@@ -104,7 +108,6 @@ export default function EnglishPracticeSetup() {
 
       if (error) throw error;
 
-      // Navigate to the practice session with correct path
       navigate(`/gat/english/practice/${session.id}`);
     } catch (error: any) {
       toast({

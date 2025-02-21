@@ -45,8 +45,9 @@ const EnglishComponent = () => {
           subtopics (
             id,
             name,
-            user_subtopic_progress (
-              points
+            user_subtopic_statistics (
+              points_earned,
+              accuracy
             )
           )
         `)
@@ -63,7 +64,7 @@ const EnglishComponent = () => {
           id: st.id,
           name: st.name,
           progress: {
-            points: st.user_subtopic_progress?.[0]?.points || 0
+            points: st.user_subtopic_statistics?.[0]?.points_earned || 0
           }
         }))
       }));
@@ -80,7 +81,7 @@ const EnglishComponent = () => {
     if (validSubtopics.length === 0) return { percentage: 0 };
 
     const subtopicPercentages = validSubtopics.map(st => 
-      Math.min((st.progress.points / 1000) * 100, 100) // Updated to use 1000 as max points
+      Math.min((st.progress.points / 1000) * 100, 100)
     );
 
     const totalPercentage = subtopicPercentages.reduce((sum, percentage) => sum + percentage, 0);
@@ -141,7 +142,7 @@ const EnglishComponent = () => {
           <Button
             size="lg"
             className="w-full"
-            onClick={() => navigate("/gat/english/practice")}
+            onClick={() => navigate("/gat/english/practice/setup")}
           >
             Start Practice
           </Button>
