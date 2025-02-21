@@ -22,16 +22,15 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     sourcemap: true,
-    // Ensure assets are served from the correct base path
-    assetsDir: "assets",
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
     rollupOptions: {
       output: {
-        // Ensure consistent chunk names
-        chunkFileNames: "assets/[name]-[hash].js",
-        entryFileNames: "assets/[name]-[hash].js",
-        assetFileNames: "assets/[name]-[hash].[ext]"
+        manualChunks: undefined,
+        inlineDynamicImports: true,
       }
     }
   },
-  base: "/"
+  base: "",
 }));
