@@ -71,9 +71,15 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
   } = usePracticeStore();
 
+  // Reset questions answered when session changes
   useEffect(() => {
-    setQuestionsAnswered(0);
-  }, [setQuestionsAnswered]);
+    if (sessionId) {
+      setQuestionsAnswered(0);
+      setCurrentQuestion(null);
+      setSelectedAnswer(null);
+      setShowFeedback(false);
+    }
+  }, [sessionId, setQuestionsAnswered, setCurrentQuestion, setSelectedAnswer, setShowFeedback]);
 
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ["practice-session", sessionId],
