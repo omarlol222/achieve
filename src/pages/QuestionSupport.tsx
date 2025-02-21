@@ -1,39 +1,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Navigation } from "@/components/ui/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Label } from "@/components/ui/label";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Upload, Search, ThumbsUp, ThumbsDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { OptimizedImage } from "@/components/ui/optimized-image/OptimizedImage";
-import { Textarea } from "@/components/ui/textarea";
-
-type Message = {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  rating?: number;
-  marked_as_understood?: boolean;
-  image?: string;
-  imageBase64?: string;
-};
+import { QuestionSearch } from "@/components/question-support/QuestionSearch";
+import { MessageList } from "@/components/question-support/MessageList";
+import { ChatInput } from "@/components/question-support/ChatInput";
+import { Message } from "@/components/question-support/types";
 
 export default function QuestionSupport() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [questionId, setQuestionId] = useState("");
   const [questionContext, setQuestionContext] = useState("");
   const [hasUploadedImage, setHasUploadedImage] = useState(false);
   const [currentImageMessage, setCurrentImageMessage] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -74,8 +59,6 @@ export default function QuestionSupport() {
     setIsLoading(true);
 
     try {
-      console.log('Sending message to AI:', userMessage);
-
       const messageHistory = messages.concat(userMessage).map(msg => ({
         role: msg.role,
         content: msg.content,
@@ -92,11 +75,7 @@ export default function QuestionSupport() {
         },
       });
 
-      if (error) {
-        throw error;
-      }
-
-      console.log('AI Response:', data);
+      if (error) throw error;
 
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
@@ -105,7 +84,6 @@ export default function QuestionSupport() {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
     } catch (error) {
       console.error('Error getting AI response:', error);
       toast({
@@ -118,10 +96,7 @@ export default function QuestionSupport() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleImageUpload = async (file: File) => {
     try {
       const base64Data = await convertImageToBase64(file);
       const imageUrl = URL.createObjectURL(file);
@@ -150,41 +125,13 @@ export default function QuestionSupport() {
     }
   };
 
-  const handleQuestionSearch = async () => {
-    if (!questionId.trim()) {
-      toast({
-        description: "Please enter a question ID",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*')
-        .eq('id', questionId)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      if (data) {
-        const questionText = `Question: ${data.question_text}\n\nChoices:\n1. ${data.choice1}\n2. ${data.choice2}\n3. ${data.choice3}\n4. ${data.choice4}\n\nCorrect Answer: ${data.correct_answer}`;
-        setQuestionContext(questionText);
-        
-        setMessages(prev => [...prev, {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: `I found the question you're looking for. Here it is:\n\n${questionText}\n\nHow can I help you understand this question better?`
-        }]);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to find question. Please check the ID and try again.",
-        variant: "destructive",
-      });
-    }
+  const handleQuestionFound = (questionText: string) => {
+    setQuestionContext(questionText);
+    setMessages(prev => [...prev, {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: `I found the question you're looking for. Here it is:\n\n${questionText}\n\nHow can I help you understand this question better?`
+    }]);
   };
 
   const handleRateMessage = async (messageId: string, rating: 'up' | 'down') => {
@@ -211,16 +158,6 @@ export default function QuestionSupport() {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && e.shiftKey) {
-      e.preventDefault();
-      setInput(prev => prev + '\n');
-    } else if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e as any);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-white">
       <Navigation />
@@ -229,154 +166,28 @@ export default function QuestionSupport() {
           <h1 className="text-4xl font-bold text-[#1B2B2B]">
             Question Support
           </h1>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline">
-                <Search className="h-4 w-4 mr-2" />
-                Find Question
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Find a Question</SheetTitle>
-                <SheetDescription>
-                  Enter a question ID to find it.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="question-id">Question ID</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="question-id"
-                      value={questionId}
-                      onChange={(e) => setQuestionId(e.target.value)}
-                      placeholder="Enter question ID..."
-                    />
-                    <Button onClick={handleQuestionSearch}>Search</Button>
-                  </div>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <QuestionSearch onQuestionFound={handleQuestionFound} />
         </div>
 
         <Card className="p-4">
           <ScrollArea className="h-[500px] pr-4" ref={scrollRef}>
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-4 ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
-                  >
-                    {message.image && (
-                      <div className="mb-2">
-                        <OptimizedImage 
-                          src={message.image} 
-                          alt="Question" 
-                          className="rounded-lg max-w-full h-auto"
-                        />
-                      </div>
-                    )}
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                    {message.role === 'assistant' && (
-                      <div className="flex items-center gap-2 mt-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRateMessage(message.id, 'up')}
-                          className={message.rating === 5 ? "text-green-500" : ""}
-                        >
-                          <ThumbsUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRateMessage(message.id, 'down')}
-                          className={message.rating === 1 ? "text-red-500" : ""}
-                        >
-                          <ThumbsDown className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="max-w-[80%] rounded-lg p-4 bg-muted">
-                    <p>AI is thinking...</p>
-                  </div>
-                </div>
-              )}
-              {currentImageMessage && (
-                <div className="flex justify-end">
-                  <div className="max-w-[80%] rounded-lg p-4 bg-primary text-primary-foreground">
-                    <div className="mb-2">
-                      <OptimizedImage 
-                        src={currentImageMessage.image!} 
-                        alt="Question" 
-                        className="rounded-lg max-w-full h-auto"
-                      />
-                    </div>
-                    <p className="text-sm text-primary-foreground/80">Click send to get an explanation</p>
-                  </div>
-                </div>
-              )}
-            </div>
+            <MessageList
+              messages={messages}
+              isLoading={isLoading}
+              currentImageMessage={currentImageMessage}
+              onRateMessage={handleRateMessage}
+            />
           </ScrollArea>
 
-          <form onSubmit={handleSubmit} className="mt-4">
-            <div className="flex items-center gap-2">
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={currentImageMessage ? "Add any specific questions about the image (optional)" : "Type your question... (Shift+Enter for new line)"}
-                disabled={isLoading}
-                className="min-h-[60px]"
-                rows={1}
-              />
-              <div className="flex gap-2 shrink-0">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading}
-                  size="icon"
-                  className="h-10 w-10 shrink-0"
-                >
-                  {hasUploadedImage ? (
-                    <Check className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Upload className="h-5 w-5" />
-                  )}
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading || (!input.trim() && !currentImageMessage)}
-                  size="icon"
-                  className="h-10 w-10 shrink-0"
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-          </form>
+          <ChatInput
+            input={input}
+            isLoading={isLoading}
+            hasUploadedImage={hasUploadedImage}
+            currentImageMessage={currentImageMessage}
+            onInputChange={setInput}
+            onSubmit={handleSubmit}
+            onImageUpload={handleImageUpload}
+          />
         </Card>
       </div>
     </div>
