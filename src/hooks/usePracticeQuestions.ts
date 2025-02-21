@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,13 +81,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         throw error;
       }
 
-      console.log("Session data:", data);
       return data;
     },
     enabled: !!sessionId
   });
 
-  const subtopicIds = (session?.subtopic_attempts as SubtopicAttempts)?.subtopics || [];
+  const subtopicIds = (session?.subtopic_attempts as { subtopics: string[] })?.subtopics || [];
   
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
 
@@ -133,20 +133,66 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
 
     try {
+      // Get user's statistics for adaptive difficulty
       const { data: statisticsData } = await supabase
         .from('user_subtopic_statistics')
-        .select('subtopic_id, accuracy')
+        .select('subtopic_id, accuracy, difficulty_level')
         .in('subtopic_id', subtopicIds)
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
       const subtopicDifficulties = new Map(
         statisticsData?.map(stat => [
           stat.subtopic_id,
-          stat.accuracy && stat.accuracy >= 0.8 ? 'Hard' :
-          stat.accuracy && stat.accuracy >= 0.6 ? 'Moderate' : 'Easy'
+          stat.difficulty_level || (
+            stat.accuracy && stat.accuracy >= 0.8 ? 'Hard' :
+            stat.accuracy && stat.accuracy >= 0.6 ? 'Moderate' : 'Easy'
+          )
         ]) || []
       );
 
+      // Get the last answered question to check if it was incorrect
+      const lastAnswer = answeredIds.length > 0 ? await supabase
+        .from('practice_answers')
+        .select('is_correct, question_id')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single() : null;
+
+      if (lastAnswer?.data && !lastAnswer.data.is_correct) {
+        // If last answer was wrong, get a similar type of question but at an easier difficulty
+        const lastQuestion = await supabase
+          .from('questions')
+          .select('question_type, category, subtopic_id')
+          .eq('id', lastAnswer.data.question_id)
+          .single();
+
+        if (lastQuestion.data) {
+          const { question_type, category, subtopic_id } = lastQuestion.data;
+          console.log("Last question was wrong, fetching similar type:", { question_type, category });
+
+          const currentDifficulty = subtopicDifficulties.get(subtopic_id) || 'Easy';
+          const easierDifficulty = currentDifficulty === 'Hard' ? 'Moderate' : 'Easy';
+
+          const { data: similarQuestions } = await supabase
+            .from('questions')
+            .select('*')
+            .eq('question_type', question_type)
+            .eq('category', category)
+            .eq('difficulty', easierDifficulty)
+            .in('subtopic_id', subtopicIds)
+            .not('id', 'in', answeredIds);
+
+          if (similarQuestions && similarQuestions.length > 0) {
+            const randomIndex = Math.floor(Math.random() * similarQuestions.length);
+            setCurrentQuestion(similarQuestions[randomIndex]);
+            incrementQuestionsAnswered();
+            return;
+          }
+        }
+      }
+
+      // Default question fetching logic
       const questionPromises = subtopicIds.map(subtopicId => {
         const difficulty = subtopicDifficulties.get(subtopicId) || 'Easy';
         return fetchQuestionsForSubtopic(
@@ -186,11 +232,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
   }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, toast]);
 
+  // Initialize the session with the first question
   useEffect(() => {
     if (session && !currentQuestion && subtopicIds.length > 0) {
+      // Reset questions answered when starting a new session
+      setQuestionsAnswered(0);
       getNextQuestion();
     }
-  }, [session, currentQuestion, subtopicIds, getNextQuestion]);
+  }, [session, currentQuestion, subtopicIds, getNextQuestion, setQuestionsAnswered]);
 
   return {
     currentQuestion,
