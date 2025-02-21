@@ -104,7 +104,7 @@ export default function EnglishPracticeSetup() {
 
       if (error) throw error;
 
-      // Navigate to the practice session
+      // Navigate to the practice session with correct path
       navigate(`/gat/english/practice/${session.id}`);
     } catch (error: any) {
       toast({
