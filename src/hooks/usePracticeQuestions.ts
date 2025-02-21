@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,16 +33,6 @@ type SubtopicAttempts = {
   subtopics: string[];
 };
 
-type PracticeSession = {
-  id: string;
-  user_id: string;
-  subject: string;
-  total_questions: number;
-  status: 'in_progress' | 'completed' | 'abandoned';
-  subtopic_attempts: SubtopicAttempts;
-  questions_answered?: number;
-};
-
 export function usePracticeQuestions(sessionId: string | undefined) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -64,6 +53,10 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       setShowFeedback
     }
   } = usePracticeStore();
+
+  useEffect(() => {
+    setQuestionsAnswered(0);
+  }, [setQuestionsAnswered]);
 
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ["practice-session", sessionId],
@@ -86,7 +79,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     enabled: !!sessionId
   });
 
-  const subtopicIds = (session?.subtopic_attempts as { subtopics: string[] })?.subtopics || [];
+  const subtopicIds = (session?.subtopic_attempts as SubtopicAttempts)?.subtopics || [];
   
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
 
@@ -133,7 +126,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
 
     try {
-      // Get user's statistics for adaptive difficulty
       const { data: statisticsData } = await supabase
         .from('user_subtopic_statistics')
         .select('subtopic_id, accuracy, difficulty_level')
@@ -150,7 +142,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         ]) || []
       );
 
-      // Get the last answered question to check if it was incorrect
       const lastAnswer = answeredIds.length > 0 ? await supabase
         .from('practice_answers')
         .select('is_correct, question_id')
@@ -160,15 +151,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         .single() : null;
 
       if (lastAnswer?.data && !lastAnswer.data.is_correct) {
-        // If last answer was wrong, get a similar type of question but at an easier difficulty
-        const lastQuestion = await supabase
+        const { data: lastQuestion } = await supabase
           .from('questions')
           .select('question_type, category, subtopic_id')
           .eq('id', lastAnswer.data.question_id)
           .single();
 
-        if (lastQuestion.data) {
-          const { question_type, category, subtopic_id } = lastQuestion.data;
+        if (lastQuestion) {
+          const { question_type, category, subtopic_id } = lastQuestion;
           console.log("Last question was wrong, fetching similar type:", { question_type, category });
 
           const currentDifficulty = subtopicDifficulties.get(subtopic_id) || 'Easy';
@@ -177,7 +167,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           const { data: similarQuestions } = await supabase
             .from('questions')
             .select('*')
-            .eq('question_type', question_type)
+            .eq('question_type', question_type as 'normal' | 'passage' | 'analogy' | 'comparison')
             .eq('category', category)
             .eq('difficulty', easierDifficulty)
             .in('subtopic_id', subtopicIds)
@@ -185,14 +175,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
           if (similarQuestions && similarQuestions.length > 0) {
             const randomIndex = Math.floor(Math.random() * similarQuestions.length);
-            setCurrentQuestion(similarQuestions[randomIndex]);
+            const nextQuestion = similarQuestions[randomIndex] as PracticeQuestion;
+            setCurrentQuestion(nextQuestion);
             incrementQuestionsAnswered();
             return;
           }
         }
       }
 
-      // Default question fetching logic
       const questionPromises = subtopicIds.map(subtopicId => {
         const difficulty = subtopicDifficulties.get(subtopicId) || 'Easy';
         return fetchQuestionsForSubtopic(
@@ -232,14 +222,11 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
   }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, toast]);
 
-  // Initialize the session with the first question
   useEffect(() => {
     if (session && !currentQuestion && subtopicIds.length > 0) {
-      // Reset questions answered when starting a new session
-      setQuestionsAnswered(0);
       getNextQuestion();
     }
-  }, [session, currentQuestion, subtopicIds, getNextQuestion, setQuestionsAnswered]);
+  }, [session, currentQuestion, subtopicIds, getNextQuestion]);
 
   return {
     currentQuestion,
