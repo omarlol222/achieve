@@ -46,7 +46,10 @@ serve(async (req) => {
     const requestBody = {
       contents: [{
         parts: [{
-          text: prompt
+          text: `You are a helpful AI assistant that helps students understand questions and concepts. 
+Please analyze the question or conversation and provide a clear, helpful response.
+
+${prompt}`
         }]
       }],
       generationConfig: {
@@ -91,13 +94,7 @@ serve(async (req) => {
 
     console.log('Gemini API response data:', data);
 
-    // Validate response structure
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      console.error('Invalid response structure:', data);
-      throw new Error('Invalid response format from Gemini API');
-    }
-
-    // Format response
+    // Format response to match expected structure
     const aiResponse = {
       choices: [{
         message: {
@@ -113,7 +110,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Edge function error:', error);
     
-    // Ensure we return a properly formatted error response
     return new Response(
       JSON.stringify({
         error: error.message,
