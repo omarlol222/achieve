@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePracticeQuestions } from "@/hooks/usePracticeQuestions";
 import { Progress } from "@/components/ui/progress";
 import { usePracticeStore } from "@/store/usePracticeStore";
-import { Info } from "lucide-react";
+import { Info, Trophy } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -31,7 +31,8 @@ export function PracticeSession() {
     showFeedback,
     actions: {
       setSelectedAnswer,
-      setShowFeedback
+      setShowFeedback,
+      setQuestionsAnswered
     }
   } = usePracticeStore();
 
@@ -42,6 +43,12 @@ export function PracticeSession() {
     getNextQuestion,
     isComplete
   } = usePracticeQuestions(sessionId);
+
+  useEffect(() => {
+    if (sessionId) {
+      setQuestionsAnswered(0);
+    }
+  }, [sessionId, setQuestionsAnswered]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -133,7 +140,6 @@ export function PracticeSession() {
       setConsecutiveMistakes(newConsecutiveMistakes);
       setPointsEarned(prev => prev + newPoints);
 
-      // Update session streak and points
       const { error: streakError } = await supabase
         .from("practice_sessions")
         .update({ 
@@ -144,7 +150,6 @@ export function PracticeSession() {
 
       if (streakError) throw streakError;
 
-      // Record the answer
       const { error: answerError } = await supabase
         .from("practice_answers")
         .insert({
@@ -258,8 +263,9 @@ export function PracticeSession() {
           <Progress value={((questionsAnswered + 1) / totalQuestions) * 100} className="w-[200px]" />
         </div>
         <div className="space-y-1 text-right">
-          <div className="text-sm text-gray-500">
-            Current Streak: {currentStreak}
+          <div className="flex items-center justify-end gap-2 text-sm text-gray-500">
+            <Trophy className={`h-5 w-5 ${currentStreak > 0 ? 'text-yellow-500' : 'text-gray-400'}`} />
+            <span className="font-medium">{currentStreak}</span>
           </div>
           <div className="text-sm text-gray-500">
             Points: {pointsEarned}
