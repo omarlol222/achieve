@@ -31,6 +31,7 @@ export default function QuestionSupport() {
   const [questionId, setQuestionId] = useState("");
   const [questionContext, setQuestionContext] = useState("");
   const [hasUploadedImage, setHasUploadedImage] = useState(false);
+  const [currentImageMessage, setCurrentImageMessage] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,26 +55,27 @@ export default function QuestionSupport() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() && !hasUploadedImage) return;
+    if (!input.trim() && !currentImageMessage) return;
 
-    let userMessageContent = input.trim() || "My question is in the picture";
-    const lastMessage = messages[messages.length - 1];
-    const hasRecentImage = lastMessage?.image && lastMessage.role === 'user';
-
+    let userMessageContent = input.trim() || "Please help me understand this question";
+    
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
       content: userMessageContent,
-      image: hasRecentImage ? lastMessage.image : undefined,
-      imageBase64: hasRecentImage ? lastMessage.imageBase64 : undefined,
+      image: currentImageMessage?.image,
+      imageBase64: currentImageMessage?.imageBase64,
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInput("");
+    setCurrentImageMessage(null);
     setHasUploadedImage(false);
     setIsLoading(true);
 
     try {
+      console.log('Sending message to AI:', userMessage);
+
       const messageHistory = messages.concat(userMessage).map(msg => ({
         role: msg.role,
         content: msg.content,
@@ -132,11 +134,11 @@ export default function QuestionSupport() {
         imageBase64: base64Data,
       };
 
-      setMessages(prev => [...prev, imageMessage]);
+      setCurrentImageMessage(imageMessage);
       setHasUploadedImage(true);
       
       toast({
-        description: "Image uploaded successfully!",
+        description: "Image uploaded successfully! Click send to get an explanation.",
       });
     } catch (error) {
       console.error('Error processing image:', error);
@@ -314,6 +316,20 @@ export default function QuestionSupport() {
                   </div>
                 </div>
               )}
+              {currentImageMessage && (
+                <div className="flex justify-end">
+                  <div className="max-w-[80%] rounded-lg p-4 bg-primary text-primary-foreground">
+                    <div className="mb-2">
+                      <OptimizedImage 
+                        src={currentImageMessage.image!} 
+                        alt="Question" 
+                        className="rounded-lg max-w-full h-auto"
+                      />
+                    </div>
+                    <p className="text-sm text-primary-foreground/80">Click send to get an explanation</p>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
 
@@ -323,7 +339,7 @@ export default function QuestionSupport() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Type your question... (Shift+Enter for new line)"
+                placeholder={currentImageMessage ? "Add any specific questions about the image (optional)" : "Type your question... (Shift+Enter for new line)"}
                 disabled={isLoading}
                 className="min-h-[60px]"
                 rows={1}
@@ -352,7 +368,7 @@ export default function QuestionSupport() {
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={isLoading}
+                  disabled={isLoading || (!input.trim() && !currentImageMessage)}
                   size="icon"
                   className="h-10 w-10 shrink-0"
                 >
