@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePracticeQuestions } from "@/hooks/usePracticeQuestions";
 import { Progress } from "@/components/ui/progress";
 import { usePracticeStore } from "@/store/usePracticeStore";
-import { Info, Trophy } from "lucide-react";
+import { Info, ArrowRight } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +25,7 @@ export function PracticeSession() {
   const [consecutiveMistakes, setConsecutiveMistakes] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pointsEarned, setPointsEarned] = useState(0);
+  const [showNextButton, setShowNextButton] = useState(false);
 
   const {
     selectedAnswer,
@@ -168,28 +169,8 @@ export function PracticeSession() {
       if (answerError) throw answerError;
 
       setShowFeedback(true);
-
-      setTimeout(async () => {
-        setShowFeedback(false);
-        setSelectedAnswer(null);
-        
-        if (questionsAnswered >= totalQuestions - 1) {
-          try {
-            console.log("Attempting to complete session...");
-            await completeSession();
-          } catch (error: any) {
-            console.error("Failed to complete session:", error);
-            toast({
-              title: "Error completing session",
-              description: "Failed to complete the practice session. Please try again.",
-              variant: "destructive",
-            });
-          }
-        } else {
-          getNextQuestion();
-        }
-        setIsSubmitting(false);
-      }, 2000);
+      setShowNextButton(true);
+      setIsSubmitting(false);
 
     } catch (error: any) {
       setIsSubmitting(false);
@@ -199,6 +180,18 @@ export function PracticeSession() {
         description: "Failed to submit your answer. Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleNextQuestion = () => {
+    setShowFeedback(false);
+    setSelectedAnswer(null);
+    setShowNextButton(false);
+    
+    if (questionsAnswered >= totalQuestions - 1) {
+      completeSession();
+    } else {
+      getNextQuestion();
     }
   };
 
@@ -262,10 +255,10 @@ export function PracticeSession() {
           <p className="text-sm text-gray-500">Question {questionsAnswered + 1} of {totalQuestions}</p>
           <Progress value={((questionsAnswered + 1) / totalQuestions) * 100} className="w-[200px]" />
         </div>
-        <div className="space-y-1 text-right">
-          <div className="flex items-center justify-end gap-2 text-sm text-gray-500">
-            <Trophy className={`h-5 w-5 ${currentStreak > 0 ? 'text-yellow-500' : 'text-gray-400'}`} />
-            <span className="font-medium">{currentStreak}</span>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1">
+            <span role="img" aria-label="fire" className="text-xl">🔥</span>
+            <span className="font-medium text-orange-600">{currentStreak}</span>
           </div>
           <div className="text-sm text-gray-500">
             Points: {pointsEarned}
@@ -309,14 +302,25 @@ export function PracticeSession() {
           totalQuestions={totalQuestions}
         />
         
-        <div className="mt-6 flex justify-end">
-          <Button
-            size="lg"
-            onClick={handleAnswerSubmit}
-            disabled={selectedAnswer === null || showFeedback || isSubmitting}
-          >
-            {isSubmitting ? "Submitting..." : "Submit Answer"}
-          </Button>
+        <div className="mt-6 flex justify-end gap-4">
+          {showNextButton ? (
+            <Button
+              size="lg"
+              onClick={handleNextQuestion}
+              className="flex items-center gap-2"
+            >
+              Next Question
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              onClick={handleAnswerSubmit}
+              disabled={selectedAnswer === null || showFeedback || isSubmitting}
+            >
+              {isSubmitting ? "Submitting..." : "Submit Answer"}
+            </Button>
+          )}
         </div>
       </Card>
     </div>
