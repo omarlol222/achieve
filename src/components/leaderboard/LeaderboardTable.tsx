@@ -37,6 +37,7 @@ export function LeaderboardTable({ data, isLoading, type }: LeaderboardTableProp
             <TableCell className="font-medium">
               <div className="flex items-center gap-2">
                 {getRankIcon(entry.rank)}
+                <span>{entry.rank}</span>
               </div>
             </TableCell>
             <TableCell>
