@@ -30,6 +30,29 @@ const MathPracticeSetup = () => {
   const startPractice = async () => {
     setIsCreatingSession(true);
     try {
+      // First, fetch all math subtopics
+      const { data: subtopics, error: subtopicsError } = await supabase
+        .from('subtopics')
+        .select('id')
+        .in('topic_id', (
+          await supabase
+            .from('topics')
+            .select('id')
+            .eq('subject_id', (
+              await supabase
+                .from('subjects')
+                .select('id')
+                .eq('name', 'Math')
+                .single()
+            ).data?.id)
+        ).data?.map(topic => topic.id) || []);
+
+      if (subtopicsError) throw subtopicsError;
+
+      if (!subtopics || subtopics.length === 0) {
+        throw new Error("No math subtopics found");
+      }
+
       // Create a new practice session
       const { data: session, error: sessionError } = await supabase
         .from("practice_sessions")
@@ -38,7 +61,10 @@ const MathPracticeSetup = () => {
           total_questions: questionsCount === -1 ? 999 : questionsCount,
           questions_answered: 0,
           status: 'in_progress',
-          subject: 'Math'
+          subject: 'Math',
+          subtopic_attempts: {
+            subtopics: subtopics.map(s => s.id)
+          }
         })
         .select()
         .single();
