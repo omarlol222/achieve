@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { SubjectProgress } from "@/components/gat/progress/SubjectProgress";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { usePracticeStore } from "@/store/usePracticeStore"; // Add this import
 
 type SubjectType = {
   id: string;
@@ -19,6 +20,14 @@ const MathComponent = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
+  
+  // Get reset action from store
+  const resetSession = usePracticeStore(state => state.actions.resetSession);
+
+  // Reset practice session state when component mounts
+  useEffect(() => {
+    resetSession();
+  }, [resetSession]);
 
   const { 
     data: subject, 
@@ -183,7 +192,7 @@ const MathComponent = () => {
           </div>
 
           <div className="space-y-6">
-            {topics.map((topic) => (
+            {topics?.map((topic) => (
               <Card key={topic.id} className="p-6">
                 <SubjectProgress
                   subject={{
@@ -209,7 +218,10 @@ const MathComponent = () => {
           <Button
             size="lg"
             className="w-full"
-            onClick={() => navigate("/gat/math/practice/setup")}
+            onClick={() => {
+              resetSession(); // Reset session before navigating
+              navigate("/gat/math/practice/setup");
+            }}
           >
             Start Practice
           </Button>
