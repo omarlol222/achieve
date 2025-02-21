@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,7 +33,6 @@ type SubtopicAttempts = {
   subtopics: string[];
 };
 
-// Helper function to validate question type
 function validateQuestionType(type: string): 'normal' | 'passage' | 'analogy' | 'comparison' {
   if (type === 'normal' || type === 'passage' || type === 'analogy' || type === 'comparison') {
     return type;
@@ -42,7 +40,6 @@ function validateQuestionType(type: string): 'normal' | 'passage' | 'analogy' | 
   return 'normal'; // Default fallback
 }
 
-// Helper function to transform database question to PracticeQuestion
 function transformToPracticeQuestion(dbQuestion: any): PracticeQuestion {
   return {
     ...dbQuestion,
@@ -67,7 +64,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       incrementQuestionsAnswered,
       setSelectedAnswer,
       setStreak,
-      setShowFeedback
+      setShowFeedback,
+      resetSession
     }
   } = usePracticeStore();
 
@@ -75,6 +73,15 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     queryKey: ["practice-session", sessionId],
     queryFn: async () => {
       if (!sessionId) return null;
+      
+      const { error: resetError } = await supabase
+        .from("practice_sessions")
+        .update({ questions_answered: 0 })
+        .eq("id", sessionId);
+        
+      if (resetError) {
+        console.error("Error resetting session:", resetError);
+      }
       
       const { data, error } = await supabase
         .from("practice_sessions")
@@ -92,64 +99,46 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     enabled: !!sessionId
   });
 
-  // Reset everything when session changes or component mounts
   useEffect(() => {
-    setQuestionsAnswered(0);
-    setCurrentQuestion(null);
-    setSelectedAnswer(null);
-    setShowFeedback(false);
-  }, [sessionId, setQuestionsAnswered, setCurrentQuestion, setSelectedAnswer, setShowFeedback]);
-
-  // Make sure questions_answered in the database matches our local state
-  useEffect(() => {
-    if (sessionId && questionsAnswered === 0) {
-      const updateSession = async () => {
-        const { error } = await supabase
-          .from("practice_sessions")
-          .update({ questions_answered: 0 })
-          .eq("id", sessionId);
-          
-        if (error) {
-          console.error("Error resetting questions_answered:", error);
-        }
-      };
-      updateSession();
+    if (sessionId) {
+      console.log("Resetting session state");
+      resetSession();
     }
-  }, [sessionId, questionsAnswered]);
+  }, [sessionId, resetSession]);
 
   const subtopicIds = (session?.subtopic_attempts as SubtopicAttempts)?.subtopics || [];
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
 
   useEffect(() => {
-    if (!session?.user_id) return;
+    if (session?.user_id) {
+      const channel = supabase
+        .channel('achievements')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'user_achievements',
+            filter: `user_id=eq.${session.user_id}`
+          },
+          async (payload) => {
+            const { data: achievement } = await supabase
+              .from('achievements')
+              .select('*')
+              .eq('id', payload.new.achievement_id)
+              .single();
 
-    const channel = supabase
-      .channel('achievements')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'user_achievements',
-          filter: `user_id=eq.${session.user_id}`
-        },
-        async (payload) => {
-          const { data: achievement } = await supabase
-            .from('achievements')
-            .select('*')
-            .eq('id', payload.new.achievement_id)
-            .single();
-
-          if (achievement) {
-            showAchievementNotification(achievement);
+            if (achievement) {
+              showAchievementNotification(achievement);
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [session?.user_id, showAchievementNotification]);
 
   const getNextQuestion = useCallback(async () => {
@@ -157,7 +146,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       console.log("Early return conditions:", {
         sessionId,
         subject: session?.subject,
-        subtopicIdsLength: subtopicIds.length
+        subtopicIdsLength: subtopicIds.length,
+        questionsAnswered
       });
       return;
     }
@@ -248,8 +238,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       const randomIndex = Math.floor(Math.random() * availableQuestions.length);
       const nextQuestion = transformToPracticeQuestion(availableQuestions[randomIndex]);
       
-      // Only increment if we actually have a new question
       if (nextQuestion) {
+        console.log("Setting next question, current questions answered:", questionsAnswered);
         setCurrentQuestion(nextQuestion);
         incrementQuestionsAnswered();
       }
@@ -262,13 +252,14 @@ export function usePracticeQuestions(sessionId: string | undefined) {
         variant: "destructive",
       });
     }
-  }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, toast]);
+  }, [sessionId, session, subtopicIds, answeredIds, setCurrentQuestion, incrementQuestionsAnswered, toast, questionsAnswered]);
 
   useEffect(() => {
     if (session && !currentQuestion && subtopicIds.length > 0) {
+      console.log("Initial question fetch, current questions answered:", questionsAnswered);
       getNextQuestion();
     }
-  }, [session, currentQuestion, subtopicIds, getNextQuestion]);
+  }, [session, currentQuestion, subtopicIds, getNextQuestion, questionsAnswered]);
 
   return {
     currentQuestion,
