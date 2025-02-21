@@ -7,6 +7,25 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+async function fetchImageAsBase64(imageUrl: string) {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error('Failed to fetch image');
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    const mimeType = response.headers.get('content-type') || 'image/jpeg';
+    
+    return {
+      mimeType,
+      data: base64
+    };
+  } catch (error) {
+    console.error('Error fetching image:', error);
+    throw error;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -26,21 +45,65 @@ serve(async (req) => {
       throw new Error('Invalid messages format');
     }
 
-    const prompt = messages.map((msg: any) => msg.content).join('\n') + 
-      (questionContext ? `\n\nAdditional Context: ${questionContext}` : '');
+    // Find the latest message with an image
+    const messageWithImage = [...messages].reverse().find((msg: any) => msg.content.includes('Image URL:'));
+    let contents = [];
 
-    console.log('Creating Gemini request with prompt:', prompt);
+    if (messageWithImage) {
+      // Extract image URL from the message
+      const urlMatch = messageWithImage.content.match(/Image URL: (.*?)(?:\n|$)/);
+      if (urlMatch) {
+        const imageUrl = urlMatch[1];
+        try {
+          const imageData = await fetchImageAsBase64(imageUrl);
+          
+          // Add text prompt first
+          contents.push({
+            parts: [{
+              text: "Please analyze this image of a question and provide a detailed explanation to help understand it."
+            }]
+          });
+
+          // Add image content
+          contents.push({
+            parts: [{
+              text: messageWithImage.content.replace(/Image URL:.*(\n|$)/, '')
+            }, {
+              inlineData: {
+                mimeType: imageData.mimeType,
+                data: imageData.data
+              }
+            }]
+          });
+        } catch (error) {
+          console.error('Error processing image:', error);
+          throw new Error('Failed to process image');
+        }
+      }
+    }
+
+    // Add any additional context
+    if (questionContext) {
+      contents.push({
+        parts: [{
+          text: `Additional Context: ${questionContext}`
+        }]
+      });
+    }
+
+    // If no image was found, use regular text prompt
+    if (contents.length === 0) {
+      contents = [{
+        parts: [{
+          text: messages.map((msg: any) => msg.content).join('\n')
+        }]
+      }];
+    }
+
+    console.log('Creating Gemini request with contents:', contents);
 
     const requestBody = {
-      contents: [{
-        parts: [{
-          text: `You are a helpful AI assistant that helps students understand questions and concepts. 
-You have been provided with a conversation that may include images of questions. When an image URL is provided,
-please analyze the question in the image and provide a detailed explanation to help the student understand it.
-
-${prompt}`
-        }]
-      }],
+      contents,
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -49,7 +112,7 @@ ${prompt}`
       },
     };
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${geminiApiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${geminiApiKey}`;
     
     console.log('Making request to Gemini API...');
     const response = await fetch(apiUrl, {
