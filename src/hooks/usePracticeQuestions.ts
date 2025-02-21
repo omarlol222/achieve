@@ -71,16 +71,6 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     }
   } = usePracticeStore();
 
-  // Reset questions answered when session changes
-  useEffect(() => {
-    if (sessionId) {
-      setQuestionsAnswered(0);
-      setCurrentQuestion(null);
-      setSelectedAnswer(null);
-      setShowFeedback(false);
-    }
-  }, [sessionId, setQuestionsAnswered, setCurrentQuestion, setSelectedAnswer, setShowFeedback]);
-
   const { data: session, isLoading: isSessionLoading } = useQuery({
     queryKey: ["practice-session", sessionId],
     queryFn: async () => {
@@ -102,8 +92,32 @@ export function usePracticeQuestions(sessionId: string | undefined) {
     enabled: !!sessionId
   });
 
+  // Reset everything when session changes or component mounts
+  useEffect(() => {
+    setQuestionsAnswered(0);
+    setCurrentQuestion(null);
+    setSelectedAnswer(null);
+    setShowFeedback(false);
+  }, [sessionId, setQuestionsAnswered, setCurrentQuestion, setSelectedAnswer, setShowFeedback]);
+
+  // Make sure questions_answered in the database matches our local state
+  useEffect(() => {
+    if (sessionId && questionsAnswered === 0) {
+      const updateSession = async () => {
+        const { error } = await supabase
+          .from("practice_sessions")
+          .update({ questions_answered: 0 })
+          .eq("id", sessionId);
+          
+        if (error) {
+          console.error("Error resetting questions_answered:", error);
+        }
+      };
+      updateSession();
+    }
+  }, [sessionId, questionsAnswered]);
+
   const subtopicIds = (session?.subtopic_attempts as SubtopicAttempts)?.subtopics || [];
-  
   const { data: answeredIds = [] } = useAnsweredQuestions(sessionId);
 
   useEffect(() => {
@@ -233,8 +247,12 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
       const randomIndex = Math.floor(Math.random() * availableQuestions.length);
       const nextQuestion = transformToPracticeQuestion(availableQuestions[randomIndex]);
-      setCurrentQuestion(nextQuestion);
-      incrementQuestionsAnswered();
+      
+      // Only increment if we actually have a new question
+      if (nextQuestion) {
+        setCurrentQuestion(nextQuestion);
+        incrementQuestionsAnswered();
+      }
 
     } catch (error: any) {
       console.error("Error fetching next question:", error);
