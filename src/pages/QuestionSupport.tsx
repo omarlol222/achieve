@@ -42,7 +42,7 @@ export default function QuestionSupport() {
     e.preventDefault();
     if (!input.trim() && !currentImageMessage) return;
 
-    let userMessageContent = input.trim() || "Please help me understand this question";
+    let userMessageContent = input.trim() || "Could you please analyze this image and help me understand the question shown?";
     
     const userMessage: Message = {
       id: crypto.randomUUID(),
