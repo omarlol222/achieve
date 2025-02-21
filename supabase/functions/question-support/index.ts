@@ -72,17 +72,16 @@ serve(async (req) => {
 
     console.log('Request body:', JSON.stringify(requestBody, null, 2)); // Debug log
 
-    const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${geminiApiKey}`,
-        },
-        body: JSON.stringify(requestBody),
-      }
-    );
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${geminiApiKey}`;
+    console.log('API URL (without key):', apiUrl.split('?')[0]); // Log URL without exposing the key
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
 
     // First check if we got a JSON response
     const contentType = response.headers.get('content-type');
