@@ -40,13 +40,24 @@ export default function QuestionSupport() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() && !messages[messages.length - 1]?.image) return;
+
+    let userMessageContent = input;
+    const lastMessage = messages[messages.length - 1];
+    const hasRecentImage = lastMessage?.image && lastMessage.role === 'user';
+
+    // If there's a recent image and no text input, use a default question
+    if (!input.trim() && hasRecentImage) {
+      userMessageContent = "Can you help me understand this question?";
+    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: input,
+      content: userMessageContent,
+      image: hasRecentImage ? lastMessage.image : undefined,
     };
+
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
@@ -54,7 +65,9 @@ export default function QuestionSupport() {
     try {
       const messageHistory = messages.concat(userMessage).map(msg => ({
         role: msg.role,
-        content: msg.content
+        content: msg.image 
+          ? `[Image context]: This message includes an image of a question. ${msg.content}`
+          : msg.content
       }));
 
       const { data, error } = await supabase.functions.invoke('question-support', {
@@ -68,7 +81,7 @@ export default function QuestionSupport() {
         throw error;
       }
 
-      console.log('AI Response:', data); // Debug log
+      console.log('AI Response:', data);
 
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
