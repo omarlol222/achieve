@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Navigation } from "@/components/ui/navigation";
 import { Card } from "@/components/ui/card";
@@ -62,10 +61,7 @@ export default function QuestionSupport() {
       const messageHistory = messages.concat(userMessage).map(msg => ({
         role: msg.role,
         content: msg.content,
-        image: msg.imageBase64 ? {
-          data: msg.imageBase64,
-          mimeType: 'image/jpeg'
-        } : undefined
+        imageBase64: msg.id === userMessage.id ? msg.imageBase64 : undefined
       }));
 
       const { data, error } = await supabase.functions.invoke('question-support', {

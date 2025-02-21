@@ -16,9 +16,9 @@ serve(async (req) => {
     const { messages, questionContext } = await req.json()
     console.log('Received request:', { messages, questionContext })
 
-    // Check if the latest message contains an image
-    const latestMessage = messages[messages.length - 1]
-    console.log('Latest message:', latestMessage)
+    // Find the message with the image
+    const messageWithImage = messages.find(msg => msg.imageBase64)
+    console.log('Message with image:', messageWithImage ? 'Found' : 'Not found')
 
     // Prepare the request for Gemini
     const geminiRequest = {
@@ -35,18 +35,18 @@ serve(async (req) => {
     }
 
     // Add text content
-    let userPrompt = latestMessage.content || "Please help me understand this question"
+    let userPrompt = messageWithImage?.content || "Please help me understand this question"
     if (questionContext) {
       userPrompt = `${questionContext}\n\n${userPrompt}`
     }
 
     // Add image if present
-    if (latestMessage.imageBase64) {
+    if (messageWithImage?.imageBase64) {
       geminiRequest.contents[0].parts = [
         {
           inlineData: {
             mimeType: "image/jpeg",
-            data: latestMessage.imageBase64
+            data: messageWithImage.imageBase64
           }
         },
         {
