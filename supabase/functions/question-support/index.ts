@@ -48,7 +48,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': Deno.env.get('GOOGLE_API_KEY')!,
+        'x-goog-api-key': Deno.env.get('GEMINI_API_KEY')!,
       },
       body: JSON.stringify({
         contents: [
