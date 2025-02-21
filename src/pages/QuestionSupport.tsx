@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
@@ -310,7 +311,7 @@ export default function QuestionSupport() {
           </ScrollArea>
 
           <form onSubmit={handleSubmit} className="mt-4">
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -320,24 +321,33 @@ export default function QuestionSupport() {
                 className="min-h-[60px]"
                 rows={1}
               />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                accept="image/*"
-                className="hidden"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading}
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                <Send className="h-4 w-4" />
-              </Button>
+              <div className="flex gap-2 shrink-0">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading}
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                >
+                  <Upload className="h-5 w-5" />
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading}
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                >
+                  <Send className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
           </form>
         </Card>
