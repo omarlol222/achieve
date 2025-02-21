@@ -7,6 +7,44 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const SYSTEM_PROMPT = `You are an AI tutor specializing in GAT (General Aptitude Test) preparation. Your primary goal is to help students understand and solve questions clearly and accurately. Users will upload images of questions, and you will analyze, interpret, and provide step-by-step explanations while ensuring solutions are correct and logically structured.
+
+Key Capabilities:
+1. General Explanation Guidelines
+- Always provide structured, step-by-step explanations
+- Keep responses clear, simple, and to the point
+- If a user asks for clarification, rephrase or explain differently
+- Do not assume missing values unless explicitly stated
+
+2. Geometric Problem Analysis
+Step 1: Identify the Figure Correctly
+- Recognize and confirm the type of shape
+- If multiple shapes overlap, determine relationships
+
+Step 2: Recognize Key Given Values
+- Identify labeled sides, angles, and relationships
+- Pay attention to which side corresponds to which shape
+
+Step 3: Apply the Right Theorems
+- Use appropriate mathematical theorems
+- Use basic area, perimeter, or angle rules when relevant
+
+Step 4: Cross-Check the Answer
+- Verify solution matches problem statement
+- Re-evaluate calculations if answer doesn't match choices
+
+What to Avoid:
+- Do not misinterpret how values relate to different parts
+- Do not overcomplicate solutions
+- Do not dismiss answer sets without full verification
+- Do not assume incorrect drawings unless stated
+
+Remember to:
+- Break down complex concepts into simpler parts
+- Provide visual representations when helpful
+- Use clear mathematical notation
+- Explain your reasoning at each step`
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -25,7 +63,11 @@ serve(async (req) => {
       contents: [
         {
           role: 'user',
-          parts: []
+          parts: [
+            {
+              text: SYSTEM_PROMPT
+            }
+          ]
         }
       ],
       generationConfig: {
@@ -34,41 +76,46 @@ serve(async (req) => {
       },
     }
 
-    // Add text content
-    let userPrompt = messageWithImage?.content || "Please help me understand this question"
-    if (questionContext) {
-      userPrompt = `${questionContext}\n\n${userPrompt}`
-    }
-
-    // Add image if present
+    // Add user message with image if present
     if (messageWithImage?.imageBase64) {
-      geminiRequest.contents[0].parts = [
-        {
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: messageWithImage.imageBase64
+      geminiRequest.contents.push({
+        role: 'user',
+        parts: [
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: messageWithImage.imageBase64
+            }
+          },
+          {
+            text: messageWithImage.content || "Please analyze this question and provide a clear, step-by-step explanation."
           }
-        },
-        {
-          text: userPrompt
-        }
-      ]
+        ]
+      })
     } else {
-      geminiRequest.contents[0].parts = [
-        {
-          text: userPrompt
-        }
-      ]
+      // Handle text-only questions
+      const userPrompt = questionContext ? 
+        `${questionContext}\n\n${messages[messages.length - 1].content}` :
+        messages[messages.length - 1].content
+
+      geminiRequest.contents.push({
+        role: 'user',
+        parts: [
+          {
+            text: userPrompt
+          }
+        ]
+      })
     }
 
     console.log('Gemini request configuration:', JSON.stringify({
       ...geminiRequest,
-      contents: [{
-        ...geminiRequest.contents[0],
-        parts: geminiRequest.contents[0].parts.map(part => 
+      contents: geminiRequest.contents.map(content => ({
+        ...content,
+        parts: content.parts.map(part => 
           'inlineData' in part ? { ...part, inlineData: { mimeType: part.inlineData.mimeType, data: '[BASE64_DATA]' }} : part
         )
-      }]
+      }))
     }))
 
     const apiKey = Deno.env.get('GEMINI_API_KEY')
