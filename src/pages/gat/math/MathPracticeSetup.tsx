@@ -1,18 +1,15 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { SubtopicGrid } from "@/components/practice/setup/SubtopicGrid";
 import { useToast } from "@/hooks/use-toast";
 import { usePracticeStore } from "@/store/usePracticeStore";
 
 const MathPracticeSetup = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedSubtopics, setSelectedSubtopics] = useState<string[]>([]);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   
   // Get reset action from store and reset immediately
@@ -25,30 +22,7 @@ const MathPracticeSetup = () => {
     setQuestionsAnswered(0);
   }, [resetSession, setQuestionsAnswered]);
 
-  const { data: mathSubject } = useQuery({
-    queryKey: ["math-subject"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("subjects")
-        .select("id, name")
-        .eq("name", "Math")
-        .single();
-
-      if (error) throw error;
-      return data;
-    }
-  });
-
   const startPractice = async () => {
-    if (selectedSubtopics.length === 0) {
-      toast({
-        title: "No subtopics selected",
-        description: "Please select at least one subtopic to practice.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsCreatingSession(true);
     try {
       // Create a new practice session
@@ -59,10 +33,7 @@ const MathPracticeSetup = () => {
           total_questions: 10,
           questions_answered: 0,
           status: 'in_progress',
-          subject: 'Math',
-          subtopic_attempts: {
-            subtopics: selectedSubtopics
-          }
+          subject: 'Math'
         })
         .select()
         .single();
@@ -100,17 +71,11 @@ const MathPracticeSetup = () => {
 
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-[#1B2B2B]">Practice Setup</h1>
-          <p className="text-lg text-gray-600">Select topics to practice</p>
+          <h1 className="text-4xl font-bold text-[#1B2B2B]">Math Practice</h1>
+          <p className="text-lg text-gray-600">
+            Start a practice session to improve your math skills
+          </p>
         </div>
-
-        {mathSubject && (
-          <SubtopicGrid
-            subjectId={mathSubject.id}
-            selectedSubtopics={selectedSubtopics}
-            onSubtopicsChange={setSelectedSubtopics}
-          />
-        )}
 
         <Button
           size="lg"
