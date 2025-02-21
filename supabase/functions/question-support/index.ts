@@ -27,17 +27,23 @@ serve(async (req) => {
 
     console.log('Received messages:', messages);
 
-    let contents = [];
-    
     // Find the latest message with an image
-    const messageWithImage = [...messages].reverse().find(msg => msg.image);
+    const messageWithImage = [...messages].reverse().find(msg => msg.image?.data);
     
+    const systemPrompt = `You are a helpful AI assistant that helps students understand questions and concepts. 
+When provided with an image of a question, analyze it carefully and provide a detailed explanation to help the student understand it.
+Break down complex concepts, provide examples, and offer step-by-step explanations when relevant.`;
+
+    const contents = [{
+      parts: [
+        { text: systemPrompt }
+      ]
+    }];
+
     if (messageWithImage) {
       contents.push({
         parts: [
-          {
-            text: messageWithImage.content
-          },
+          { text: messageWithImage.content },
           {
             inlineData: {
               mimeType: 'image/jpeg',
@@ -48,7 +54,7 @@ serve(async (req) => {
       });
     }
 
-    // Add text messages
+    // Add text messages and context as a separate content part
     const textMessages = messages
       .filter(msg => !msg.image)
       .map(msg => msg.content)
@@ -62,7 +68,12 @@ serve(async (req) => {
       });
     }
 
-    console.log('Creating Gemini request with contents:', contents);
+    console.log('Making request to Gemini API with contents structure:', 
+      contents.map(c => ({
+        ...c,
+        parts: c.parts.map(p => 'inlineData' in p ? { type: 'image' } : p)
+      }))
+    );
 
     const requestBody = {
       contents,
