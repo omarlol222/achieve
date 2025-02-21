@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Upload, Search, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Send, Upload, Search, ThumbsUp, ThumbsDown, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { OptimizedImage } from "@/components/ui/optimized-image/OptimizedImage";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +30,7 @@ export default function QuestionSupport() {
   const [isLoading, setIsLoading] = useState(false);
   const [questionId, setQuestionId] = useState("");
   const [questionContext, setQuestionContext] = useState("");
+  const [hasUploadedImage, setHasUploadedImage] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -52,16 +54,11 @@ export default function QuestionSupport() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() && !messages[messages.length - 1]?.image) return;
+    if (!input.trim() && !hasUploadedImage) return;
 
-    let userMessageContent = input;
+    let userMessageContent = input.trim() || "My question is in the picture";
     const lastMessage = messages[messages.length - 1];
     const hasRecentImage = lastMessage?.image && lastMessage.role === 'user';
-
-    // If there's a recent image and no text input, use a default question
-    if (!input.trim() && hasRecentImage) {
-      userMessageContent = "Can you help me understand this question?";
-    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -73,6 +70,7 @@ export default function QuestionSupport() {
 
     setMessages(prev => [...prev, userMessage]);
     setInput("");
+    setHasUploadedImage(false);
     setIsLoading(true);
 
     try {
@@ -129,12 +127,13 @@ export default function QuestionSupport() {
       const imageMessage: Message = {
         id: crypto.randomUUID(),
         role: 'user',
-        content: 'Here is my question:',
+        content: '',
         image: imageUrl,
         imageBase64: base64Data,
       };
 
       setMessages(prev => [...prev, imageMessage]);
+      setHasUploadedImage(true);
       
       toast({
         description: "Image uploaded successfully!",
@@ -345,7 +344,11 @@ export default function QuestionSupport() {
                   size="icon"
                   className="h-10 w-10 shrink-0"
                 >
-                  <Upload className="h-5 w-5" />
+                  {hasUploadedImage ? (
+                    <Check className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <Upload className="h-5 w-5" />
+                  )}
                 </Button>
                 <Button 
                   type="submit" 
