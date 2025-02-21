@@ -9,8 +9,10 @@ type StatsSectionProps = {
 };
 
 export function StatsSection({ statistics }: StatsSectionProps) {
-  const topicData = useMemo(() => {
-    if (!statistics || !Array.isArray(statistics)) return [];
+  const { mathData, englishData } = useMemo(() => {
+    if (!statistics || !Array.isArray(statistics)) {
+      return { mathData: [], englishData: [] };
+    }
     
     const tenDaysAgo = subDays(new Date(), 10);
     
@@ -25,21 +27,37 @@ export function StatsSection({ statistics }: StatsSectionProps) {
 
     console.log("Filtered statistics:", filteredStats);
 
-    // Combine all topics into a single dataset
-    const data = filteredStats.map(stat => ({
-      subtopic: `${stat.subtopic.name} (${stat.subtopic.topic.subject.name})`,
+    // Separate data by subject
+    const mathStats = filteredStats.filter(stat => 
+      stat.subtopic?.topic?.subject?.name.toLowerCase().includes('math')
+    );
+
+    const englishStats = filteredStats.filter(stat => 
+      stat.subtopic?.topic?.subject?.name.toLowerCase().includes('english')
+    );
+
+    // Format data for each subject
+    const mathData = mathStats.map(stat => ({
+      subtopic: stat.subtopic.name,
       accuracy: (stat.accuracy || 0) * 100,
     }));
 
-    console.log("Combined topic data:", data);
-    return data;
+    const englishData = englishStats.map(stat => ({
+      subtopic: stat.subtopic.name,
+      accuracy: (stat.accuracy || 0) * 100,
+    }));
+
+    console.log("Math data:", mathData);
+    console.log("English data:", englishData);
+
+    return { mathData, englishData };
   }, [statistics]);
 
-  const renderRadarChart = (data: any[]) => {
+  const renderRadarChart = (data: any[], title: string) => {
     if (!data || data.length === 0) {
       return (
         <div className="h-full flex items-center justify-center text-muted-foreground">
-          No performance data available for the last 10 days. Try practicing some questions!
+          No performance data available for {title} in the last 10 days. Try practicing some questions!
         </div>
       );
     }
@@ -50,7 +68,7 @@ export function StatsSection({ statistics }: StatsSectionProps) {
         keys={["accuracy"]}
         indexBy="subtopic"
         maxValue={100}
-        margin={{ top: 70, right: 120, bottom: 40, left: 120 }}
+        margin={{ top: 70, right: 80, bottom: 40, left: 80 }}
         borderWidth={2}
         gridLabelOffset={36}
         dotSize={10}
@@ -64,11 +82,18 @@ export function StatsSection({ statistics }: StatsSectionProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Topic Mastery (Last 10 Days)</h2>
-        <div className="h-[500px]">
-          {renderRadarChart(topicData)}
+        <h2 className="text-lg font-semibold mb-4">Math Mastery (Last 10 Days)</h2>
+        <div className="h-[400px]">
+          {renderRadarChart(mathData, "Math")}
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold mb-4">English Mastery (Last 10 Days)</h2>
+        <div className="h-[400px]">
+          {renderRadarChart(englishData, "English")}
         </div>
       </Card>
     </div>
