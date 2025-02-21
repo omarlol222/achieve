@@ -230,7 +230,7 @@ export default function QuestionSupport() {
               <SheetHeader>
                 <SheetTitle>Find a Question</SheetTitle>
                 <SheetDescription>
-                  Enter a question ID or upload an image of your question.
+                  Enter a question ID to find it.
                 </SheetDescription>
               </SheetHeader>
               <div className="grid gap-4 py-4">
@@ -245,24 +245,6 @@ export default function QuestionSupport() {
                     />
                     <Button onClick={handleQuestionSearch}>Search</Button>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Upload Image</Label>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageUpload}
-                    accept="image/*"
-                    className="hidden"
-                  />
-                  <Button 
-                    onClick={() => fileInputRef.current?.click()} 
-                    variant="outline" 
-                    className="w-full"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload Question Image
-                  </Button>
                 </div>
               </div>
             </SheetContent>
@@ -338,6 +320,21 @@ export default function QuestionSupport() {
                 className="min-h-[60px]"
                 rows={1}
               />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
               <Button type="submit" disabled={isLoading}>
                 <Send className="h-4 w-4" />
               </Button>
