@@ -25,6 +25,7 @@ export default function QuestionSupport() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [questionId, setQuestionId] = useState("");
+  const [questionContext, setQuestionContext] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto scroll to bottom when new messages arrive
@@ -49,23 +50,56 @@ export default function QuestionSupport() {
     setIsLoading(true);
 
     try {
-      // TODO: Implement AI response logic here
-      // For now, just add a mock response
-      setTimeout(() => {
-        const assistantMessage: Message = {
-          id: crypto.randomUUID(),
-          role: 'assistant',
-          content: "I'm here to help! (This is a placeholder response. AI integration coming soon)",
-        };
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsLoading(false);
-      }, 1000);
+      // Convert messages to the format expected by the API
+      const messageHistory = messages.concat(userMessage).map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      const response = await fetch('/api/question-support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: messageHistory,
+          questionContext,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get AI response');
+      }
+
+      const data = await response.json();
+      const assistantMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: data.choices[0].message.content,
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+
+      // Store the chat in the database
+      const { error: sessionError } = await supabase
+        .from('ai_chat_sessions')
+        .insert({
+          user_id: (await supabase.auth.getUser()).data.user?.id,
+          question_id: questionId || null,
+          status: 'active',
+        });
+
+      if (sessionError) {
+        console.error('Error storing chat session:', sessionError);
+      }
+
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to get AI response. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
@@ -89,10 +123,13 @@ export default function QuestionSupport() {
       if (error) throw error;
 
       if (data) {
+        const questionText = `Question: ${data.question_text}\n\nChoices:\n1. ${data.choice1}\n2. ${data.choice2}\n3. ${data.choice3}\n4. ${data.choice4}\n\nCorrect Answer: ${data.correct_answer}`;
+        setQuestionContext(questionText);
+        
         setMessages(prev => [...prev, {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: `Question found:\n${data.question_text}\n\nHow can I help you understand this question better?`
+          content: `I found the question you're looking for. Here it is:\n\n${questionText}\n\nHow can I help you understand this question better?`
         }]);
       }
     } catch (error) {
@@ -104,21 +141,34 @@ export default function QuestionSupport() {
     }
   };
 
-  const handleImageUpload = () => {
-    toast({
-      description: "Image upload feature coming soon!",
-    });
-  };
-
-  const handleRateMessage = (messageId: string, rating: 'up' | 'down') => {
+  const handleRateMessage = async (messageId: string, rating: 'up' | 'down') => {
     setMessages(prev => prev.map(msg => {
       if (msg.id === messageId) {
         return { ...msg, rating: rating === 'up' ? 5 : 1 };
       }
       return msg;
     }));
+
+    try {
+      // Store the rating in the database
+      const { error } = await supabase
+        .from('ai_chat_messages')
+        .update({ rating: rating === 'up' ? 5 : 1 })
+        .eq('id', messageId);
+
+      if (error) throw error;
+
+      toast({
+        description: rating === 'up' ? "Thanks for the positive feedback!" : "Thanks for the feedback. We'll try to improve.",
+      });
+    } catch (error) {
+      console.error('Error storing rating:', error);
+    }
+  };
+
+  const handleImageUpload = () => {
     toast({
-      description: rating === 'up' ? "Thanks for the positive feedback!" : "Thanks for the feedback. We'll try to improve.",
+      description: "Image upload feature coming soon!",
     });
   };
 
