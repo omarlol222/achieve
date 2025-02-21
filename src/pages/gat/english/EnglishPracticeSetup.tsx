@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -10,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { usePracticeStore } from "@/store/practice";
+import { usePracticeStore } from "@/store/usePracticeStore";
 
 type QuestionCount = 10 | 20 | 30 | -1; // -1 represents infinite mode
 
