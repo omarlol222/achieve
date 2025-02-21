@@ -42,6 +42,109 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          marked_as_understood: boolean | null
+          rating: number | null
+          role: Database["public"]["Enums"]["message_type"]
+          session_id: string | null
+          tokens_used: number | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          marked_as_understood?: boolean | null
+          rating?: number | null
+          role: Database["public"]["Enums"]["message_type"]
+          session_id?: string | null
+          tokens_used?: number | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          marked_as_understood?: boolean | null
+          rating?: number | null
+          role?: Database["public"]["Enums"]["message_type"]
+          session_id?: string | null
+          tokens_used?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_chat_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          question_id: string | null
+          question_image_url: string | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          question_id?: string | null
+          question_image_url?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          question_id?: string | null
+          question_image_url?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_sessions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_chat_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "overall_leaderboard"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "ai_chat_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_chat_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_leaderboard"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       daily_attempts: {
         Row: {
           created_at: string | null
@@ -1361,6 +1464,7 @@ export type Database = {
     }
     Enums: {
       difficulty_level: "Easy" | "Moderate" | "Hard"
+      message_type: "user" | "assistant"
       module_status: "pending" | "in_progress" | "completed"
       platform_type: "gat" | "sat" | "act"
       practice_status: "in_progress" | "completed" | "abandoned"
