@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +26,7 @@ export type PracticeQuestion = {
   comparison_value1?: string;
   comparison_value2?: string;
   subtopic_id?: string;
+  category?: 'analogy' | 'vocabulary' | 'grammar' | 'reading' | 'writing';
 };
 
 type SubtopicAttempts = {

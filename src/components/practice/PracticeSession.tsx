@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePracticeQuestions } from "@/hooks/usePracticeQuestions";
 import { Progress } from "@/components/ui/progress";
 import { usePracticeStore } from "@/store/usePracticeStore";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -269,7 +269,7 @@ export function PracticeSession() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-1 text-sm text-gray-500 cursor-help">
-                    <InfoCircle className="h-4 w-4" />
+                    <Info className="h-4 w-4" />
                     Potential Points: {pointsInfo.potentialPoints}
                   </div>
                 </TooltipTrigger>
