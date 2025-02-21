@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,7 @@ type Message = {
   rating?: number;
   marked_as_understood?: boolean;
   image?: string;
+  imageBase64?: string;
 };
 
 export default function QuestionSupport() {
@@ -37,6 +37,18 @@ export default function QuestionSupport() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const convertImageToBase64 = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        resolve(base64String.split(',')[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,6 +68,7 @@ export default function QuestionSupport() {
       role: 'user',
       content: userMessageContent,
       image: hasRecentImage ? lastMessage.image : undefined,
+      imageBase64: hasRecentImage ? lastMessage.imageBase64 : undefined,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -63,18 +76,14 @@ export default function QuestionSupport() {
     setIsLoading(true);
 
     try {
-      const messageHistory = messages.concat(userMessage).map(msg => {
-        if (msg.image) {
-          return {
-            role: msg.role,
-            content: `${msg.content}\n\nImage URL: ${msg.image}\n\nPlease analyze this image of a question and help me understand it.`
-          };
-        }
-        return {
-          role: msg.role,
-          content: msg.content
-        };
-      });
+      const messageHistory = messages.concat(userMessage).map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        image: msg.imageBase64 ? {
+          data: msg.imageBase64,
+          mimeType: 'image/jpeg'
+        } : undefined
+      }));
 
       const { data, error } = await supabase.functions.invoke('question-support', {
         body: {
@@ -97,18 +106,6 @@ export default function QuestionSupport() {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      const { error: sessionError } = await supabase
-        .from('ai_chat_sessions')
-        .insert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          question_id: questionId || null,
-          status: 'active',
-        });
-
-      if (sessionError) {
-        console.error('Error storing chat session:', sessionError);
-      }
-
     } catch (error) {
       console.error('Error getting AI response:', error);
       toast({
@@ -118,6 +115,37 @@ export default function QuestionSupport() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const base64Data = await convertImageToBase64(file);
+      const imageUrl = URL.createObjectURL(file);
+
+      const imageMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: 'Here is my question:',
+        image: imageUrl,
+        imageBase64: base64Data,
+      };
+
+      setMessages(prev => [...prev, imageMessage]);
+      
+      toast({
+        description: "Image uploaded successfully!",
+      });
+    } catch (error) {
+      console.error('Error processing image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process image. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -179,45 +207,6 @@ export default function QuestionSupport() {
       });
     } catch (error) {
       console.error('Error storing rating:', error);
-    }
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
-      const { data, error } = await supabase.storage
-        .from('question-images')
-        .upload(fileName, file);
-
-      if (error) throw error;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('question-images')
-        .getPublicUrl(fileName);
-
-      const imageMessage: Message = {
-        id: crypto.randomUUID(),
-        role: 'user',
-        content: 'Here is my question:',
-        image: publicUrl,
-      };
-
-      setMessages(prev => [...prev, imageMessage]);
-      
-      toast({
-        description: "Image uploaded successfully!",
-      });
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload image. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 

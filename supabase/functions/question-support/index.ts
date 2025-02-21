@@ -7,25 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function fetchImageAsBase64(imageUrl: string) {
-  try {
-    const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error('Failed to fetch image');
-    
-    const arrayBuffer = await response.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    const mimeType = response.headers.get('content-type') || 'image/jpeg';
-    
-    return {
-      mimeType,
-      data: base64
-    };
-  } catch (error) {
-    console.error('Error fetching image:', error);
-    throw error;
-  }
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -38,66 +19,47 @@ serve(async (req) => {
       throw new Error('API key not configured');
     }
 
-    const body = await req.json();
-    const { messages, questionContext } = body;
+    const { messages, questionContext } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error('Invalid messages format');
     }
 
-    // Find the latest message with an image
-    const messageWithImage = [...messages].reverse().find((msg: any) => msg.content.includes('Image URL:'));
+    console.log('Received messages:', messages);
+
     let contents = [];
-
+    
+    // Find the latest message with an image
+    const messageWithImage = [...messages].reverse().find(msg => msg.image);
+    
     if (messageWithImage) {
-      // Extract image URL from the message
-      const urlMatch = messageWithImage.content.match(/Image URL: (.*?)(?:\n|$)/);
-      if (urlMatch) {
-        const imageUrl = urlMatch[1];
-        try {
-          const imageData = await fetchImageAsBase64(imageUrl);
-          
-          // Add text prompt first
-          contents.push({
-            parts: [{
-              text: "Please analyze this image of a question and provide a detailed explanation to help understand it."
-            }]
-          });
-
-          // Add image content
-          contents.push({
-            parts: [{
-              text: messageWithImage.content.replace(/Image URL:.*(\n|$)/, '')
-            }, {
-              inlineData: {
-                mimeType: imageData.mimeType,
-                data: imageData.data
-              }
-            }]
-          });
-        } catch (error) {
-          console.error('Error processing image:', error);
-          throw new Error('Failed to process image');
-        }
-      }
-    }
-
-    // Add any additional context
-    if (questionContext) {
       contents.push({
-        parts: [{
-          text: `Additional Context: ${questionContext}`
-        }]
+        parts: [
+          {
+            text: messageWithImage.content
+          },
+          {
+            inlineData: {
+              mimeType: 'image/jpeg',
+              data: messageWithImage.image.data
+            }
+          }
+        ]
       });
     }
 
-    // If no image was found, use regular text prompt
-    if (contents.length === 0) {
-      contents = [{
+    // Add text messages
+    const textMessages = messages
+      .filter(msg => !msg.image)
+      .map(msg => msg.content)
+      .join('\n');
+
+    if (textMessages || questionContext) {
+      contents.push({
         parts: [{
-          text: messages.map((msg: any) => msg.content).join('\n')
+          text: `${textMessages}${questionContext ? `\n\nAdditional Context: ${questionContext}` : ''}`
         }]
-      }];
+      });
     }
 
     console.log('Creating Gemini request with contents:', contents);
