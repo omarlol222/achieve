@@ -1,9 +1,9 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
@@ -20,11 +20,18 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-    // Add more flexible build options
     outDir: "dist",
     sourcemap: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
+    // Ensure assets are served from the correct base path
+    assetsDir: "assets",
+    rollupOptions: {
+      output: {
+        // Ensure consistent chunk names
+        chunkFileNames: "assets/[name]-[hash].js",
+        entryFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash].[ext]"
+      }
+    }
   },
+  base: "/"
 }));
