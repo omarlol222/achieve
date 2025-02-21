@@ -10,6 +10,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { useToast } from "@/hooks/use-toast";
 import { Send, Upload, Search, ThumbsUp, ThumbsDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { OptimizedImage } from "@/components/ui/optimized-image/OptimizedImage";
+import { Textarea } from "@/components/ui/textarea";
 
 type Message = {
   id: string;
@@ -17,6 +19,7 @@ type Message = {
   content: string;
   rating?: number;
   marked_as_understood?: boolean;
+  image?: string;
 };
 
 export default function QuestionSupport() {
@@ -27,6 +30,7 @@ export default function QuestionSupport() {
   const [questionId, setQuestionId] = useState("");
   const [questionContext, setQuestionContext] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
@@ -72,6 +76,9 @@ export default function QuestionSupport() {
       }
 
       const data = await response.json();
+      console.log('AI Response:', data); // Debug log
+
+      // Properly handle Gemini API response format
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -94,6 +101,7 @@ export default function QuestionSupport() {
       }
 
     } catch (error) {
+      console.error('Error getting AI response:', error);
       toast({
         title: "Error",
         description: "Failed to get AI response. Please try again.",
@@ -118,7 +126,7 @@ export default function QuestionSupport() {
         .from('questions')
         .select('*')
         .eq('id', questionId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
 
@@ -166,10 +174,56 @@ export default function QuestionSupport() {
     }
   };
 
-  const handleImageUpload = () => {
-    toast({
-      description: "Image upload feature coming soon!",
-    });
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Upload image to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const { data, error } = await supabase.storage
+        .from('question-images')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('question-images')
+        .getPublicUrl(fileName);
+
+      // Add image message to chat
+      const imageMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: 'Here is my question:',
+        image: publicUrl,
+      };
+
+      setMessages(prev => [...prev, imageMessage]);
+      
+      toast({
+        description: "Image uploaded successfully!",
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      e.preventDefault();
+      setInput(prev => prev + '\n');
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as any);
+    }
   };
 
   return (
@@ -209,7 +263,18 @@ export default function QuestionSupport() {
                 </div>
                 <div className="space-y-2">
                   <Label>Upload Image</Label>
-                  <Button onClick={handleImageUpload} variant="outline" className="w-full">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <Button 
+                    onClick={() => fileInputRef.current?.click()} 
+                    variant="outline" 
+                    className="w-full"
+                  >
                     <Upload className="h-4 w-4 mr-2" />
                     Upload Question Image
                   </Button>
@@ -234,6 +299,15 @@ export default function QuestionSupport() {
                         : 'bg-muted'
                     }`}
                   >
+                    {message.image && (
+                      <div className="mb-2">
+                        <OptimizedImage 
+                          src={message.image} 
+                          alt="Question" 
+                          className="rounded-lg max-w-full h-auto"
+                        />
+                      </div>
+                    )}
                     <p className="whitespace-pre-wrap">{message.content}</p>
                     {message.role === 'assistant' && (
                       <div className="flex items-center gap-2 mt-2">
@@ -270,11 +344,14 @@ export default function QuestionSupport() {
 
           <form onSubmit={handleSubmit} className="mt-4">
             <div className="flex gap-2">
-              <Input
+              <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your question..."
+                onKeyDown={handleKeyDown}
+                placeholder="Type your question... (Shift+Enter for new line)"
                 disabled={isLoading}
+                className="min-h-[60px]"
+                rows={1}
               />
               <Button type="submit" disabled={isLoading}>
                 <Send className="h-4 w-4" />
