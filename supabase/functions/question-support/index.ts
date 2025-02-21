@@ -14,64 +14,89 @@ serve(async (req) => {
 
   try {
     const { messages, questionContext } = await req.json()
+    console.log('Received request:', { messages, questionContext })
 
     // Check if the latest message contains an image
     const latestMessage = messages[messages.length - 1]
-    let systemPrompt = "You are a helpful AI tutor that explains GAT questions clearly and concisely."
-    let userPrompt = latestMessage.content
+    console.log('Latest message:', latestMessage)
 
-    // Prepare the messages array for Gemini
-    const geminiMessages = messages.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.content }]
+    // Prepare the request for Gemini
+    const geminiRequest = {
+      contents: [
+        {
+          role: 'user',
+          parts: []
+        }
+      ],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 1000,
+      },
+    }
+
+    // Add text content
+    let userPrompt = latestMessage.content || "Please help me understand this question"
+    if (questionContext) {
+      userPrompt = `${questionContext}\n\n${userPrompt}`
+    }
+
+    // Add image if present
+    if (latestMessage.imageBase64) {
+      geminiRequest.contents[0].parts = [
+        {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: latestMessage.imageBase64
+          }
+        },
+        {
+          text: userPrompt
+        }
+      ]
+    } else {
+      geminiRequest.contents[0].parts = [
+        {
+          text: userPrompt
+        }
+      ]
+    }
+
+    console.log('Gemini request configuration:', JSON.stringify({
+      ...geminiRequest,
+      contents: [{
+        ...geminiRequest.contents[0],
+        parts: geminiRequest.contents[0].parts.map(part => 
+          'inlineData' in part ? { ...part, inlineData: { mimeType: part.inlineData.mimeType, data: '[BASE64_DATA]' }} : part
+        )
+      }]
     }))
 
-    // If there's an image in the latest message, add it
-    if (latestMessage.imageBase64) {
-      geminiMessages[geminiMessages.length - 1].parts.unshift({
-        inlineData: {
-          mimeType: "image/jpeg",
-          data: latestMessage.imageBase64
-        }
-      })
+    const apiKey = Deno.env.get('GEMINI_API_KEY')
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY is not set')
     }
-
-    // Add context if available
-    if (questionContext) {
-      geminiMessages[geminiMessages.length - 1].parts[0].text = 
-        `${questionContext}\n\n${geminiMessages[geminiMessages.length - 1].parts[0].text}`
-    }
-
-    console.log('Sending to Gemini:', JSON.stringify(geminiMessages))
 
     const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': Deno.env.get('GEMINI_API_KEY')!,
+        'x-goog-api-key': apiKey,
       },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: geminiMessages[geminiMessages.length - 1].parts
-          }
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 1000,
-        },
-      }),
+      body: JSON.stringify(geminiRequest),
     })
 
     if (!response.ok) {
-      const error = await response.text()
-      console.error('Gemini API error:', error)
-      throw new Error(`Gemini API error: ${error}`)
+      const errorText = await response.text()
+      console.error('Gemini API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      })
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     const data = await response.json()
-    console.log('Gemini Response:', JSON.stringify(data))
+    console.log('Gemini response:', JSON.stringify(data))
 
     // Format response to match expected structure
     const formattedResponse = {
@@ -88,9 +113,12 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in edge function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
