@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -104,7 +105,7 @@ export default function EnglishPracticeSetup() {
       if (error) throw error;
 
       // Navigate to the practice session
-      navigate(`/gat/practice/${session.id}`);
+      navigate(`/gat/english/practice/${session.id}`);
     } catch (error: any) {
       toast({
         title: "Error starting practice",
