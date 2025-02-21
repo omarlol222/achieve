@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +33,22 @@ export type PracticeQuestion = {
 type SubtopicAttempts = {
   subtopics: string[];
 };
+
+// Helper function to validate question type
+function validateQuestionType(type: string): 'normal' | 'passage' | 'analogy' | 'comparison' {
+  if (type === 'normal' || type === 'passage' || type === 'analogy' || type === 'comparison') {
+    return type;
+  }
+  return 'normal'; // Default fallback
+}
+
+// Helper function to transform database question to PracticeQuestion
+function transformToPracticeQuestion(dbQuestion: any): PracticeQuestion {
+  return {
+    ...dbQuestion,
+    question_type: validateQuestionType(dbQuestion.question_type)
+  };
+}
 
 export function usePracticeQuestions(sessionId: string | undefined) {
   const navigate = useNavigate();
@@ -167,7 +184,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
           const { data: similarQuestions } = await supabase
             .from('questions')
             .select('*')
-            .eq('question_type', question_type as 'normal' | 'passage' | 'analogy' | 'comparison')
+            .eq('question_type', question_type)
             .eq('category', category)
             .eq('difficulty', easierDifficulty)
             .in('subtopic_id', subtopicIds)
@@ -175,7 +192,7 @@ export function usePracticeQuestions(sessionId: string | undefined) {
 
           if (similarQuestions && similarQuestions.length > 0) {
             const randomIndex = Math.floor(Math.random() * similarQuestions.length);
-            const nextQuestion = similarQuestions[randomIndex] as PracticeQuestion;
+            const nextQuestion = transformToPracticeQuestion(similarQuestions[randomIndex]);
             setCurrentQuestion(nextQuestion);
             incrementQuestionsAnswered();
             return;
@@ -209,7 +226,8 @@ export function usePracticeQuestions(sessionId: string | undefined) {
       }
 
       const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-      setCurrentQuestion(availableQuestions[randomIndex]);
+      const nextQuestion = transformToPracticeQuestion(availableQuestions[randomIndex]);
+      setCurrentQuestion(nextQuestion);
       incrementQuestionsAnswered();
 
     } catch (error: any) {
