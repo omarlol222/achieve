@@ -20,74 +20,70 @@ serve(async (req) => {
     let systemPrompt = "You are a helpful AI tutor that explains GAT questions clearly and concisely."
     let userPrompt = latestMessage.content
 
-    // If there's an image, modify the prompts
-    if (latestMessage.image) {
-      systemPrompt = "You are a helpful AI tutor that analyzes and explains GAT questions, including those presented in images. When analyzing an image, describe what you see and provide a detailed explanation."
-      userPrompt = `This is a GAT question presented in an image. ${latestMessage.content}`
+    // Prepare the messages array for Gemini
+    const geminiMessages = messages.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    }))
+
+    // If there's an image in the latest message, add it
+    if (latestMessage.imageBase64) {
+      geminiMessages[geminiMessages.length - 1].parts.unshift({
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: latestMessage.imageBase64
+        }
+      })
     }
 
     // Add context if available
     if (questionContext) {
-      userPrompt = `${questionContext}\n\n${userPrompt}`
+      geminiMessages[geminiMessages.length - 1].parts[0].text = 
+        `${questionContext}\n\n${geminiMessages[geminiMessages.length - 1].parts[0].text}`
     }
 
-    const messages_for_ai = [
-      {
-        role: "system",
-        content: systemPrompt
-      },
-      ...messages.slice(0, -1), // Previous conversation
-      {
-        role: "user",
-        content: userPrompt
-      }
-    ]
+    console.log('Sending to Gemini:', JSON.stringify(geminiMessages))
 
-    // If there's an image in the latest message, add it to the messages
-    if (latestMessage.image) {
-      messages_for_ai[messages_for_ai.length - 1].content = [
-        {
-          type: "text",
-          text: userPrompt
-        },
-        {
-          type: "image_url",
-          image_url: {
-            url: `data:image/jpeg;base64,${latestMessage.image.data}`
-          }
-        }
-      ]
-    }
-
-    console.log('Sending to AI:', JSON.stringify(messages_for_ai))
-
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('PERPLEXITY_API_KEY')}`,
         'Content-Type': 'application/json',
+        'x-goog-api-key': Deno.env.get('GOOGLE_API_KEY')!,
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
-        messages: messages_for_ai,
-        temperature: 0.2,
-        max_tokens: 1000,
-        return_images: false,
-        return_related_questions: false,
+        contents: [
+          {
+            role: 'user',
+            parts: geminiMessages[geminiMessages.length - 1].parts
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 1000,
+        },
       }),
     })
 
     if (!response.ok) {
       const error = await response.text()
-      console.error('AI API error:', error)
-      throw new Error(`AI API error: ${error}`)
+      console.error('Gemini API error:', error)
+      throw new Error(`Gemini API error: ${error}`)
     }
 
     const data = await response.json()
-    console.log('AI Response:', JSON.stringify(data))
+    console.log('Gemini Response:', JSON.stringify(data))
+
+    // Format response to match expected structure
+    const formattedResponse = {
+      choices: [{
+        message: {
+          content: data.candidates[0].content.parts[0].text
+        }
+      }]
+    }
 
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify(formattedResponse),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
