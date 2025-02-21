@@ -25,10 +25,15 @@ serve(async (req) => {
       throw new Error('Invalid messages format');
     }
 
-    console.log('Received messages:', messages);
+    console.log('Number of messages received:', messages.length);
+    console.log('Message structure:', messages.map(m => ({
+      role: m.role,
+      hasImage: !!m.imageBase64,
+      contentLength: m.content.length
+    })));
 
     // Find the latest message with an image
-    const messageWithImage = [...messages].reverse().find(msg => msg.image?.data);
+    const messageWithImage = [...messages].reverse().find(msg => msg.imageBase64);
     
     const systemPrompt = `You are a helpful AI assistant that helps students understand questions and concepts. 
 When provided with an image of a question, analyze it carefully and provide a detailed explanation to help the student understand it.
@@ -41,13 +46,14 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
     }];
 
     if (messageWithImage) {
+      console.log('Found message with image, preparing image data');
       contents.push({
         parts: [
           { text: messageWithImage.content },
           {
             inlineData: {
               mimeType: 'image/jpeg',
-              data: messageWithImage.image.data
+              data: messageWithImage.imageBase64
             }
           }
         ]
@@ -56,7 +62,7 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
 
     // Add text messages and context as a separate content part
     const textMessages = messages
-      .filter(msg => !msg.image)
+      .filter(msg => !msg.imageBase64)
       .map(msg => msg.content)
       .join('\n');
 
@@ -68,12 +74,12 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
       });
     }
 
-    console.log('Making request to Gemini API with contents structure:', 
-      contents.map(c => ({
+    console.log('Request structure:', JSON.stringify({
+      contents: contents.map(c => ({
         ...c,
-        parts: c.parts.map(p => 'inlineData' in p ? { type: 'image' } : p)
+        parts: c.parts.map(p => 'inlineData' in p ? { type: 'image', mimeType: p.inlineData.mimeType } : p)
       }))
-    );
+    }, null, 2));
 
     const requestBody = {
       contents,
@@ -103,7 +109,12 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
     }
 
     const data = await response.json();
-    console.log('Gemini API response data:', data);
+    console.log('Gemini API response received');
+
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      console.error('Unexpected response format:', data);
+      throw new Error('Invalid response format from Gemini API');
+    }
 
     const aiResponse = {
       choices: [{
