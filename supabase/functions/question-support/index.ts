@@ -79,7 +79,8 @@ Break down complex concepts, provide examples, and offer step-by-step explanatio
       })), null, 2)
     );
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent?key=${geminiApiKey}`;
+    // Updated to use gemini-1.5-flash model
+    const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
     
     const response = await fetch(apiUrl, {
       method: 'POST',
