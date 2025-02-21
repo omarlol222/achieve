@@ -63,12 +63,18 @@ export default function QuestionSupport() {
     setIsLoading(true);
 
     try {
-      const messageHistory = messages.concat(userMessage).map(msg => ({
-        role: msg.role,
-        content: msg.image 
-          ? `[Image context]: This message includes an image of a question. ${msg.content}`
-          : msg.content
-      }));
+      const messageHistory = messages.concat(userMessage).map(msg => {
+        if (msg.image) {
+          return {
+            role: msg.role,
+            content: `${msg.content}\n\nImage URL: ${msg.image}\n\nPlease analyze this image of a question and help me understand it.`
+          };
+        }
+        return {
+          role: msg.role,
+          content: msg.content
+        };
+      });
 
       const { data, error } = await supabase.functions.invoke('question-support', {
         body: {

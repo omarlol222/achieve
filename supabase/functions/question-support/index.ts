@@ -8,38 +8,26 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Get API key from environment and validate
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiApiKey) {
       console.error('GEMINI_API_KEY not found in environment');
       throw new Error('API key not configured');
     }
 
-    // Parse request body
-    let body;
-    try {
-      body = await req.json();
-    } catch (e) {
-      console.error('Failed to parse request body:', e);
-      throw new Error('Invalid request body');
-    }
-
+    const body = await req.json();
     const { messages, questionContext } = body;
 
-    // Validate request data
     if (!messages || !Array.isArray(messages)) {
       throw new Error('Invalid messages format');
     }
 
-    // Create the prompt
     const prompt = messages.map((msg: any) => msg.content).join('\n') + 
-      (questionContext ? `\n\nContext: ${questionContext}` : '');
+      (questionContext ? `\n\nAdditional Context: ${questionContext}` : '');
 
     console.log('Creating Gemini request with prompt:', prompt);
 
@@ -47,7 +35,8 @@ serve(async (req) => {
       contents: [{
         parts: [{
           text: `You are a helpful AI assistant that helps students understand questions and concepts. 
-Please analyze the question or conversation and provide a clear, helpful response.
+You have been provided with a conversation that may include images of questions. When an image URL is provided,
+please analyze the question in the image and provide a detailed explanation to help the student understand it.
 
 ${prompt}`
         }]
@@ -60,7 +49,6 @@ ${prompt}`
       },
     };
 
-    // Make request to Gemini API
     const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${geminiApiKey}`;
     
     console.log('Making request to Gemini API...');
@@ -72,29 +60,15 @@ ${prompt}`
       body: JSON.stringify(requestBody),
     });
 
-    // Log response details for debugging
-    console.log('Gemini API response status:', response.status);
-    console.log('Gemini API response headers:', Object.fromEntries(response.headers.entries()));
-
-    // Handle non-200 responses
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Gemini API error response:', errorText);
       throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
     }
 
-    // Parse JSON response
-    let data;
-    try {
-      data = await response.json();
-    } catch (e) {
-      console.error('Failed to parse Gemini API response:', e);
-      throw new Error('Invalid response from Gemini API');
-    }
-
+    const data = await response.json();
     console.log('Gemini API response data:', data);
 
-    // Format response to match expected structure
     const aiResponse = {
       choices: [{
         message: {
